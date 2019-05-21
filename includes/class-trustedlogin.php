@@ -63,13 +63,18 @@ class TrustedLogin
             add_action('trustedlogin_button', array($this, 'output_support_users'), 20);
         }
 
+        add_action('admin_bar_menu', array($this, 'maybe_add_toolbar_items'), 100);
+
+        add_action('admin_init', array($this, 'maybe_revoke_support'), 100);
+
         // add_action('init', array($this, 'maybe_add_endpoint'));
 
     }
 
     public function maybe_add_endpoint()
     {
-        $endpoint = get_option('tl_endpoint');
+        $ns = $this->get_setting('plugin.namespace');
+        $endpoint = get_option('tl_' . $ns . '_endpoint');
         if ($endpoint) {
 
         }
@@ -457,7 +462,9 @@ class TrustedLogin
             $siteurl = get_site_option('siteurl');
 
             $endpoint = md5($siteurl . $identifier);
-            update_option('tl_endpoint', $endpoint);
+
+            $ns = $this->get_setting('plugin.namespace');
+            update_option('tl_' . $ns . '_endpoint', $endpoint);
 
             $decay_time = $this->get_setting('decay');
             $decay_time = 300; // for testing
@@ -642,6 +649,41 @@ class TrustedLogin
         $this->dlog('Args:' . print_r($args, true), __METHOD__);
 
         return get_users($args);
+    }
+
+    public function maybe_add_toolbar_items($admin_bar)
+    {
+
+        if (current_user_can($this->support_role)) {
+            $admin_bar->add_menu(array(
+                'id' => 'tl-' . $this->get_setting('plugin.namespace') . '-revoke',
+                'title' => __('Revoke TrustedLogin', 'trustedlogin'),
+                'href' => admin_url('/?revoke-tl=si'),
+                'meta' => array(
+                    'title' => __('Revoke TrustedLogin', 'trustedlogin'),
+                    'class' => 'tl-destroy-session',
+                ),
+            ));
+        }
+    }
+
+    public function maybe_revoke_support()
+    {
+
+        if (!isset($_GET['revoke-tl']) || $_GET['revoke-tl'] !== 'si') {
+            return;
+        }
+
+        $check = current_user_can($this->support_role);
+
+        $this->dlog("Check: $check", __METHOD__);
+
+        if ($check) {
+            $this->support_user_destroy('all');
+        }
+
+        wp_redirect(home_url());
+        die;
     }
 
 }
