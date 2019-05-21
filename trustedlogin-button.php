@@ -3,7 +3,7 @@
  * Plugin Name: TrustedLogin Button
  * Plugin URI: https://trustedlogin.com
  * Description: Proof-of-concept plugin to grant support wp-admin access in a click
- * Version: 0.1.0
+ * Version: 0.2.1
  * Author: trustedlogin.io
  * Author URI: https://trustedlogin.com
  * Text Domain: trustedlogin
@@ -55,7 +55,7 @@ class TrustedLogin_Button
             'reassign_posts' => true, // Whether or not to re-assign posts created by support account to admin. If not, they'll be deleted.
         );
 
-        add_action('admin_init', array($this, 'init_tl'));
+        add_action('init', array($this, 'init_tl'));
 
     }
 
@@ -74,6 +74,7 @@ class TrustedLogin_Button
         // Classes
 
         require_once plugin_dir_path(__FILE__) . 'includes/class-trustedlogin.php';
+        require_once plugin_dir_path(__FILE__) . 'includes/class-settings.php';
 
     }
 

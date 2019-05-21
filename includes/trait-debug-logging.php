@@ -30,7 +30,7 @@ trait TL_Debug_Logging
             }
 
             if (!is_null($method)) {
-                $text = '[' . $method . '] - ' . $text;
+                $text = '' . $method . ' => ' . $text;
             }
 
             $fw = fwrite($fh, date("d-m-Y, H:i") . " - $text\n");

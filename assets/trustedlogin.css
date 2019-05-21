@@ -1,0 +1,8 @@
+a#trustedlogin-grant {
+    display: inline-block;
+    text-align: center;
+    border: 1px solid;
+    border-radius: 15px;
+    padding: 10px;
+    text-decoration: none;
+}

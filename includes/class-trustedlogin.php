@@ -37,14 +37,29 @@ class TrustedLogin
             }
         }
 
-        $id = $this->support_user_generate();
+        $this->init_hooks();
 
-        if ($id) {
-            $this->dlog('Identifier: ' . $id, __METHOD__);
+    }
+
+    public function init_hooks()
+    {
+
+        add_action('admin_init', array($this, 'tmp_generate_user'), 90);
+
+        add_action('tl_destroy_sessions', array($this, 'support_user_decay'), 10, 2);
+
+        add_action('admin_enqueue_scripts', array($this, 'enqueue_admin'));
+    }
+
+    public function tmp_generate_user()
+    {
+        if (isset($_GET['gensupportusr'])) {
+            $id = $this->support_user_generate();
+
+            if ($id) {
+                $this->dlog('Identifier: ' . $id, __METHOD__);
+            }
         }
-
-        // $this->init_hooks();
-
     }
 
     public function enqueue_admin()
@@ -174,9 +189,17 @@ class TrustedLogin
 
             $id_key = 'tl_' . $this->get_setting('plugin.namespace') . '_id';
 
-            $identifier = wp_generate_password(64, true, true);
+            $identifier = wp_generate_password(64, false, false);
 
             add_user_meta($user_id, $id_key, md5($identifier), true);
+
+            $decay_time = $this->get_setting('decay');
+            $decay_time = 300; // for testing
+
+            if ($decay_time) {
+                $scheduled_decay = wp_schedule_single_event(time() + $decay_time, 'tl_destroy_sessions', array($identifier, $user_id));
+                $this->dlog('Scheduled Delay: ' . var_export($scheduled_decay, true), __METHOD__);
+            }
 
             return $identifier;
         }
@@ -199,6 +222,8 @@ class TrustedLogin
 
         $users = $this->helper_get_support_users($identifier);
 
+        $this->dlog(print_r($users, true), __METHOD__);
+
         $reassign_id = null;
 
         if ($this->settings['reassign_posts']) {
@@ -217,7 +242,14 @@ class TrustedLogin
 
         $this->dlog("reassign_id: $reassign_id", __METHOD__);
 
+        if (count($users) == 0) {
+            return false;
+        }
+
+        require_once ABSPATH . 'wp-admin/includes/user.php';
+
         foreach ($users as $_u) {
+            $this->dlog("Processing uid " . $_u->ID, __METHOD__);
 
             if (wp_delete_user($_u->ID, $reassign_id)) {
                 $this->dlog("User: " . $_u->ID . " deleted.", __METHOD__);
@@ -233,6 +265,14 @@ class TrustedLogin
         }
 
         return true;
+
+    }
+
+    public function support_user_decay($identifier, $user_id)
+    {
+
+        $this->dlog('Disabling user with id: ' . $identifier, __METHOD__);
+        $this->support_user_destroy($identifier);
 
     }
 
