@@ -14,8 +14,12 @@ class TrustedLogin
     private $debug_mode;
     private $settings_init;
 
+    public $version;
+
     public function __construct($config = '')
     {
+
+        $this->version = '0.2.1';
 
         $this->debug_mode = true;
 
@@ -41,33 +45,290 @@ class TrustedLogin
 
     }
 
+    /**
+     * Initialise the action hooks required
+     *
+     * @since 0.2.0
+     **/
     public function init_hooks()
     {
 
-        add_action('admin_init', array($this, 'tmp_generate_user'), 90);
-
         add_action('tl_destroy_sessions', array($this, 'support_user_decay'), 10, 2);
 
-        add_action('admin_enqueue_scripts', array($this, 'enqueue_admin'));
+        if (is_admin()) {
+            add_action('wp_ajax_tl_gen_support', array($this, 'tl_gen_support'));
+            add_action('admin_enqueue_scripts', array($this, 'enqueue_admin'));
+
+            add_action('trustedlogin_button', array($this, 'output_tl_button'), 10);
+            add_action('trustedlogin_button', array($this, 'output_support_users'), 20);
+        }
+
+        // add_action('init', array($this, 'maybe_add_endpoint'));
+
     }
 
-    public function tmp_generate_user()
+    public function maybe_add_endpoint()
     {
-        if (isset($_GET['gensupportusr'])) {
+        $endpoint = get_option('tl_endpoint');
+        if ($endpoint) {
+
+        }
+        return;
+    }
+
+    /**
+     * AJAX handler for maybe generating a Support User
+     *
+     * @since 0.2.0
+     * @return String JSON result
+     **/
+    public function tl_gen_support()
+    {
+
+        $nonce = $_POST['_nonce'];
+        if (empty($_POST)) {
+            wp_send_json_error(array('message' => 'Auth Issue'));
+        }
+
+        $this->dlog(print_r($_POST, true), __METHOD__);
+
+        //!wp_verify_nonce($nonce, 'tl_nonce-' . get_current_user_id()
+        if (!check_ajax_referer('tl_nonce-' . get_current_user_id(), '_nonce', false)) {
+            wp_send_json_error(array('message' => 'Verification Issue'));
+        }
+
+        if (current_user_can('administrator')) {
             $id = $this->support_user_generate();
 
             if ($id) {
                 $this->dlog('Identifier: ' . $id, __METHOD__);
+                // Send to Vault
             }
+
+            wp_send_json_success(array('id' => $id), 201);
+        } else {
+            wp_send_json_error(array('message' => 'Permissions Issue'));
         }
+
+        wp_die();
     }
 
+    /**
+     * Register the required scripts and styles for wp-admin
+     *
+     * @since 0.2.0
+     **/
     public function enqueue_admin()
     {
-        /**
-        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/jquery-confirm/3.3.2/jquery-confirm.min.css">
-        <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery-confirm/3.3.2/jquery-confirm.min.js"></script>
-         **/
+
+        $jquery_confirm_version = '3.3.2';
+
+        wp_register_style(
+            'jquery-confirm',
+            'https://cdnjs.cloudflare.com/ajax/libs/jquery-confirm/' . $jquery_confirm_version . '/jquery-confirm.min.css',
+            array(),
+            $jquery_confirm_version,
+            'all'
+        );
+
+        wp_register_script(
+            'jquery-confirm',
+            'https://cdnjs.cloudflare.com/ajax/libs/jquery-confirm/' . $jquery_confirm_version . '/jquery-confirm.min.js',
+            array('jquery'),
+            $jquery_confirm_version,
+            true
+        );
+
+        wp_register_script(
+            'trustedlogin',
+            plugin_dir_url(dirname(__FILE__)) . '/assets/trustedlogin.js',
+            array('jquery', 'jquery-confirm'),
+            $this->version,
+            true
+        );
+
+        wp_register_style(
+            'trustedlogin',
+            plugin_dir_url(dirname(__FILE__)) . '/assets/trustedlogin.css',
+            array(),
+            $this->version,
+            'all'
+        );
+
+    }
+
+    /**
+     * Output the TrustedLogin Button and required scripts
+     *
+     * @since 0.2.0
+     * @param Boolean $print - whether to print results or return them
+     * @return String the HTML output
+     **/
+    public function output_tl_button($print = true)
+    {
+
+        if (empty($print)) {
+            $print = true;
+        }
+
+        wp_enqueue_script('jquery-confirm');
+        wp_enqueue_style('jquery-confirm');
+        wp_enqueue_style('trustedlogin');
+
+        $tl_obj = $this->output_tl_alert();
+
+        $tl_obj['plugin'] = $this->get_setting('plugin');
+        $tl_obj['ajaxurl'] = admin_url('admin-ajax.php');
+        $tl_obj['_n'] = wp_create_nonce('tl_nonce-' . get_current_user_id());
+
+        wp_localize_script('trustedlogin', 'tl_obj', $tl_obj);
+
+        wp_enqueue_script('trustedlogin');
+
+        $return = 'Need help? <a href="#" id="trustedlogin-grant" class="trustedlogin-btn btn">';
+        $return .= sprintf('%1$s <br/><small>Powered by TrustedLogin</small>',
+            sprintf(__('Grant %s Support Access', 'trustedlogin'), $this->get_setting('plugin.title')
+            ));
+        $return .= '</a>';
+
+        if (!$print) {
+            return $return;
+        }
+
+        echo $return;
+    }
+
+    /**
+     * Hooked Action to Output the List of Support Users Created
+     *
+     * @since 0.2.1
+     * @param Boolean $return - whether to echo (vs return) the results [default:true]
+     * @return Mixed - echoed HTML or returned String of HTML
+     **/
+    public function output_support_users($print = true)
+    {
+
+        if (!is_admin() || !current_user_can('administrator')) {
+            return;
+        }
+
+        if (empty($print)) {
+            $print = true;
+        }
+
+        $return = '';
+
+        $users = $this->helper_get_support_users('all');
+
+        if (count($users) > 0) {
+
+            $table_header =
+                sprintf('<table class="wp-list-table widefat plugins"><thead>
+                <tr><td>%1$s</td><td>%2$s</td><td>%3$s</td><td>%4$s</td></tr></thead><tbody>',
+                __('User', 'trustedlogin'),
+                __('Role', 'trustedlogin'),
+                __('Created At', 'trustedlogin'),
+                __('Created By', 'trustedlogin')
+            );
+
+            $return .= $table_header;
+
+            foreach ($users as $_u) {
+                $this->dlog('tl_created_by:' . get_user_meta($_u->ID, 'tl_created_by', true), __METHOD__);
+
+                $_gen_u = get_user_by('id', get_user_meta($_u->ID, 'tl_created_by', true));
+
+                $this->dlog('g_u:' . print_r($_gen_u, true));
+
+                $_udata = get_userdata($_u->ID);
+                $return .= '<tr><td>' . $_u->first_name . ' ' . $_u->last_name . '(#' . $_u->ID . ')</td>';
+
+                if (count($_u->roles) > 1) {
+                    $roles = trim(implode(',', $_u->roles), ',');
+                } else {
+                    $roles = $_u->roles[0];
+                }
+                $return .= '<td>' . $roles . '</td>';
+
+                $return .= '<td>' . date('d M Y', strtotime($_udata->user_registered)) . '</td>';
+                if ($_gen_u) {
+                    $return .= '<td>' . ($_gen_u->exists() ? $_gen_u->display_name : __('unknown', 'trustedlogin')) . '</td>';
+                } else {
+                    $return .= '<td>' . __('unknown', 'trustedlogin') . '</td>';
+                }
+                $return .= '</tr>';
+
+            }
+
+            $return .= '</tbody></table>';
+        }
+
+        if (!$print) {
+            return $return;
+        }
+
+        echo $return;
+    }
+
+    /**
+     * Generate the HTML strings for the Confirmation dialogues
+     *
+     * @since 0.2.0
+     * @return String[] Array containing 'intro', 'description' and 'detail' keys.
+     **/
+    public function output_tl_alert()
+    {
+
+        $result = array();
+
+        $result['intro'] = sprintf(
+            __('Grant %1$s Support access to your site.', 'trustedlogin'),
+            $this->get_setting('plugin.title')
+        );
+
+        $result['description'] = sprintf('<p class="description">%1$s</p>',
+            __('By clicking Confirm, the following will happen automatically:', 'trustedlogin')
+        );
+
+        $details = '<ul class="tl-details">';
+
+        // Roles
+        foreach ($this->get_setting('role') as $role => $reason) {
+            $details .= sprintf('<li class="role"> %1$s <br /><small>%2$s</small></li>',
+                sprintf(__('A new user will be created with a custom role \'%1$s\' (with the same capabilities as %2$s).', 'trustedlogin'),
+                    $this->support_role,
+                    $role
+                ),
+                $reason
+            );
+        }
+
+        // Extra Caps
+        foreach ($this->get_setting('extra_caps') as $cap => $reason) {
+            $details .= sprintf('<li class="extra-caps"> %1$s <br /><small>%2$s</small></li>',
+                sprintf(__('With the additional \'%1$s\' Capability.', 'trustedlogin'),
+                    $cap
+                ),
+                $reason
+            );
+        }
+
+        // Decay
+        if ($this->get_setting('decay')) {
+            $now_date = new DateTime("@0");
+            $decay_date = new DateTime("@" . $this->get_setting('decay'));
+            $details .= sprintf('<li class="decay">%1$s</li>',
+                sprintf(__('The support user, and custom role, will be removed and access revoked in %1$s', 'trustedlogin'),
+                    $now_date->diff($decay_date)->format("%a days, %h hours, %i minutes"))
+            );
+        }
+
+        $details .= '</ul>';
+
+        $result['details'] = $details;
+
+        return $result;
+
     }
 
     /**
@@ -155,14 +416,12 @@ class TrustedLogin
             $user_id = null;
         }
 
-        $support_role = $this->get_setting('plugin.namespace') . '-support';
-
         foreach ($this->get_setting('role') as $key => $reason) {
             $role_to_clone = $key;
         }
 
         $role_exists = $this->support_user_create_role(
-            $support_role,
+            $this->support_role,
             $role_to_clone
         );
 
@@ -175,9 +434,10 @@ class TrustedLogin
                 'user_url' => $this->get_setting('plugin.website'),
                 'user_pass' => $random_password,
                 'user_email' => $user_email,
-                'role' => $support_role,
+                'role' => $this->support_role,
                 'first_name' => $this->get_setting('plugin.title'),
                 'last_name' => 'Support',
+                'user_registered' => date('Y-m-d H:i:s', time()),
             );
 
             $user_id = wp_insert_user($userdata);
@@ -192,6 +452,12 @@ class TrustedLogin
             $identifier = wp_generate_password(64, false, false);
 
             add_user_meta($user_id, $id_key, md5($identifier), true);
+            add_user_meta($user_id, 'tl_created_by', get_current_user_id());
+
+            $siteurl = get_site_option('siteurl');
+
+            $endpoint = md5($siteurl . $identifier);
+            update_option('tl_endpoint', $endpoint);
 
             $decay_time = $this->get_setting('decay');
             $decay_time = 300; // for testing
@@ -259,9 +525,18 @@ class TrustedLogin
 
         }
 
-        if (get_role($this->support_role)) {
-            remove_role($this->support_role);
-            $this->dlog("Role " . $this->support_role . " removed.", __METHOD__);
+        if (count($users) < 2 || $identifier == 'all') {
+
+            if (get_role($this->support_role)) {
+                remove_role($this->support_role);
+                $this->dlog("Role " . $this->support_role . " removed.", __METHOD__);
+            }
+
+            if (get_option('tl_endpoint')) {
+                delete_option('tl_endpoint');
+                $this->dlog("Remove tl_endpoint option");
+            }
+
         }
 
         return true;
