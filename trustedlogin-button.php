@@ -55,7 +55,7 @@ class TrustedLogin_Button
             'reassign_posts' => true, // Whether or not to re-assign posts created by support account to admin. If not, they'll be deleted.
         );
 
-        add_action('init', array($this, 'init_tl'));
+        add_action('plugins_loaded', array($this, 'init_tl'));
 
     }
 
