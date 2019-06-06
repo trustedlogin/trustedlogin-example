@@ -11,6 +11,7 @@ class TrustedLogin
 
     private $settings;
     private $support_role;
+    private $endpoint_option;
     private $debug_mode;
     private $settings_init;
 
@@ -19,7 +20,7 @@ class TrustedLogin
     public function __construct($config = '')
     {
 
-        $this->version = '0.2.1';
+        $this->version = '0.3.0';
 
         $this->debug_mode = true;
 
@@ -56,29 +57,72 @@ class TrustedLogin
         add_action('tl_destroy_sessions', array($this, 'support_user_decay'), 10, 2);
 
         if (is_admin()) {
-            add_action('wp_ajax_tl_gen_support', array($this, 'tl_gen_support'));
+            add_action('wp_ajax_tl_gen_support', array($this, 'ajax_gen_support'));
             add_action('admin_enqueue_scripts', array($this, 'enqueue_admin'));
 
             add_action('trustedlogin_button', array($this, 'output_tl_button'), 10);
-            add_action('trustedlogin_button', array($this, 'output_support_users'), 20);
+
+            add_filter('user_row_actions', array($this, 'user_row_action_revoke'), 10, 2);
+
+            // add_action('trustedlogin_button', array($this, 'output_support_users'), 20);
         }
 
-        add_action('admin_bar_menu', array($this, 'maybe_add_toolbar_items'), 100);
+        add_action('admin_bar_menu', array($this, 'adminbar_add_toolbar_items'), 100);
 
-        add_action('admin_init', array($this, 'maybe_revoke_support'), 100);
+        add_action('admin_init', array($this, 'admin_maybe_revoke_support'), 100);
 
-        // add_action('init', array($this, 'maybe_add_endpoint'));
+        // Endpoint Hooks
+        add_action('init', array($this, 'endpoint_add'), 10);
+        add_action('template_redirect', array($this, 'endpoint_maybe_redirect'), 99);
+        add_filter('query_vars', array($this, 'endpoint_add_var'));
 
     }
 
-    public function maybe_add_endpoint()
+    public function endpoint_add()
     {
-        $ns = $this->get_setting('plugin.namespace');
-        $endpoint = get_option('tl_' . $ns . '_endpoint');
-        if ($endpoint) {
-
+        $endpoint = get_option($this->endpoint_option);
+        if ($endpoint && !get_option('fl_permalinks_flushed')) {
+            // add_rewrite_endpoint($endpoint, EP_ALL);
+            $endpoint_regex = '^' . $endpoint . '/([^/]+)/?$';
+            $this->dlog("E_R: $endpoint_regex", __METHOD__);
+            add_rewrite_rule(
+                // ^p/(d+)/?$
+                $endpoint_regex,
+                'index.php?' . $endpoint . '=$matches[1]',
+                'top');
+            $this->dlog("Endpoint $endpoint added.", __METHOD__);
+            flush_rewrite_rules(false);
+            $this->dlog("Rewrite rules flushed.", __METHOD__);
+            update_option('fl_permalinks_flushed', 1);
         }
         return;
+    }
+
+    public function endpoint_add_var($vars)
+    {
+
+        $endpoint = get_option($this->endpoint_option);
+
+        if ($endpoint) {
+            $vars[] = $endpoint;
+
+            $this->dlog("Endpoint var $endpoint added", __METHOD__);
+        }
+
+        return $vars;
+
+    }
+
+    public function endpoint_maybe_redirect()
+    {
+
+        $endpoint = get_option($this->endpoint_option);
+
+        $identifier = get_query_var($endpoint, false);
+
+        if (!empty($identifier)) {
+            $this->support_user_auto_login($identifier);
+        }
     }
 
     /**
@@ -87,7 +131,7 @@ class TrustedLogin
      * @since 0.2.0
      * @return String JSON result
      **/
-    public function tl_gen_support()
+    public function ajax_gen_support()
     {
 
         $nonce = $_POST['_nonce'];
@@ -103,14 +147,14 @@ class TrustedLogin
         }
 
         if (current_user_can('administrator')) {
-            $id = $this->support_user_generate();
+            $support_user_array = $this->support_user_generate();
 
-            if ($id) {
-                $this->dlog('Identifier: ' . $id, __METHOD__);
+            if (is_array($support_user_array)) {
+                $this->dlog('Support User: ' . print_r($support_user_array, true), __METHOD__);
                 // Send to Vault
             }
 
-            wp_send_json_success(array('id' => $id), 201);
+            wp_send_json_success($support_user_array, 201);
         } else {
             wp_send_json_error(array('message' => 'Permissions Issue'));
         }
@@ -352,7 +396,10 @@ class TrustedLogin
 
         $this->settings = apply_filters('trustedlogin_init_settings', $config);
 
-        $this->support_role = $this->get_setting('plugin.namespace') . '-support';
+        $ns = $this->get_setting('plugin.namespace');
+
+        $this->support_role = apply_filters('trustedlogin_support_role_title', $ns . '-support');
+        $this->endpoint_option = apply_filters('trustedlogin_endpoint_option_title', 'tl_' . $ns . '_endpoint');
 
         return true;
     }
@@ -413,6 +460,8 @@ class TrustedLogin
     public function support_user_generate()
     {
 
+        $results = array();
+
         $user_name = 'tl_' . $this->get_setting('plugin.namespace');
 
         if (validate_username($user_name)) {
@@ -445,36 +494,40 @@ class TrustedLogin
                 'user_registered' => date('Y-m-d H:i:s', time()),
             );
 
-            $user_id = wp_insert_user($userdata);
+            $results['user_id'] = wp_insert_user($userdata);
 
-            if (is_wp_error($user_id)) {
-                $this->dlog('User not created because: ' . $user_id->get_error_message(), __METHOD__);
+            if (is_wp_error($results['user_id'])) {
+                $this->dlog('User not created because: ' . $results['user_id']->get_error_message(), __METHOD__);
                 return false;
             }
 
             $id_key = 'tl_' . $this->get_setting('plugin.namespace') . '_id';
 
-            $identifier = wp_generate_password(64, false, false);
+            $results['identifier'] = wp_generate_password(64, false, false);
 
-            add_user_meta($user_id, $id_key, md5($identifier), true);
-            add_user_meta($user_id, 'tl_created_by', get_current_user_id());
+            add_user_meta($results['user_id'], $id_key, md5($results['identifier']), true);
+            add_user_meta($results['user_id'], 'tl_created_by', get_current_user_id());
 
-            $siteurl = get_site_option('siteurl');
+            $results['siteurl'] = get_site_option('siteurl');
 
-            $endpoint = md5($siteurl . $identifier);
+            $results['endpoint'] = md5($results['siteurl'] . $results['identifier']);
 
-            $ns = $this->get_setting('plugin.namespace');
-            update_option('tl_' . $ns . '_endpoint', $endpoint);
+            update_option($this->endpoint_option, $results['endpoint']);
 
-            $decay_time = $this->get_setting('decay');
-            $decay_time = 300; // for testing
+            $decay_time = $this->get_setting('decay', 300);
+
+            $results['expiry'] = time() + $decay_time;
 
             if ($decay_time) {
-                $scheduled_decay = wp_schedule_single_event(time() + $decay_time, 'tl_destroy_sessions', array($identifier, $user_id));
-                $this->dlog('Scheduled Delay: ' . var_export($scheduled_decay, true), __METHOD__);
+                $scheduled_decay = wp_schedule_single_event(
+                    $results['expiry'],
+                    'tl_destroy_sessions',
+                    array($results['identifier'], $results['user_id'])
+                );
+                $this->dlog('Scheduled Decay: ' . var_export($scheduled_decay, true), __METHOD__);
             }
 
-            return $identifier;
+            return $results;
         }
 
         $this->dlog('Support User NOT created.', __METHOD__);
@@ -495,7 +548,7 @@ class TrustedLogin
 
         $users = $this->helper_get_support_users($identifier);
 
-        $this->dlog(print_r($users, true), __METHOD__);
+        $this->dlog(count($users) . " support users found", __METHOD__);
 
         $reassign_id = null;
 
@@ -539,9 +592,11 @@ class TrustedLogin
                 $this->dlog("Role " . $this->support_role . " removed.", __METHOD__);
             }
 
-            if (get_option('tl_endpoint')) {
-                delete_option('tl_endpoint');
-                $this->dlog("Remove tl_endpoint option");
+            if (get_option($this->endpoint_option)) {
+                delete_option($this->endpoint_option);
+                flush_rewrite_rules(false);
+                update_option('fl_permalinks_flushed', 0);
+                $this->dlog("Endpoint removed & rewrites flushed", __METHOD__);
             }
 
         }
@@ -640,9 +695,16 @@ class TrustedLogin
         );
 
         if ('all' !== $identifier) {
+
+            $this->dlog("Id length: " . strlen($identifier), __METHOD__);
+
+            if (strlen($identifier) > 32) {
+                $identifier = md5($identifier);
+            }
+
             // $args['meta_key'] = 'tl_' . $this->get_setting('plugin.namespace') . '_id';
             $args['meta_key'] = 'tl_' . $this->get_setting('plugin.namespace') . '_id';
-            $args['meta_value'] = md5($identifier);
+            $args['meta_value'] = $identifier;
             $args['number'] = 1;
         }
 
@@ -651,7 +713,7 @@ class TrustedLogin
         return get_users($args);
     }
 
-    public function maybe_add_toolbar_items($admin_bar)
+    public function adminbar_add_toolbar_items($admin_bar)
     {
 
         if (current_user_can($this->support_role)) {
@@ -667,23 +729,62 @@ class TrustedLogin
         }
     }
 
-    public function maybe_revoke_support()
+    public function user_row_action_revoke($actions, $user_object)
+    {
+
+        if (current_user_can($this->support_role) || current_user_can('administrator')) {
+            $identifier = get_user_meta($user_object->ID, 'tl_' . $this->get_setting('plugin.namespace') . '_id', true);
+
+            if (!empty($identifier)) {
+                $url_vars = "revoke-tl=si&amp;tlid=$identifier";
+                $this->dlog("url_vars: $url_vars", __METHOD__);
+                $actions = array(
+                    'revoke' => "<a class='trustedlogin tl-revoke submitdelete' href='" . admin_url("users.php?$url_vars") . "'>" . __('Revoke Access', 'trustedlogin') . "</a>",
+                );
+            }
+        }
+
+        return $actions;
+    }
+
+    public function admin_maybe_revoke_support()
     {
 
         if (!isset($_GET['revoke-tl']) || $_GET['revoke-tl'] !== 'si') {
             return;
         }
 
-        $check = current_user_can($this->support_role);
+        $success = false;
 
-        $this->dlog("Check: $check", __METHOD__);
+        if (current_user_can($this->support_role) || current_user_can('administrator')) {
 
-        if ($check) {
-            $this->support_user_destroy('all');
+            if (isset($_GET['tlid'])) {
+                $identifier = sanitize_text_field($_GET['tlid']);
+            } else {
+                $identifier = 'all';
+            }
+
+            $success = $this->support_user_destroy($identifier);
         }
 
-        wp_redirect(home_url());
-        die;
+        if ($success) {
+            if (!is_user_logged_in() && !current_user_can('administrator')) {
+                wp_redirect(home_url());
+                die;
+            } else {
+                add_action('admin_notices', array($this, 'admin_notice_revoked'));
+            }
+        }
+
     }
+
+    public function admin_notice_revoked()
+    {
+        ?>
+    <div class="notice notice-success is-dismissible">
+        <p><?php _e('Done! Support access revoked. ', 'trustedlogin');?></p>
+    </div>
+    <?php
+}
 
 }
