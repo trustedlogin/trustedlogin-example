@@ -216,6 +216,10 @@ class TrustedLogin
     public function output_tl_button($print = true)
     {
 
+        if (!current_user_can('administrator')) {
+            return;
+        }
+
         if (empty($print)) {
             $print = true;
         }
