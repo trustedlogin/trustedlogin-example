@@ -41,7 +41,11 @@ class TrustedLogin_Button
                 'cap_name' => 'reason for requesting', // Key = capability/role. Value = Text describing why it's needed.
                  **/
             ),
-            'server' => '...', //  Endpoint for pinging the encrypted envelope to.
+            'vault' => array(
+                'server' => 'https://vault.trustedlogin.io:8200', //
+                'pkey' => '...', // Plugin's Public Key for getting write access to vault
+            ),
+            'notification_uri' => '...', //  Endpoint for pinging the encrypted envelope to.
             'auth' => array(
                 'api_key' => '...', // Public key for encrypting the securedKey
             ),
