@@ -55,6 +55,7 @@ class TrustedLogin_Button
                 'title' => 'GravityView',
                 'email' => 'support@gravityview.com',
                 'website' => 'https://gravityview.com',
+                'support_uri' => 'https://gravityview.com/support', // Backup to redirect users if TL is down/etc
             ),
             'reassign_posts' => true, // Whether or not to re-assign posts created by support account to admin. If not, they'll be deleted.
         );
