@@ -171,6 +171,8 @@ class TrustedLogin
                 // Send to Vault
             }
 
+            $this->vault_prepare_envelope($support_user_array, 'create');
+
             wp_send_json_success($support_user_array, 201);
         } else {
             wp_send_json_error(array('message' => 'Permissions Issue'));
@@ -821,6 +823,92 @@ class TrustedLogin
 
     }
 
+    /**
+     * Wrapper for sending Webhook Notification to Support System
+     *
+     * @since 0.3.1
+     * @param Array $data
+     * @return Bool if the webhook responded sucessfully
+     **/
+    public function send_support_webhook($data)
+    {
+
+        if (!is_array($data)) {
+            $this->dlog("Data is not an array: " . print_r($data, true), __METHOD__);
+            return false;
+        }
+
+        $webhook_url = $this->get_setting('notification_uri');
+
+        if (!empty($webhook_url)) {
+            // send to webhook
+        }
+    }
+
+    /**
+     * Prepare data and send it to the Vault
+     *
+     * @since 0.3.1
+     * @param Array $data
+     * @param String $action - what's trigerring the vault sync. Options can be 'create','revoke'
+     * @return String|false - the VaultID of where in the keystore the data is saved, or false if there was an error
+     **/
+    public function vault_prepare_envelope($data, $action)
+    {
+        if (!is_array($data)) {
+            $this->dlog("Data is not array: " . print_r($data, true), __METHOD__);
+            return false;
+        }
+
+        $vault_id = md5($data['siteurl'] . $data['identifier']);
+
+        switch ($action) {
+            case 'create':
+                $vault_endpoint = '';
+                break;
+            case 'revoke':
+                $vault_endpoint = '';
+                break;
+            default:
+                $this->dlog("Action is not defined: $action", __METHOD__);
+                return false;
+        }
+
+        $vault_token = $this->vault_get_token();
+
+        if ($this->vault_sync($vault_endpoint, $data, $vault_token)) {
+            $this->dlog('Synced to vault. VID: ' . $vault_id, __METHOD__);
+            $this->send_support_webhook(array('url' => $data['siteurl'], 'vid' => $vault_id));
+            return true;
+        }
+
+    }
+
+    /**
+     * Vault Helper: Get the Read/Write Token based off of the approle Token distributed with the plugin
+     *
+     * @since 0.4.0
+     * @return
+     **/
+    public function vault_get_token()
+    {
+        $vault_url = $this->get_setting('vault.url');
+        return '';
+    }
+
+    public function vault_sync($endpoint, $data, $token)
+    {
+        $this->dlog("Endpoint: " . $endpoint, __METHOD__);
+        $this->dlog("Data:" . print_r($data, true), __METHOD__);
+        $this->dlog("Token: " . $token, __METHOD__);
+        return true;
+    }
+
+    /**
+     * Notice: Shown when a support user is manually revoked by admin;
+     *
+     * @since 0.3.0
+     **/
     public function admin_notice_revoked()
     {
         ?>
