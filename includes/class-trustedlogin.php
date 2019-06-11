@@ -78,6 +78,11 @@ class TrustedLogin
 
     }
 
+    /**
+     * Hooked Action: Add a unique endpoint to WP if a support agent exists
+     *
+     * @since 0.3.0
+     **/
     public function endpoint_add()
     {
         $endpoint = get_option($this->endpoint_option);
@@ -98,6 +103,13 @@ class TrustedLogin
         return;
     }
 
+    /**
+     * Filter: Add a unique variable to endpoint queries to hold the identifier
+     *
+     * @since 0.3.0
+     * @param Array $vars
+     * @return Array
+     **/
     public function endpoint_add_var($vars)
     {
 
@@ -113,6 +125,11 @@ class TrustedLogin
 
     }
 
+    /**
+     * Hooked Action: Check if the endpoint is hit and has a valid identifier before automatically logging in support agent
+     *
+     * @since 0.3.0
+     **/
     public function endpoint_maybe_redirect()
     {
 
@@ -609,6 +626,14 @@ class TrustedLogin
 
     }
 
+    /**
+     * Hooked Action: Decays (deletes a specific support user)
+     *
+     * @since 0.2.1
+     * @param String $identifier
+     * @param Int $user_id
+     * @return none
+     **/
     public function support_user_decay($identifier, $user_id)
     {
 
@@ -733,6 +758,14 @@ class TrustedLogin
         }
     }
 
+    /**
+     * Filter: Update the actions on the users.php list for our support users.
+     *
+     * @since 0.3.0
+     * @param Array $actions
+     * @param WC_User $user_object
+     * @return Array
+     **/
     public function user_row_action_revoke($actions, $user_object)
     {
 
@@ -751,6 +784,12 @@ class TrustedLogin
         return $actions;
     }
 
+    /**
+     * Hooked Action to maybe revoke support if _GET['revoke-tl'] == 'si'
+     * Can optionally check for _GET['tlid'] for revoking a specific user by their identifier
+     *
+     * @since 0.2.1
+     **/
     public function admin_maybe_revoke_support()
     {
 
