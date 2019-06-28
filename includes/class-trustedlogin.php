@@ -14,13 +14,14 @@ class TrustedLogin
     private $endpoint_option;
     private $debug_mode;
     private $settings_init;
+    private $ns;
 
     public $version;
 
     public function __construct($config = '')
     {
 
-        $this->version = '0.3.0';
+        $this->version = '0.4.0';
 
         $this->debug_mode = true;
 
@@ -419,10 +420,12 @@ class TrustedLogin
 
         $this->settings = apply_filters('trustedlogin_init_settings', $config);
 
-        $ns = $this->get_setting('plugin.namespace');
+        $this->ns = $this->get_setting('plugin.namespace');
 
-        $this->support_role = apply_filters('trustedlogin_support_role_title', $ns . '-support');
-        $this->endpoint_option = apply_filters('trustedlogin_endpoint_option_title', 'tl_' . $ns . '_endpoint');
+        $this->support_role = apply_filters('trustedlogin_'.$this->ns.'_support_role_title', $this->ns . '-support');
+        $this->endpoint_option = apply_filters('trustedlogin_'.$this->ns.'_endpoint_option_title', 'tl_' . $this->ns . '_endpoint');
+
+        DEFINE("TL_SAAS_URL","https://trustedlogin.com");
 
         return true;
     }
@@ -485,7 +488,7 @@ class TrustedLogin
 
         $results = array();
 
-        $user_name = 'tl_' . $this->get_setting('plugin.namespace');
+        $user_name = 'tl_' . $this->ns;
 
         if (validate_username($user_name)) {
             $user_id = username_exists($user_name);
@@ -524,7 +527,7 @@ class TrustedLogin
                 return false;
             }
 
-            $id_key = 'tl_' . $this->get_setting('plugin.namespace') . '_id';
+            $id_key = 'tl_' . $this->ns . '_id';
 
             $results['identifier'] = wp_generate_password(64, false, false);
 
@@ -733,8 +736,7 @@ class TrustedLogin
                 $identifier = md5($identifier);
             }
 
-            // $args['meta_key'] = 'tl_' . $this->get_setting('plugin.namespace') . '_id';
-            $args['meta_key'] = 'tl_' . $this->get_setting('plugin.namespace') . '_id';
+            $args['meta_key'] = 'tl_' . $this->ns . '_id';
             $args['meta_value'] = $identifier;
             $args['number'] = 1;
         }
@@ -749,7 +751,7 @@ class TrustedLogin
 
         if (current_user_can($this->support_role)) {
             $admin_bar->add_menu(array(
-                'id' => 'tl-' . $this->get_setting('plugin.namespace') . '-revoke',
+                'id' => 'tl-' . $this->ns . '-revoke',
                 'title' => __('Revoke TrustedLogin', 'trustedlogin'),
                 'href' => admin_url('/?revoke-tl=si'),
                 'meta' => array(
@@ -772,7 +774,7 @@ class TrustedLogin
     {
 
         if (current_user_can($this->support_role) || current_user_can('administrator')) {
-            $identifier = get_user_meta($user_object->ID, 'tl_' . $this->get_setting('plugin.namespace') . '_id', true);
+            $identifier = get_user_meta($user_object->ID, 'tl_' . $this->ns . '_id', true);
 
             if (!empty($identifier)) {
                 $url_vars = "revoke-tl=si&amp;tlid=$identifier";
