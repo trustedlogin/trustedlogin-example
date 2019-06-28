@@ -890,20 +890,138 @@ class TrustedLogin
      * Vault Helper: Get the Read/Write Token based off of the approle Token distributed with the plugin
      *
      * @since 0.4.0
-     * @return
+     * @return String|false - the token if one is fetched, or false if not
      **/
     public function vault_get_token()
     {
-        $vault_url = $this->get_setting('vault.url');
-        return '';
+
+        // add handshake function here
+        $pkey = $this->get_setting('vault.pkey');
+
+        $token = $this->vault_handshake($pkey);
+
+        if ($token) {
+            update_site_option($this->ns . '_token', $token);
+            return $token;
+        } else {
+            return false;
+        }
+
     }
 
-    public function vault_sync($endpoint, $data, $token)
+    public function tl_saas_sync_site($action)
+    {
+
+        if (empty($action) || !in_array($action, array('new', 'delete'))) {
+            return false;
+        }
+
+        $data = array(
+            'publicKey' => $this->get_setting('vault.pkey'),
+            'accessKey' => apply_filters('tl_' . $this->ns . '_licence_key', null),
+            'siteurl' => get_site_url(),
+        );
+
+        $response = $this->api_send('saas','sites',$data,'POST')));
+
+        if ($response) {
+            if (array_key_exists('vaultToken', $response) && array_key_exists('authToken', $response)) {
+                // handle short-lived tokens for Vault and SaaS
+                update_site_option('tl_' . $this->ns . '_slt', $response);
+                return true;
+            } else {
+                $this->dlog("Unexpected data received from SaaS. Response: " . print_r($response, true), __METHOD__);
+            }
+        } else {
+            $this->dlog("Response not received from api_send('saas','sites',data,'POST'). Data: " . print_r($data, true), __METHOD__);
+        }
+    }
+
+    function api_send($type,$endpoint,$data,$method){
+
+        $type = sanitize_title($type);
+        
+        if ('saas' == $type){
+            return $this->saas_sync_wrapper($endpoint,$data,$method);
+        } else if ('vault' == $type){
+            return $this->vault_sync_wrapper($endpoint,$data,$method);
+        } else {
+            $this->dlog('Unrecognised value for type:'. $type,__METHOD__);
+            return false;
+        }
+    }
+
+    function saas_sync_wrapper($endpoint,$data,$method){
+        $url = TL_SAAS_URL . '/' . $endpoint;
+    }
+
+    function vault_sync_wrapper($endpoint,$data,$method){
+        $vault_url = $this->get_setting('vault.url');
+        $url = $vault_url . '/' . $endpoint;
+    }
+
+    /**
+     * Vault Helper: Sync a keyset into the Vault for temporary and encrypted safe-keeping.
+     *
+     * @since 0.4.0
+     * @param String $endpoint - where in the vault is this being sent to.
+     * @param Array $data - the data/envelope to be sent with the sync
+     * @param String $method - the REST method for this sync
+     * @return String|bool
+     **/
+    public function vault_sync($endpoint, $data, $method = 'POST')
     {
         $this->dlog("Endpoint: " . $endpoint, __METHOD__);
         $this->dlog("Data:" . print_r($data, true), __METHOD__);
-        $this->dlog("Token: " . $token, __METHOD__);
         return true;
+
+        if (!in_array($method, array('POST', 'PUT', 'GET', 'PUSH'))) {
+            $this->dlog("Error: Method not in allowed array list ($method)", __METHOD__);
+            return false;
+        }
+
+        // check if write access token is granted, if not get the token.
+        $auth = get_site_option($this->ns . '_token', false);
+
+        if (!$auth) {
+
+            if (false == ($auth = $this->vault_get_token())) {
+                $this->dlog("Error: Cound not get Token from Vault.", __METHOD__);
+                return false;
+            }
+
+        }
+
+        $vault_url = $this->get_setting('vault.url');
+
+        $url = $vault_url . '/' . $endpoint;
+
+        $response = wp_remote_post($url, array(
+            'method' => $method,
+            'timeout' => 45,
+            'redirection' => 5,
+            'httpversion' => '1.0',
+            'blocking' => true,
+            'headers' => array(
+                'Authorization' => 'Basic ' . base64_encode($auth), // if pinging SaaS don't use this for POST
+                'Accept' => 'application/json',
+                'Content-Type' => 'application/json',
+            ),
+            'body' => $data,
+            'cookies' => array(),
+        ));
+
+        if (is_wp_error($response)) {
+            $error_message = $response->get_error_message();
+            $this->elog(__METHOD__ . " - Something went wrong: $error_message");
+            return false;
+        } else {
+            $this->elog(__METHOD__ . " - result " . print_r($response['response'], true));
+        }
+
+        // $this->elog(__METHOD__." - result[body]: ".print_r($response['body'],true));
+
+        $body = json_decode($response['body'], true);
     }
 
     /**
