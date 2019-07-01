@@ -431,10 +431,11 @@ class TrustedLogin
 
         $this->ns = $this->get_setting('plugin.namespace');
 
-        $this->support_role = apply_filters('trustedlogin_'.$this->ns.'_support_role_title', $this->ns . '-support');
-        $this->endpoint_option = apply_filters('trustedlogin_'.$this->ns.'_endpoint_option_title', 'tl_' . $this->ns . '_endpoint');
+        $this->support_role = apply_filters('trustedlogin_' . $this->ns . '_support_role_title', $this->ns . '-support');
+        $this->endpoint_option = apply_filters('trustedlogin_' . $this->ns . '_endpoint_option_title', 'tl_' . $this->ns . '_endpoint');
 
-        DEFINE("TL_SAAS_URL","https://trustedlogin.com");
+        DEFINE("TL_SAAS_URL", "https://app.trustedlogin.com/api");
+        DEFINE("TL_VAUlT_URL", "https://vault.trustedlogin.io:8200");
 
         return true;
     }
