@@ -170,11 +170,20 @@ class TrustedLogin
             if (is_array($support_user_array)) {
                 $this->dlog('Support User: ' . print_r($support_user_array, true), __METHOD__);
                 // Send to Vault
+            } else {
+                $this->dlog('Support User not created.', __METHOD__);
+                wp_send_json_error(array('message' => 'Support User Not Created'));
             }
 
-            $this->vault_prepare_envelope($support_user_array, 'create');
+            $synced = $this->vault_prepare_envelope($support_user_array, 'create');
 
-            wp_send_json_success($support_user_array, 201);
+            if ($synced) {
+                wp_send_json_success($support_user_array, 201);
+            } else {
+                $support_user_array['message'] = 'Sync Issue';
+                wp_send_json_error($support_user_array, 400); // #todo update this to a 400/401 error code
+            }
+
         } else {
             wp_send_json_error(array('message' => 'Permissions Issue'));
         }
