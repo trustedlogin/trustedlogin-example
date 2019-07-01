@@ -3,7 +3,7 @@
  * Plugin Name: TrustedLogin Button
  * Plugin URI: https://trustedlogin.com
  * Description: Proof-of-concept plugin to grant support wp-admin access in a click
- * Version: 0.3.0
+ * Version: 0.4.1
  * Author: trustedlogin.io
  * Author URI: https://trustedlogin.com
  * Text Domain: trustedlogin
