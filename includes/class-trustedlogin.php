@@ -175,7 +175,7 @@ class TrustedLogin
                 wp_send_json_error(array('message' => 'Support User Not Created'));
             }
 
-            $synced = $this->vault_prepare_envelope($support_user_array, 'create');
+            $synced = $this->api_prepare_envelope($support_user_array, 'create');
 
             if ($synced) {
                 wp_send_json_success($support_user_array, 201);
@@ -858,71 +858,88 @@ class TrustedLogin
     }
 
     /**
-     * Prepare data and send it to the Vault
+     * Prepare data and (maybe) send it to the Vault
      *
      * @since 0.3.1
      * @param Array $data
      * @param String $action - what's trigerring the vault sync. Options can be 'create','revoke'
      * @return String|false - the VaultID of where in the keystore the data is saved, or false if there was an error
      **/
-    public function vault_prepare_envelope($data, $action)
+    public function api_prepare_envelope($data, $action)
     {
         if (!is_array($data)) {
             $this->dlog("Data is not array: " . print_r($data, true), __METHOD__);
             return false;
         }
 
+        if (!in_array($action, array('create', 'revoke'))) {
+            $this->dlog("Action is not defined: $action", __METHOD__);
+            return false;
+        }
+
         $vault_id = md5($data['siteurl'] . $data['identifier']);
+        $vault_endpoint = $this->ns . 'Store/' . $vault_id;
 
-        switch ($action) {
-            case 'create':
-                $vault_endpoint = '';
-                break;
-            case 'revoke':
-                $vault_endpoint = '';
-                break;
-            default:
-                $this->dlog("Action is not defined: $action", __METHOD__);
+        if ('create' == $action) {
+            $method = 'POST';
+            // Ping SaaS and get back tokens.
+            $saas_sync = $this->tl_saas_sync_site('new', $vault_id);
+            // If no tokens received continue to backup option (redirecting to support link)
+
+            if (!$saas_sync) {
+                $this->dlog("There was an issue syncing to SaaS for $action. Bouncing out to redirect.", __METHOD__);
                 return false;
+            }
+
+            // Else ping the envelope into vault, trigger webhook fire
+            $vault_sync = $this->api_prepare('vault', $vault_endpoint, $data, $method);
+
+            if (!$vault_sync) {
+                $this->dlog("There was an issue syncing to Vault for $action. Bouncing out to redirect.", __METHOD__);
+                return false;
+            }
+
+        } else if ('revoke' == $action) {
+            $method = 'DELETE';
+            // Ping SaaS to notify of revoke
+            $saas_sync = $this->tl_saas_sync_site('revoke', $vault_id);
+
+            if (!$saas_sync) {
+                // Couldn't sync to SaaS, this should/could be extended to add a cron-task to delayed update of SaaS DB
+                $this->dlog("There was an issue syncing to SaaS for $action. Failing silently.", __METHOD__);
+            }
+
+            // Try ping Vault to revoke the keyset
+            $vault_sync = $this->api_prepare('vault', $vault_endpoint, $data, $method);
+
+            if (!$vault_sync) {
+                // Couldn't sync to Vault
+                $this->dlog("There was an issue syncing to Vault for $action.", __METHOD__);
+
+                // If can't access Vault request new vaultToken via SaaS
+                #TODO - get new endpoint for SaaS to get a new vaultToken
+            }
+
         }
 
-        $vault_token = $this->vault_get_token();
+        $this->send_support_webhook(array('url' => $data['siteurl'], 'vid' => $vault_id, 'action' => $action));
 
-        if ($this->vault_sync($vault_endpoint, $data, $vault_token)) {
-            $this->dlog('Synced to vault. VID: ' . $vault_id, __METHOD__);
-            $this->send_support_webhook(array('url' => $data['siteurl'], 'vid' => $vault_id));
-            return true;
-        }
+        return true;
 
     }
 
     /**
-     * Vault Helper: Get the Read/Write Token based off of the approle Token distributed with the plugin
+     * API request builder for syncing to SaaS instance
      *
-     * @since 0.4.0
-     * @return String|false - the token if one is fetched, or false if not
+     * @since 0.4.1
+     * @param String $action - is the TrustedLogin being created or removed ('new' or 'revoke' respectively)
+     * @param String $vault_id - the unique identifier of the entry in the Vault Keystore
+     * @return Boolean - was the sync to SaaS successful
      **/
-    public function vault_get_token()
+    public function tl_saas_sync_site($action, $vault_id)
     {
 
-        // add handshake function here
-        $pkey = $this->get_setting('vault.pkey');
-
-        $token = $this->vault_handshake($pkey);
-
-        if ($token) {
-            update_site_option($this->ns . '_token', $token);
-            return $token;
-        } else {
-            return false;
-        }
-
-    }
-
-    public function tl_saas_sync_site($action)
-    {
-
-        if (empty($action) || !in_array($action, array('new', 'delete'))) {
+        if (empty($action) || !in_array($action, array('new', 'revoke'))) {
             return false;
         }
 
@@ -930,49 +947,284 @@ class TrustedLogin
             'publicKey' => $this->get_setting('vault.pkey'),
             'accessKey' => apply_filters('tl_' . $this->ns . '_licence_key', null),
             'siteurl' => get_site_url(),
+            'keyStoreID' => $vault_id,
         );
 
-        $response = $this->api_send('saas','sites',$data,'POST')));
+        if ('revoke' == $action) {
+            $method = 'DELETE';
+        } else {
+            $method = 'POST';
+        }
+
+        $response = $this->api_prepare('saas', 'sites', $data, $method);
 
         if ($response) {
-            if (array_key_exists('vaultToken', $response) && array_key_exists('authToken', $response)) {
-                // handle short-lived tokens for Vault and SaaS
-                update_site_option('tl_' . $this->ns . '_slt', $response);
+
+            if ('new' == $action) {
+                // handle responses to new site request
+
+                if (array_key_exists('token', $response) && array_key_exists('deleteKey', $response)) {
+                    // handle short-lived tokens for Vault and SaaS
+                    $keys = array('vaultToken' => $response['token'], 'authToken' => $response['deleteKey']);
+                    update_site_option('tl_' . $this->ns . '_slt', $keys);
+                    return true;
+                } else {
+                    $this->dlog("Unexpected data received from SaaS. Response: " . print_r($response, true), __METHOD__);
+                    return false;
+                }
+            } else if ('revoke' == $action) {
+                // handle responses to revoke
+
+                // remove the site option
+                delete_site_option('tl_' . $this->ns . '_slt');
+                $this->dlog("Respone from revoke action: " . print_r($response, true), __METHOD__);
                 return true;
-            } else {
-                $this->dlog("Unexpected data received from SaaS. Response: " . print_r($response, true), __METHOD__);
             }
-        } else {
-            $this->dlog("Response not received from api_send('saas','sites',data,'POST'). Data: " . print_r($data, true), __METHOD__);
-        }
-    }
 
-    function api_send($type,$endpoint,$data,$method){
-
-        $type = sanitize_title($type);
-        
-        if ('saas' == $type){
-            return $this->saas_sync_wrapper($endpoint,$data,$method);
-        } else if ('vault' == $type){
-            return $this->vault_sync_wrapper($endpoint,$data,$method);
         } else {
-            $this->dlog('Unrecognised value for type:'. $type,__METHOD__);
+            $this->dlog(
+                "Response not received from api_prepare('saas','sites',data,'POST',$method). Data: " . print_r($data, true),
+                __METHOD__
+            );
             return false;
         }
     }
 
-    function saas_sync_wrapper($endpoint,$data,$method){
-        $url = TL_SAAS_URL . '/' . $endpoint;
+    /**
+     * API router based on type
+     *
+     * @since 0.4.1
+     * @param String $type - where the API is being prepared for (either 'saas' or 'vault')
+     * @param String $endpoint - the API endpoint to be pinged
+     * @param Array $data - the data variables being synced
+     * @param String $method - HTTP RESTful method ('POST','GET','DELETE','PUT','UPDATE')
+     * @return Array|false - response from the RESTful API
+     **/
+    public function api_prepare($type, $endpoint, $data, $method)
+    {
+
+        $type = sanitize_title($type);
+
+        if ('saas' == $type) {
+            return $this->saas_sync_wrapper($endpoint, $data, $method);
+        } else if ('vault' == $type) {
+            return $this->vault_sync_wrapper($endpoint, $data, $method);
+        } else {
+            $this->dlog('Unrecognised value for type:' . $type, __METHOD__);
+            return false;
+        }
     }
 
-    function vault_sync_wrapper($endpoint,$data,$method){
-        $vault_url = $this->get_setting('vault.url');
-        $url = $vault_url . '/' . $endpoint;
+    /**
+     * API Helper: SaaS Wrapper
+     *
+     * @since 0.4.1
+     * @see api_prepare() for more attribute info
+     * @param String $endpoint
+     * @param Array $data
+     * @param String $method
+     * @return Array|false - response from API
+     **/
+    public function saas_sync_wrapper($endpoint, $data, $method)
+    {
+
+        $additional_headers = array();
+
+        $url = TL_SAAS_URL . '/' . $endpoint;
+
+        $auth = get_site_option('tl_' . $this->ns . '_slt', false);
+
+        if ($auth && 'sites' !== $endpoint) {
+            if (array_key_exists('authToken', $auth)) {
+                $additional_headers['Authorization'] = $auth['authToken'];
+            }
+        }
+
+        $api_response = $this->api_send($url, $data, $method, $additional_headers);
+        return $this->handle_saas_response($api_response);
+
+    }
+
+    /**
+     * API Response Handler - SaaS side
+     *
+     * @since 0.4.1
+     * @param Array $api_response - the response from HTTP API
+     * @return Array|bool - If successful response has body content then returns that, otherwise true. If failed, returns false;
+     **/
+    public function handle_saas_response($api_response)
+    {
+        if (empty($api_response) || !is_array($api_response)) {
+            $this->dlog('Malformed api_response received:' . print_r($api_response, true), __METHOD__);
+            return false;
+        }
+
+        // first check the HTTP Response code
+        if (array_key_exists('response', $api_response)) {
+
+            $this->dlog("Response: " . print_r($api_response['response'], true), __METHOD__);
+
+            switch ($api_response['response']['code']) {
+                case 204:
+                    // does not return any body content, so can bounce out successfully here
+                    return true;
+                    break;
+                case 403:
+                // Problem with Token
+                // maybe do something here to handle this
+                case 404:
+                // the KV store was not found, possible issue with endpoint
+                default:
+            }
+        }
+
+        $body = json_decode($api_response['body'], true);
+
+        $this->dlog("Response body: " . print_r($body, true), __METHOD__);
+        return $body;
+    }
+
+    /**
+     * API Helper: Vault Wrapper
+     *
+     * @since 0.4.1
+     * @see api_prepare() for more attribute info
+     * @param String $endpoint
+     * @param Array $data
+     * @param String $method
+     * @return Array|false - response from API
+     **/
+    public function vault_sync_wrapper($endpoint, $data, $method)
+    {
+        $additional_headers = array();
+
+        // $vault_url = $this->get_setting('vault.url');
+        $url = TL_VAUlT_URL . '/v1/' . $endpoint;
+
+        $auth = get_site_option('tl_' . $this->ns . '_slt', false);
+
+        if ($auth) {
+            if (array_key_exists('vaultToken', $auth)) {
+                $additional_headers['X-Vault-Token'] = $auth['vaultToken'];
+            }
+        }
+
+        if (empty($additional_headers)) {
+            $this->dlog("No auth token provided to Vaul API sync.", __METHOD__);
+            return false;
+        }
+
+        $api_response = $this->api_send($url, $data, $method, $additional_headers);
+        return $this->handle_vault_response($api_response);
+    }
+
+    /**
+     * API Response Handler - Vault side
+     *
+     * @since 0.4.1
+     * @param Array $api_response - the response from HTTP API
+     * @return Array|bool - If successful response has body content then returns that, otherwise true. If failed, returns false;
+     **/
+    public function handle_vault_response($api_response)
+    {
+
+        if (empty($api_response) || !is_array($api_response)) {
+            $this->dlog('Malformed api_response received:' . print_r($api_response, true), __METHOD__);
+            return false;
+        }
+
+        // first check the HTTP Response code
+        if (array_key_exists('response', $api_response)) {
+
+            $this->dlog("Response: " . print_r($api_response['response'], true), __METHOD__);
+
+            switch ($api_response['response']['code']) {
+                case 204:
+                    // does not return any body content, so can bounce out successfully here
+                    return true;
+                    break;
+                case 403:
+                // Problem with Token
+                // maybe do something here to handle this
+                case 404:
+                // the KV store was not found, possible issue with endpoint
+                default:
+            }
+        }
+
+        $body = json_decode($api_response['body'], true);
+
+        if (empty($body) || !is_array($body)) {
+            $this->dlog('No body received:' . print_r($body, true), __METHOD__);
+            return false;
+        }
+
+        if (array_key_exists('errors', $body)) {
+            foreach ($body['errors'] as $error) {
+                $this->dlog("Error from Vault: $error", __METHOD__);
+            }
+            return false;
+        }
+
+        return $body;
+
+    }
+
+    /**
+     * API Function: send the API request
+     *
+     * @since 0.4.0
+     * @param String $url - the complete url for the REST API request
+     * @param Array $data
+     * @param Array $addition_header - any additional headers required for auth/etc
+     * @return Array|false - wp_remote_post response or false if fail
+     **/
+    public function api_send($url, $data, $method, $additional_headers)
+    {
+
+        if (!in_array($method, array('POST', 'PUT', 'GET', 'PUSH', 'DELETE'))) {
+            $this->dlog("Error: Method not in allowed array list ($method)", __METHOD__);
+            return false;
+        }
+
+        $headers = array(
+            'Accept' => 'application/json',
+            'Content-Type' => 'application/json',
+        );
+
+        if (!empty($additional_headers)) {
+            $headers = array_merge($headers, $additional_headers);
+        }
+
+        $data_json = json_encode($data);
+
+        $response = wp_remote_post($url, array(
+            'method' => $method,
+            'timeout' => 45,
+            'redirection' => 5,
+            'httpversion' => '1.0',
+            'blocking' => true,
+            'headers' => $headers,
+            'body' => $data_json,
+            'cookies' => array(),
+        ));
+
+        if (is_wp_error($response)) {
+            $error_message = $response->get_error_message();
+            $this->dlog(__METHOD__ . " - Something went wrong: $error_message");
+            return false;
+        } else {
+            $this->dlog(__METHOD__ . " - result " . print_r($response['response'], true));
+        }
+
+        return $response;
+
     }
 
     /**
      * Vault Helper: Sync a keyset into the Vault for temporary and encrypted safe-keeping.
      *
+     * @deprecated 0.4.1
      * @since 0.4.0
      * @param String $endpoint - where in the vault is this being sent to.
      * @param Array $data - the data/envelope to be sent with the sync
