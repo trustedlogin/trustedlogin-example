@@ -1127,7 +1127,7 @@ class TrustedLogin
         }
 
         if (empty($additional_headers)) {
-            $this->dlog("No auth token provided to Vaul API sync.", __METHOD__);
+            $this->dlog("No auth token provided to Vault API sync.", __METHOD__);
             return false;
         }
 
