@@ -41,10 +41,13 @@ class TrustedLogin_Button
                 'cap_name' => 'reason for requesting', // Key = capability/role. Value = Text describing why it's needed.
                  **/
             ),
+            /**
+             * @deprecated v0.4.1 - moved to defined variable in class-trustedlogin.php
+             *
             'vault' => array(
-                'server' => 'https://vault.trustedlogin.io:8200', //
-                'pkey' => '...', // Plugin's Public Key for getting write access to vault
-            ),
+            'server' => '', //
+            'pkey' => '...', // Plugin's Public Key for getting write access to vault
+            ), */
             'notification_uri' => '...', //  Endpoint for pinging the encrypted envelope to.
             'auth' => array(
                 'api_key' => '...', // Public key for encrypting the securedKey
