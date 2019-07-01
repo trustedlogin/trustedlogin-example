@@ -637,6 +637,23 @@ class TrustedLogin
 
         }
 
+        $siteurl = get_site_url();
+        $vault_id = md5($siteurl . $identifier);
+        if (false !== ($auth = get_site_option('tl_' . $this->ns . '_slt', false))) {
+            $deleteKey = $auth['authToken'];
+        } else {
+            $deleteKey = '';
+        }
+
+        $data = array('identifier' => $vault_id, 'siteurl' => $siteurl, 'deletekey' => $deleteKey);
+        $synced = $this->api_prepare_envelope($data, 'revoke');
+
+        if ($synced) {
+            $this->dlog("Revoked status synced to SaaS & Vault");
+        } else {
+            $this->dlog("Revoked status NOT synced to SaaS & Vault");
+        }
+
         return true;
 
     }
