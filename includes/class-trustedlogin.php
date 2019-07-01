@@ -55,7 +55,7 @@ class TrustedLogin
     public function init_hooks()
     {
 
-        add_action('tl_destroy_sessions', array($this, 'support_user_decay'), 10, 2);
+        add_action('tl_destroy_sessions', array($this, 'support_user_decay'), 10, 1);
 
         if (is_admin()) {
             add_action('wp_ajax_tl_gen_support', array($this, 'ajax_gen_support'));
@@ -558,7 +558,7 @@ class TrustedLogin
                 $scheduled_decay = wp_schedule_single_event(
                     $results['expiry'],
                     'tl_destroy_sessions',
-                    array($results['identifier'], $results['user_id'])
+                    array($results['identifier'])
                 );
                 $this->dlog('Scheduled Decay: ' . var_export($scheduled_decay, true), __METHOD__);
             }
