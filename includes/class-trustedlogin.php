@@ -961,7 +961,7 @@ class TrustedLogin
         }
 
         $data = array(
-            'publicKey' => $this->get_setting('vault.pkey'),
+            'publicKey' => $this->get_setting('auth.api_key'),
             'accessKey' => apply_filters('tl_' . $this->ns . '_licence_key', null),
             'siteurl' => get_site_url(),
             'keyStoreID' => $vault_id,
@@ -969,11 +969,13 @@ class TrustedLogin
 
         if ('revoke' == $action) {
             $method = 'DELETE';
+            $endpoint = 'sites/' . $vault_id;
         } else {
             $method = 'POST';
+            $endpoint = 'sites';
         }
 
-        $response = $this->api_prepare('saas', 'sites', $data, $method);
+        $response = $this->api_prepare('saas', $endpoint, $data, $method);
 
         if ($response) {
 
