@@ -298,11 +298,40 @@ class TrustedLogin
         wp_enqueue_style('jquery-confirm');
         wp_enqueue_style('trustedlogin');
 
-        $tl_obj = $this->output_tl_alert();
+        $tl_obj = array();
 
         $tl_obj['plugin'] = $this->get_setting('plugin');
         $tl_obj['ajaxurl'] = admin_url('admin-ajax.php');
         $tl_obj['_n'] = wp_create_nonce('tl_nonce-' . get_current_user_id());
+
+        $initial_alert_translations = $this->output_tl_alert();
+
+        $secondary_alert_translations = array(
+            'noSyncTitle' => sprintf(__('Error syncing Support User to %1$s', 'trustedlogin'), $this->get_setting('plugin.title')),
+            'noSyncContent' => '<p>' . sprintf(
+                __('Unfortunately, the Support User details could not be sent to %1$s automatically.', 'trustedlogin'),
+                $this->get_setting('plugin.title')
+            ) . '</p><p>' .
+            sprintf(
+                __('Please <a href="%1$s" target="_blank">click here</a> to go to %2$s Support Site', 'trustedlogin'),
+                $this->get_setting('plugin.support_uri'),
+                $this->get_setting('plugin.title')
+            ) . '</p>',
+            'noSyncProTip' => sprintf(
+                __('Pro-tip: By sharing the URL below with %1$s supprt will give them temporary support access', 'trustedlogin'),
+                $this->get_setting('plugin.title')
+            ),
+            'noSyncGoButton' => sprintf(__('Go to %1$s support site', 'trustedlogin'), $this->get_setting('plugin.title')),
+            'noSyncCancelButton' => __('Close', 'trustedlogin'),
+            'syncedTitle' => __('Support access granted', 'trustedlogin'),
+            'syncedContent' => sprintf(__('A temporary support user has been created, and sent to %1$s Support.'), $this->get_setting('plugin_title')),
+            'cancelTitle' => __('Action Cancelled', 'trustedlogin'),
+            'cancelContent' => sprintf(__('A support account for %1$s has NOT been created.'), $this->get_setting('plugin_title')),
+            'failTitle' => __('Support Access NOT Granted', 'trustedlogin'),
+            'failContent' => __('Got this from the server: ', 'trustedlogin'),
+        );
+
+        $tl_obj['lang'] = array_merge($initial_alert_translations, $secondary_alert_translations);
 
         wp_localize_script('trustedlogin', 'tl_obj', $tl_obj);
 
