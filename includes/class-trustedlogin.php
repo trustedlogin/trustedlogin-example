@@ -56,7 +56,7 @@ class TrustedLogin
     public function __construct($config = '')
     {
 
-        $this->version = '0.4.0';
+        $this->version = '0.4.2';
 
         /**
          * Filter: Whether debug logging is enabled in trustedlogin drop-in
