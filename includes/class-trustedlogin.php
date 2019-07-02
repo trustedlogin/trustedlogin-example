@@ -64,7 +64,7 @@ class TrustedLogin
          * @since 0.4.2
          * @param Boolean
          **/
-        $this->debug_mode = apply_filter('trustedlogin_debug_enabled', true);
+        $this->debug_mode = apply_filters('trustedlogin_debug_enabled', true);
 
         $this->settings_init = false;
 
