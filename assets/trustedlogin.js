@@ -45,6 +45,26 @@
             });
         }
 
+        function outputErrorAlert(response,tl_obj){
+
+            if (response.status == 409){
+                var errorTitle = tl_obj.lang.fail409Title;
+                var errorContent = tl_obj.lang.fail409Content;
+            } else {
+                var errorTitle = tl_obj.lang.failTitle;
+                var errorContent = tl_obj.lang.failContent + response;
+            }
+            $.alert({
+                icon: 'fa fa-times-circle',
+                theme: 'material',
+                // title: 'Support Access NOT Granted',
+                title: errorTitle,
+                type: 'red',
+                // content: 'Got this from the server: ' + JSON.stringify(response)
+                content: errorContent
+            });
+        }
+
         $('body').on('click','#trustedlogin-grant',function(e){
             $.confirm({
                 title: tl_obj.lang.intro,
@@ -74,22 +94,17 @@
                                     // content: 'DevNote: The following URL will be used to autologin support <a href="'+autoLoginURI+'">Support URL</a> '
                                     content: tl_obj.lang.syncedContent
                                 });
-                            } else if (!response.success && response.data.message =='Sync Issue') {
-                                offerRedirectToSupport(response,tl_obj);
                             } else {
-                                $.alert({
-                                    icon: 'fa fa-times-circle',
-                                    theme: 'material',
-                                    // title: 'Support Access NOT Granted',
-                                    title: tl_obj.lang.failTitle,
-                                    type: 'red',
-                                    // content: 'Got this from the server: ' + JSON.stringify(response)
-                                    content: tl_obj.lang.failContent + JSON.stringify(response)
-                                });
+                                outputErrorAlert(response,tl_obj);
                             }
                             
                         }).fail(function(response) {
-                            offerRedirectToSupport(response.responseJSON,tl_obj);
+                            if (response.status == 503){
+                                // problem syncing to either SaaS or Vault
+                                offerRedirectToSupport(response.responseJSON,tl_obj);
+                            } else {
+                                outputErrorAlert(response,tl_obj);
+                            }
                         });
                     },
                     cancel: function () {

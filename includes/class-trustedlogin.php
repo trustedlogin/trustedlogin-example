@@ -213,7 +213,7 @@ class TrustedLogin
                 // Send to Vault
             } else {
                 $this->dlog('Support User not created.', __METHOD__);
-                wp_send_json_error(array('message' => 'Support User Not Created'));
+                wp_send_json_error(array('message' => 'Support User already exists'), 409);
             }
 
             $synced = $this->api_prepare_envelope($support_user_array, 'create');
@@ -222,7 +222,7 @@ class TrustedLogin
                 wp_send_json_success($support_user_array, 201);
             } else {
                 $support_user_array['message'] = 'Sync Issue';
-                wp_send_json_error($support_user_array, 400); // #todo update this to a 400/401 error code
+                wp_send_json_error($support_user_array, 503);
             }
 
         } else {
@@ -306,30 +306,7 @@ class TrustedLogin
 
         $initial_alert_translations = $this->output_tl_alert();
 
-        $secondary_alert_translations = array(
-            'noSyncTitle' => sprintf(__('Error syncing Support User to %1$s', 'trustedlogin'), $this->get_setting('plugin.title')),
-            'noSyncContent' => '<p>' . sprintf(
-                __('Unfortunately, the Support User details could not be sent to %1$s automatically.', 'trustedlogin'),
-                $this->get_setting('plugin.title')
-            ) . '</p><p>' .
-            sprintf(
-                __('Please <a href="%1$s" target="_blank">click here</a> to go to %2$s Support Site', 'trustedlogin'),
-                $this->get_setting('plugin.support_uri'),
-                $this->get_setting('plugin.title')
-            ) . '</p>',
-            'noSyncProTip' => sprintf(
-                __('Pro-tip: By sharing the URL below with %1$s supprt will give them temporary support access', 'trustedlogin'),
-                $this->get_setting('plugin.title')
-            ),
-            'noSyncGoButton' => sprintf(__('Go to %1$s support site', 'trustedlogin'), $this->get_setting('plugin.title')),
-            'noSyncCancelButton' => __('Close', 'trustedlogin'),
-            'syncedTitle' => __('Support access granted', 'trustedlogin'),
-            'syncedContent' => sprintf(__('A temporary support user has been created, and sent to %1$s Support.'), $this->get_setting('plugin_title')),
-            'cancelTitle' => __('Action Cancelled', 'trustedlogin'),
-            'cancelContent' => sprintf(__('A support account for %1$s has NOT been created.'), $this->get_setting('plugin_title')),
-            'failTitle' => __('Support Access NOT Granted', 'trustedlogin'),
-            'failContent' => __('Got this from the server: ', 'trustedlogin'),
-        );
+        $secondary_alert_translations = $this->output_secondary_alerts();
 
         $tl_obj['lang'] = array_merge($initial_alert_translations, $secondary_alert_translations);
 
@@ -481,6 +458,75 @@ class TrustedLogin
 
         return $result;
 
+    }
+
+    /**
+     * Helper function: Build translate-able strings for alert messages
+     *
+     * @since 0.4.3
+     * @return Array of strings
+     **/
+    public function output_secondary_alerts()
+    {
+
+        $plugin_title = $this->get_setting('plugin.title');
+
+        $no_sync_content = '<p>' .
+        sprintf(
+            __('Unfortunately, the Support User details could not be sent to %1$s automatically.', 'trustedlogin'),
+            $plugin_title
+        ) . '</p><p>' .
+        sprintf(
+            wp_kses(
+                __('Please <a href="%1$s" target="_blank">click here</a> to go to %2$s Support Site', 'trustedlogin'),
+                array('a' => array('href' => array()))
+            ),
+            esc_url($this->get_setting('plugin.support_uri')),
+            $plugin_title
+        ) . '</p>';
+
+        $secondary_alert_translations = array(
+            'noSyncTitle' => sprintf(
+                __('Error syncing Support User to %1$s', 'trustedlogin'),
+                $plugin_title
+            ),
+            'noSyncContent' => $no_sync_content,
+            'noSyncProTip' => sprintf(
+                __('Pro-tip: By sharing the URL below with %1$s supprt will give them temporary support access', 'trustedlogin'),
+                $plugin_title
+            ),
+            'noSyncGoButton' => sprintf(
+                __('Go to %1$s support site', 'trustedlogin'),
+                $plugin_title
+            ),
+            'noSyncCancelButton' => __('Close', 'trustedlogin'),
+            'syncedTitle' => __('Support access granted', 'trustedlogin'),
+            'syncedContent' => sprintf(
+                __('A temporary support user has been created, and sent to %1$s Support.'),
+                $plugin_title
+            ),
+            'cancelTitle' => __('Action Cancelled', 'trustedlogin'),
+            'cancelContent' => sprintf(
+                __('A support account for %1$s has NOT been created.'),
+                $plugin_title
+            ),
+            'failTitle' => __('Support Access NOT Granted', 'trustedlogin'),
+            'failContent' => __('Got this from the server: ', 'trustedlogin'),
+            'fail409Title' => sprintf(
+                __('%1$s Support User already exists', 'trustedlogin'),
+                $plugin_title
+            ),
+            'fail409Content' => sprintf(
+                wp_kses(
+                    __('A support user for %1$s already exists. You can revoke this support access from your <a href="%2$s" target="_blank">Users list</a>.', 'trustedlogin'),
+                    array('a' => array('href' => array(), 'target' => array()))
+                ),
+                $plugin_title,
+                esc_url(admin_url('users.php?role=' . $this->support_role))
+            ),
+        );
+
+        return $secondary_alert_translations;
     }
 
     /**
