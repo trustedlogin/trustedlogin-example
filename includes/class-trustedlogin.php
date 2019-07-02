@@ -1187,7 +1187,7 @@ class TrustedLogin
             }
         }
 
-        $body = json_decode($api_response['body'], true);
+        $body = json_decode(wp_remote_retrieve_body($api_response), true);
 
         $this->dlog("Response body: " . print_r($body, true), __METHOD__);
         return $body;
@@ -1243,25 +1243,22 @@ class TrustedLogin
         }
 
         // first check the HTTP Response code
-        if (array_key_exists('response', $api_response)) {
+        $response_code = wp_remote_retrieve_response_code($api_response);
 
-            $this->dlog("Response: " . print_r($api_response['response'], true), __METHOD__);
-
-            switch ($api_response['response']['code']) {
-                case 204:
-                    // does not return any body content, so can bounce out successfully here
-                    return true;
-                    break;
-                case 403:
-                // Problem with Token
-                // maybe do something here to handle this
-                case 404:
-                // the KV store was not found, possible issue with endpoint
-                default:
-            }
+        switch ($response_code) {
+            case 204:
+                // does not return any body content, so can bounce out successfully here
+                return true;
+                break;
+            case 403:
+            // Problem with Token
+            // maybe do something here to handle this
+            case 404:
+            // the KV store was not found, possible issue with endpoint
+            default:
         }
 
-        $body = json_decode($api_response['body'], true);
+        $body = json_decode(wp_remote_retrieve_body($api_response), true);
 
         if (empty($body) || !is_array($body)) {
             $this->dlog('No body received:' . print_r($body, true), __METHOD__);
