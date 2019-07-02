@@ -9,13 +9,48 @@ class TrustedLogin
 
     use TL_Debug_Logging;
 
+    /**
+     * @var Array $settings - instance of the initialised plugin config object
+     * @since 0.1.0
+     **/
     private $settings;
+
+    /**
+     * @var String $support_role - the namespaced name of the new Role to be created for Support Agents
+     * @example '{plugin.namespace}-support'
+     * @since 0.1.0
+     **/
     private $support_role;
+
+    /**
+     * @var String $endpoint_option - the namespaced setting name for storing part of the auto-login endpoint
+     * @example 'tl_{plugin.namespace}_endpoint'
+     * @since 0.3.0
+     **/
     private $endpoint_option;
+
+    /**
+     * @var Boolean $debug_mode - whether to output debug information to a debug text file
+     * @since 0.1.0
+     **/
     private $debug_mode;
+
+    /**
+     * @var Boolean $setting_init - if the settings have been initialized from the config object
+     * @since 0.1.0
+     **/
     private $settings_init;
+
+    /**
+     * @var String $ns - plugin's namespace for use in namespacing variables and strings
+     * @since 0.4.0
+     **/
     private $ns;
 
+    /**
+     * @var String $version - the current drop-in file version
+     * @since 0.1.0
+     **/
     public $version;
 
     public function __construct($config = '')
@@ -23,7 +58,13 @@ class TrustedLogin
 
         $this->version = '0.4.0';
 
-        $this->debug_mode = true;
+        /**
+         * Filter: Whether debug logging is enabled in trustedlogin drop-in
+         *
+         * @since 0.4.2
+         * @param Boolean
+         **/
+        $this->debug_mode = apply_filter('trustedlogin_debug_enabled', true);
 
         $this->settings_init = false;
 
@@ -427,15 +468,56 @@ class TrustedLogin
             return false;
         }
 
+        /**
+         * Filter: Initilizing TrustedLogin settings
+         *
+         * @since 0.1.0
+         * @param Array $config {
+         *   @see trustedlogin-button.php for documentation of Array parameters
+         *   @todo Move the Array documentation here
+         * }
+         **/
         $this->settings = apply_filters('trustedlogin_init_settings', $config);
 
         $this->ns = $this->get_setting('plugin.namespace');
 
-        $this->support_role = apply_filters('trustedlogin_' . $this->ns . '_support_role_title', $this->ns . '-support');
-        $this->endpoint_option = apply_filters('trustedlogin_' . $this->ns . '_endpoint_option_title', 'tl_' . $this->ns . '_endpoint');
+        /**
+         * Filter: Set support_role value
+         *
+         * @since 0.2.0
+         * @param String
+         * @param TrustedLogin $this
+         **/
+        $this->support_role = apply_filters(
+            'trustedlogin_' . $this->ns . '_support_role_title',
+            $this->ns . '-support',
+            $this
+        );
 
+        /**
+         * Filter: Set endpoint setting name
+         *
+         * @since 0.3.0
+         * @param String
+         * @param TrustedLogin $this
+         **/
+        $this->endpoint_option = apply_filters(
+            'trustedlogin_' . $this->ns . '_endpoint_option_title',
+            'tl_' . $this->ns . '_endpoint',
+            $this
+        );
+
+        /**
+         * @var String TL_SAAS_URL - the API url for the TrustedLogin SaaS Platform
+         * @since 0.4.0
+         **/
         DEFINE("TL_SAAS_URL", "https://app.trustedlogin.com/api");
-        DEFINE("TL_VAUlT_URL", "https://vault.trustedlogin.io:8200");
+
+        /**
+         * @var String TL_VAULT_URL - the API url for the TrustedLogin Vault Platfomr
+         * @since 0.3.0
+         **/
+        DEFINE("TL_VAUlT_URL", "https://vault.trustedlogin.io");
 
         return true;
     }
@@ -960,9 +1042,17 @@ class TrustedLogin
             return false;
         }
 
+        /**
+         * Filter: Allow for over-riding the 'accessKey' sent to SaaS platform
+         *
+         * @since 0.4.0
+         * @param String|null
+         **/
+        $access_key = apply_filters('tl_' . $this->ns . '_licence_key', null);
+
         $data = array(
             'publicKey' => $this->get_setting('auth.api_key'),
-            'accessKey' => apply_filters('tl_' . $this->ns . '_licence_key', null),
+            'accessKey' => $access_key,
             'siteurl' => get_site_url(),
             'keyStoreID' => $vault_id,
         );
