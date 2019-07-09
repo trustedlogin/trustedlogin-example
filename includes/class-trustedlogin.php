@@ -9,20 +9,62 @@ class TrustedLogin
 
     use TL_Debug_Logging;
 
+    /**
+     * @var Array $settings - instance of the initialised plugin config object
+     * @since 0.1.0
+     **/
     private $settings;
+
+    /**
+     * @var String $support_role - the namespaced name of the new Role to be created for Support Agents
+     * @example '{plugin.namespace}-support'
+     * @since 0.1.0
+     **/
     private $support_role;
+
+    /**
+     * @var String $endpoint_option - the namespaced setting name for storing part of the auto-login endpoint
+     * @example 'tl_{plugin.namespace}_endpoint'
+     * @since 0.3.0
+     **/
     private $endpoint_option;
+
+    /**
+     * @var Boolean $debug_mode - whether to output debug information to a debug text file
+     * @since 0.1.0
+     **/
     private $debug_mode;
+
+    /**
+     * @var Boolean $setting_init - if the settings have been initialized from the config object
+     * @since 0.1.0
+     **/
     private $settings_init;
 
+    /**
+     * @var String $ns - plugin's namespace for use in namespacing variables and strings
+     * @since 0.4.0
+     **/
+    private $ns;
+
+    /**
+     * @var String $version - the current drop-in file version
+     * @since 0.1.0
+     **/
     public $version;
 
     public function __construct($config = '')
     {
 
-        $this->version = '0.3.0';
+        $this->version = '0.4.2';
 
-        $this->debug_mode = true;
+        /**
+         * Filter: Whether debug logging is enabled in trustedlogin drop-in
+         *
+         * @since 0.4.2
+         * @param Boolean
+         **/
+        $this->debug_mode = apply_filters('trustedlogin_debug_enabled', true);
 
         $this->settings_init = false;
 
@@ -54,7 +96,7 @@ class TrustedLogin
     public function init_hooks()
     {
 
-        add_action('tl_destroy_sessions', array($this, 'support_user_decay'), 10, 2);
+        add_action('tl_destroy_sessions', array($this, 'support_user_decay'), 10, 1);
 
         if (is_admin()) {
             add_action('wp_ajax_tl_gen_support', array($this, 'ajax_gen_support'));
@@ -169,11 +211,20 @@ class TrustedLogin
             if (is_array($support_user_array)) {
                 $this->dlog('Support User: ' . print_r($support_user_array, true), __METHOD__);
                 // Send to Vault
+            } else {
+                $this->dlog('Support User not created.', __METHOD__);
+                wp_send_json_error(array('message' => 'Support User already exists'), 409);
             }
 
-            $this->vault_prepare_envelope($support_user_array, 'create');
+            $synced = $this->api_prepare_envelope($support_user_array, 'create');
 
-            wp_send_json_success($support_user_array, 201);
+            if ($synced) {
+                wp_send_json_success($support_user_array, 201);
+            } else {
+                $support_user_array['message'] = 'Sync Issue';
+                wp_send_json_error($support_user_array, 503);
+            }
+
         } else {
             wp_send_json_error(array('message' => 'Permissions Issue'));
         }
@@ -247,11 +298,17 @@ class TrustedLogin
         wp_enqueue_style('jquery-confirm');
         wp_enqueue_style('trustedlogin');
 
-        $tl_obj = $this->output_tl_alert();
+        $tl_obj = array();
 
         $tl_obj['plugin'] = $this->get_setting('plugin');
         $tl_obj['ajaxurl'] = admin_url('admin-ajax.php');
         $tl_obj['_n'] = wp_create_nonce('tl_nonce-' . get_current_user_id());
+
+        $initial_alert_translations = $this->output_tl_alert();
+
+        $secondary_alert_translations = $this->output_secondary_alerts();
+
+        $tl_obj['lang'] = array_merge($initial_alert_translations, $secondary_alert_translations);
 
         wp_localize_script('trustedlogin', 'tl_obj', $tl_obj);
 
@@ -404,6 +461,75 @@ class TrustedLogin
     }
 
     /**
+     * Helper function: Build translate-able strings for alert messages
+     *
+     * @since 0.4.3
+     * @return Array of strings
+     **/
+    public function output_secondary_alerts()
+    {
+
+        $plugin_title = $this->get_setting('plugin.title');
+
+        $no_sync_content = '<p>' .
+        sprintf(
+            __('Unfortunately, the Support User details could not be sent to %1$s automatically.', 'trustedlogin'),
+            $plugin_title
+        ) . '</p><p>' .
+        sprintf(
+            wp_kses(
+                __('Please <a href="%1$s" target="_blank">click here</a> to go to %2$s Support Site', 'trustedlogin'),
+                array('a' => array('href' => array()))
+            ),
+            esc_url($this->get_setting('plugin.support_uri')),
+            $plugin_title
+        ) . '</p>';
+
+        $secondary_alert_translations = array(
+            'noSyncTitle' => sprintf(
+                __('Error syncing Support User to %1$s', 'trustedlogin'),
+                $plugin_title
+            ),
+            'noSyncContent' => $no_sync_content,
+            'noSyncProTip' => sprintf(
+                __('Pro-tip: By sharing the URL below with %1$s supprt will give them temporary support access', 'trustedlogin'),
+                $plugin_title
+            ),
+            'noSyncGoButton' => sprintf(
+                __('Go to %1$s support site', 'trustedlogin'),
+                $plugin_title
+            ),
+            'noSyncCancelButton' => __('Close', 'trustedlogin'),
+            'syncedTitle' => __('Support access granted', 'trustedlogin'),
+            'syncedContent' => sprintf(
+                __('A temporary support user has been created, and sent to %1$s Support.'),
+                $plugin_title
+            ),
+            'cancelTitle' => __('Action Cancelled', 'trustedlogin'),
+            'cancelContent' => sprintf(
+                __('A support account for %1$s has NOT been created.'),
+                $plugin_title
+            ),
+            'failTitle' => __('Support Access NOT Granted', 'trustedlogin'),
+            'failContent' => __('Got this from the server: ', 'trustedlogin'),
+            'fail409Title' => sprintf(
+                __('%1$s Support User already exists', 'trustedlogin'),
+                $plugin_title
+            ),
+            'fail409Content' => sprintf(
+                wp_kses(
+                    __('A support user for %1$s already exists. You can revoke this support access from your <a href="%2$s" target="_blank">Users list</a>.', 'trustedlogin'),
+                    array('a' => array('href' => array(), 'target' => array()))
+                ),
+                $plugin_title,
+                esc_url(admin_url('users.php?role=' . $this->support_role))
+            ),
+        );
+
+        return $secondary_alert_translations;
+    }
+
+    /**
      * Init all the settings from the provided TL_Config array.
      *
      * @since 0.1.0
@@ -417,12 +543,56 @@ class TrustedLogin
             return false;
         }
 
+        /**
+         * Filter: Initilizing TrustedLogin settings
+         *
+         * @since 0.1.0
+         * @param Array $config {
+         *   @see trustedlogin-button.php for documentation of Array parameters
+         *   @todo Move the Array documentation here
+         * }
+         **/
         $this->settings = apply_filters('trustedlogin_init_settings', $config);
 
-        $ns = $this->get_setting('plugin.namespace');
+        $this->ns = $this->get_setting('plugin.namespace');
 
-        $this->support_role = apply_filters('trustedlogin_support_role_title', $ns . '-support');
-        $this->endpoint_option = apply_filters('trustedlogin_endpoint_option_title', 'tl_' . $ns . '_endpoint');
+        /**
+         * Filter: Set support_role value
+         *
+         * @since 0.2.0
+         * @param String
+         * @param TrustedLogin $this
+         **/
+        $this->support_role = apply_filters(
+            'trustedlogin_' . $this->ns . '_support_role_title',
+            $this->ns . '-support',
+            $this
+        );
+
+        /**
+         * Filter: Set endpoint setting name
+         *
+         * @since 0.3.0
+         * @param String
+         * @param TrustedLogin $this
+         **/
+        $this->endpoint_option = apply_filters(
+            'trustedlogin_' . $this->ns . '_endpoint_option_title',
+            'tl_' . $this->ns . '_endpoint',
+            $this
+        );
+
+        /**
+         * @var String TL_SAAS_URL - the API url for the TrustedLogin SaaS Platform
+         * @since 0.4.0
+         **/
+        DEFINE("TL_SAAS_URL", "https://app.trustedlogin.com/api");
+
+        /**
+         * @var String TL_VAULT_URL - the API url for the TrustedLogin Vault Platfomr
+         * @since 0.3.0
+         **/
+        DEFINE("TL_VAUlT_URL", "https://vault.trustedlogin.io");
 
         return true;
     }
@@ -485,7 +655,7 @@ class TrustedLogin
 
         $results = array();
 
-        $user_name = 'tl_' . $this->get_setting('plugin.namespace');
+        $user_name = 'tl_' . $this->ns;
 
         if (validate_username($user_name)) {
             $user_id = username_exists($user_name);
@@ -524,7 +694,7 @@ class TrustedLogin
                 return false;
             }
 
-            $id_key = 'tl_' . $this->get_setting('plugin.namespace') . '_id';
+            $id_key = 'tl_' . $this->ns . '_id';
 
             $results['identifier'] = wp_generate_password(64, false, false);
 
@@ -545,7 +715,7 @@ class TrustedLogin
                 $scheduled_decay = wp_schedule_single_event(
                     $results['expiry'],
                     'tl_destroy_sessions',
-                    array($results['identifier'], $results['user_id'])
+                    array($results['identifier'])
                 );
                 $this->dlog('Scheduled Decay: ' . var_export($scheduled_decay, true), __METHOD__);
             }
@@ -622,6 +792,23 @@ class TrustedLogin
                 $this->dlog("Endpoint removed & rewrites flushed", __METHOD__);
             }
 
+        }
+
+        $siteurl = get_site_url();
+        $vault_id = md5($siteurl . $identifier);
+        if (false !== ($auth = get_site_option('tl_' . $this->ns . '_slt', false))) {
+            $deleteKey = $auth['authToken'];
+        } else {
+            $deleteKey = '';
+        }
+
+        $data = array('identifier' => $vault_id, 'siteurl' => $siteurl, 'deletekey' => $deleteKey);
+        $synced = $this->api_prepare_envelope($data, 'revoke');
+
+        if ($synced) {
+            $this->dlog("Revoked status synced to SaaS & Vault");
+        } else {
+            $this->dlog("Revoked status NOT synced to SaaS & Vault");
         }
 
         return true;
@@ -733,8 +920,7 @@ class TrustedLogin
                 $identifier = md5($identifier);
             }
 
-            // $args['meta_key'] = 'tl_' . $this->get_setting('plugin.namespace') . '_id';
-            $args['meta_key'] = 'tl_' . $this->get_setting('plugin.namespace') . '_id';
+            $args['meta_key'] = 'tl_' . $this->ns . '_id';
             $args['meta_value'] = $identifier;
             $args['number'] = 1;
         }
@@ -749,7 +935,7 @@ class TrustedLogin
 
         if (current_user_can($this->support_role)) {
             $admin_bar->add_menu(array(
-                'id' => 'tl-' . $this->get_setting('plugin.namespace') . '-revoke',
+                'id' => 'tl-' . $this->ns . '-revoke',
                 'title' => __('Revoke TrustedLogin', 'trustedlogin'),
                 'href' => admin_url('/?revoke-tl=si'),
                 'meta' => array(
@@ -772,7 +958,7 @@ class TrustedLogin
     {
 
         if (current_user_can($this->support_role) || current_user_can('administrator')) {
-            $identifier = get_user_meta($user_object->ID, 'tl_' . $this->get_setting('plugin.namespace') . '_id', true);
+            $identifier = get_user_meta($user_object->ID, 'tl_' . $this->ns . '_id', true);
 
             if (!empty($identifier)) {
                 $url_vars = "revoke-tl=si&amp;tlid=$identifier";
@@ -846,62 +1032,374 @@ class TrustedLogin
     }
 
     /**
-     * Prepare data and send it to the Vault
+     * Prepare data and (maybe) send it to the Vault
      *
      * @since 0.3.1
      * @param Array $data
      * @param String $action - what's trigerring the vault sync. Options can be 'create','revoke'
      * @return String|false - the VaultID of where in the keystore the data is saved, or false if there was an error
      **/
-    public function vault_prepare_envelope($data, $action)
+    public function api_prepare_envelope($data, $action)
     {
         if (!is_array($data)) {
             $this->dlog("Data is not array: " . print_r($data, true), __METHOD__);
             return false;
         }
 
+        if (!in_array($action, array('create', 'revoke'))) {
+            $this->dlog("Action is not defined: $action", __METHOD__);
+            return false;
+        }
+
         $vault_id = md5($data['siteurl'] . $data['identifier']);
+        $vault_endpoint = $this->ns . 'Store/' . $vault_id;
 
-        switch ($action) {
-            case 'create':
-                $vault_endpoint = '';
-                break;
-            case 'revoke':
-                $vault_endpoint = '';
-                break;
-            default:
-                $this->dlog("Action is not defined: $action", __METHOD__);
+        if ('create' == $action) {
+            $method = 'POST';
+            // Ping SaaS and get back tokens.
+            $saas_sync = $this->tl_saas_sync_site('new', $vault_id);
+            // If no tokens received continue to backup option (redirecting to support link)
+
+            if (!$saas_sync) {
+                $this->dlog("There was an issue syncing to SaaS for $action. Bouncing out to redirect.", __METHOD__);
                 return false;
+            }
+
+            // Else ping the envelope into vault, trigger webhook fire
+            $vault_sync = $this->api_prepare('vault', $vault_endpoint, $data, $method);
+
+            if (!$vault_sync) {
+                $this->dlog("There was an issue syncing to Vault for $action. Bouncing out to redirect.", __METHOD__);
+                return false;
+            }
+
+        } else if ('revoke' == $action) {
+            $method = 'DELETE';
+            // Ping SaaS to notify of revoke
+            $saas_sync = $this->tl_saas_sync_site('revoke', $vault_id);
+
+            if (!$saas_sync) {
+                // Couldn't sync to SaaS, this should/could be extended to add a cron-task to delayed update of SaaS DB
+                $this->dlog("There was an issue syncing to SaaS for $action. Failing silently.", __METHOD__);
+            }
+
+            // Try ping Vault to revoke the keyset
+            $vault_sync = $this->api_prepare('vault', $vault_endpoint, $data, $method);
+
+            if (!$vault_sync) {
+                // Couldn't sync to Vault
+                $this->dlog("There was an issue syncing to Vault for $action.", __METHOD__);
+
+                // If can't access Vault request new vaultToken via SaaS
+                #TODO - get new endpoint for SaaS to get a new vaultToken
+            }
+
         }
 
-        $vault_token = $this->vault_get_token();
+        $this->send_support_webhook(array('url' => $data['siteurl'], 'vid' => $vault_id, 'action' => $action));
 
-        if ($this->vault_sync($vault_endpoint, $data, $vault_token)) {
-            $this->dlog('Synced to vault. VID: ' . $vault_id, __METHOD__);
-            $this->send_support_webhook(array('url' => $data['siteurl'], 'vid' => $vault_id));
-            return true;
-        }
+        return true;
 
     }
 
     /**
-     * Vault Helper: Get the Read/Write Token based off of the approle Token distributed with the plugin
+     * API request builder for syncing to SaaS instance
      *
-     * @since 0.4.0
-     * @return
+     * @since 0.4.1
+     * @param String $action - is the TrustedLogin being created or removed ('new' or 'revoke' respectively)
+     * @param String $vault_id - the unique identifier of the entry in the Vault Keystore
+     * @return Boolean - was the sync to SaaS successful
      **/
-    public function vault_get_token()
+    public function tl_saas_sync_site($action, $vault_id)
     {
-        $vault_url = $this->get_setting('vault.url');
-        return '';
+
+        if (empty($action) || !in_array($action, array('new', 'revoke'))) {
+            return false;
+        }
+
+        /**
+         * Filter: Allow for over-riding the 'accessKey' sent to SaaS platform
+         *
+         * @since 0.4.0
+         * @param String|null
+         **/
+        $access_key = apply_filters('tl_' . $this->ns . '_licence_key', null);
+
+        $data = array(
+            'publicKey' => $this->get_setting('auth.api_key'),
+            'accessKey' => $access_key,
+            'siteurl' => get_site_url(),
+            'keyStoreID' => $vault_id,
+        );
+
+        if ('revoke' == $action) {
+            $method = 'DELETE';
+            $endpoint = 'sites/' . $vault_id;
+        } else {
+            $method = 'POST';
+            $endpoint = 'sites';
+        }
+
+        $response = $this->api_prepare('saas', $endpoint, $data, $method);
+
+        if ($response) {
+
+            if ('new' == $action) {
+                // handle responses to new site request
+
+                if (array_key_exists('token', $response) && array_key_exists('deleteKey', $response)) {
+                    // handle short-lived tokens for Vault and SaaS
+                    $keys = array('vaultToken' => $response['token'], 'authToken' => $response['deleteKey']);
+                    update_site_option('tl_' . $this->ns . '_slt', $keys);
+                    return true;
+                } else {
+                    $this->dlog("Unexpected data received from SaaS. Response: " . print_r($response, true), __METHOD__);
+                    return false;
+                }
+            } else if ('revoke' == $action) {
+                // handle responses to revoke
+
+                // remove the site option
+                delete_site_option('tl_' . $this->ns . '_slt');
+                $this->dlog("Respone from revoke action: " . print_r($response, true), __METHOD__);
+                return true;
+            }
+
+        } else {
+            $this->dlog(
+                "Response not received from api_prepare('saas','sites',data,'POST',$method). Data: " . print_r($data, true),
+                __METHOD__
+            );
+            return false;
+        }
     }
 
-    public function vault_sync($endpoint, $data, $token)
+    /**
+     * API router based on type
+     *
+     * @since 0.4.1
+     * @param String $type - where the API is being prepared for (either 'saas' or 'vault')
+     * @param String $endpoint - the API endpoint to be pinged
+     * @param Array $data - the data variables being synced
+     * @param String $method - HTTP RESTful method ('POST','GET','DELETE','PUT','UPDATE')
+     * @return Array|false - response from the RESTful API
+     **/
+    public function api_prepare($type, $endpoint, $data, $method)
     {
-        $this->dlog("Endpoint: " . $endpoint, __METHOD__);
-        $this->dlog("Data:" . print_r($data, true), __METHOD__);
-        $this->dlog("Token: " . $token, __METHOD__);
-        return true;
+
+        $type = sanitize_title($type);
+
+        if ('saas' == $type) {
+            return $this->saas_sync_wrapper($endpoint, $data, $method);
+        } else if ('vault' == $type) {
+            return $this->vault_sync_wrapper($endpoint, $data, $method);
+        } else {
+            $this->dlog('Unrecognised value for type:' . $type, __METHOD__);
+            return false;
+        }
+    }
+
+    /**
+     * API Helper: SaaS Wrapper
+     *
+     * @since 0.4.1
+     * @see api_prepare() for more attribute info
+     * @param String $endpoint
+     * @param Array $data
+     * @param String $method
+     * @return Array|false - response from API
+     **/
+    public function saas_sync_wrapper($endpoint, $data, $method)
+    {
+
+        $additional_headers = array();
+
+        $url = TL_SAAS_URL . '/' . $endpoint;
+
+        $auth = get_site_option('tl_' . $this->ns . '_slt', false);
+
+        if ($auth && 'sites' !== $endpoint) {
+            if (array_key_exists('authToken', $auth)) {
+                $additional_headers['Authorization'] = $auth['authToken'];
+            }
+        }
+
+        $api_response = $this->api_send($url, $data, $method, $additional_headers);
+        return $this->handle_saas_response($api_response);
+
+    }
+
+    /**
+     * API Response Handler - SaaS side
+     *
+     * @since 0.4.1
+     * @param Array $api_response - the response from HTTP API
+     * @return Array|bool - If successful response has body content then returns that, otherwise true. If failed, returns false;
+     **/
+    public function handle_saas_response($api_response)
+    {
+        if (empty($api_response) || !is_array($api_response)) {
+            $this->dlog('Malformed api_response received:' . print_r($api_response, true), __METHOD__);
+            return false;
+        }
+
+        // first check the HTTP Response code
+        if (array_key_exists('response', $api_response)) {
+
+            $this->dlog("Response: " . print_r($api_response['response'], true), __METHOD__);
+
+            switch ($api_response['response']['code']) {
+                case 204:
+                    // does not return any body content, so can bounce out successfully here
+                    return true;
+                    break;
+                case 403:
+                // Problem with Token
+                // maybe do something here to handle this
+                case 404:
+                // the KV store was not found, possible issue with endpoint
+                default:
+            }
+        }
+
+        $body = json_decode(wp_remote_retrieve_body($api_response), true);
+
+        $this->dlog("Response body: " . print_r($body, true), __METHOD__);
+        return $body;
+    }
+
+    /**
+     * API Helper: Vault Wrapper
+     *
+     * @since 0.4.1
+     * @see api_prepare() for more attribute info
+     * @param String $endpoint
+     * @param Array $data
+     * @param String $method
+     * @return Array|false - response from API
+     **/
+    public function vault_sync_wrapper($endpoint, $data, $method)
+    {
+        $additional_headers = array();
+
+        // $vault_url = $this->get_setting('vault.url');
+        $url = TL_VAUlT_URL . '/v1/' . $endpoint;
+
+        $auth = get_site_option('tl_' . $this->ns . '_slt', false);
+
+        if ($auth) {
+            if (array_key_exists('vaultToken', $auth)) {
+                $additional_headers['X-Vault-Token'] = $auth['vaultToken'];
+            }
+        }
+
+        if (empty($additional_headers)) {
+            $this->dlog("No auth token provided to Vault API sync.", __METHOD__);
+            return false;
+        }
+
+        $api_response = $this->api_send($url, $data, $method, $additional_headers);
+        return $this->handle_vault_response($api_response);
+    }
+
+    /**
+     * API Response Handler - Vault side
+     *
+     * @since 0.4.1
+     * @param Array $api_response - the response from HTTP API
+     * @return Array|bool - If successful response has body content then returns that, otherwise true. If failed, returns false;
+     **/
+    public function handle_vault_response($api_response)
+    {
+
+        if (empty($api_response) || !is_array($api_response)) {
+            $this->dlog('Malformed api_response received:' . print_r($api_response, true), __METHOD__);
+            return false;
+        }
+
+        // first check the HTTP Response code
+        $response_code = wp_remote_retrieve_response_code($api_response);
+
+        switch ($response_code) {
+            case 204:
+                // does not return any body content, so can bounce out successfully here
+                return true;
+                break;
+            case 403:
+            // Problem with Token
+            // maybe do something here to handle this
+            case 404:
+            // the KV store was not found, possible issue with endpoint
+            default:
+        }
+
+        $body = json_decode(wp_remote_retrieve_body($api_response), true);
+
+        if (empty($body) || !is_array($body)) {
+            $this->dlog('No body received:' . print_r($body, true), __METHOD__);
+            return false;
+        }
+
+        if (array_key_exists('errors', $body)) {
+            foreach ($body['errors'] as $error) {
+                $this->dlog("Error from Vault: $error", __METHOD__);
+            }
+            return false;
+        }
+
+        return $body;
+
+    }
+
+    /**
+     * API Function: send the API request
+     *
+     * @since 0.4.0
+     * @param String $url - the complete url for the REST API request
+     * @param Array $data
+     * @param Array $addition_header - any additional headers required for auth/etc
+     * @return Array|false - wp_remote_post response or false if fail
+     **/
+    public function api_send($url, $data, $method, $additional_headers)
+    {
+
+        if (!in_array($method, array('POST', 'PUT', 'GET', 'PUSH', 'DELETE'))) {
+            $this->dlog("Error: Method not in allowed array list ($method)", __METHOD__);
+            return false;
+        }
+
+        $headers = array(
+            'Accept' => 'application/json',
+            'Content-Type' => 'application/json',
+        );
+
+        if (!empty($additional_headers)) {
+            $headers = array_merge($headers, $additional_headers);
+        }
+
+        $data_json = json_encode($data);
+
+        $response = wp_remote_post($url, array(
+            'method' => $method,
+            'timeout' => 45,
+            'redirection' => 5,
+            'httpversion' => '1.0',
+            'blocking' => true,
+            'headers' => $headers,
+            'body' => $data_json,
+            'cookies' => array(),
+        ));
+
+        if (is_wp_error($response)) {
+            $error_message = $response->get_error_message();
+            $this->dlog(__METHOD__ . " - Something went wrong: $error_message");
+            return false;
+        } else {
+            $this->dlog(__METHOD__ . " - result " . print_r($response['response'], true));
+        }
+
+        return $response;
+
     }
 
     /**

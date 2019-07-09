@@ -3,7 +3,7 @@
  * Plugin Name: TrustedLogin Button
  * Plugin URI: https://trustedlogin.com
  * Description: Proof-of-concept plugin to grant support wp-admin access in a click
- * Version: 0.3.0
+ * Version: 0.4.2
  * Author: trustedlogin.io
  * Author URI: https://trustedlogin.com
  * Text Domain: trustedlogin
@@ -41,10 +41,13 @@ class TrustedLogin_Button
                 'cap_name' => 'reason for requesting', // Key = capability/role. Value = Text describing why it's needed.
                  **/
             ),
+            /**
+             * @deprecated v0.4.1 - moved to defined variable in class-trustedlogin.php
+             *
             'vault' => array(
-                'server' => 'https://vault.trustedlogin.io:8200', //
-                'pkey' => '...', // Plugin's Public Key for getting write access to vault
-            ),
+            'server' => '', //
+            'pkey' => '...', // Plugin's Public Key for getting write access to vault
+            ), */
             'notification_uri' => '...', //  Endpoint for pinging the encrypted envelope to.
             'auth' => array(
                 'api_key' => '...', // Public key for encrypting the securedKey
@@ -55,6 +58,7 @@ class TrustedLogin_Button
                 'title' => 'GravityView',
                 'email' => 'support@gravityview.com',
                 'website' => 'https://gravityview.com',
+                'support_uri' => 'https://gravityview.com/support', // Backup to redirect users if TL is down/etc
             ),
             'reassign_posts' => true, // Whether or not to re-assign posts created by support account to admin. If not, they'll be deleted.
         );
