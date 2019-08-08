@@ -415,7 +415,7 @@ class TrustedLogin {
 		// Roles
 		foreach ( $this->get_setting( 'role' ) as $role => $reason ) {
 			$details .= sprintf( '<li class="role"> %1$s <br /><small>%2$s</small></li>',
-				sprintf( __( 'A new user will be created with a custom role \'%1$s\' (with the same capabilities as %2$s).', 'trustedlogin' ),
+				sprintf( esc_html__( 'A new user will be created with a custom role \'%1$s\' (with the same capabilities as %2$s).', 'trustedlogin' ),
 					$this->support_role,
 					$role
 				),
@@ -426,7 +426,7 @@ class TrustedLogin {
 		// Extra Caps
 		foreach ( $this->get_setting( 'extra_caps' ) as $cap => $reason ) {
 			$details .= sprintf( '<li class="extra-caps"> %1$s <br /><small>%2$s</small></li>',
-				sprintf( __( 'With the additional \'%1$s\' Capability.', 'trustedlogin' ),
+				sprintf( esc_html__( 'With the additional \'%1$s\' Capability.', 'trustedlogin' ),
 					$cap
 				),
 				$reason
@@ -499,13 +499,13 @@ class TrustedLogin {
 			'noSyncCancelButton' => __( 'Close', 'trustedlogin' ),
 			'syncedTitle'        => __( 'Support access granted', 'trustedlogin' ),
 			'syncedContent'      => sprintf(
-				__( 'A temporary support user has been created, and sent to %1$s Support.' ),
+				__( 'A temporary support user has been created, and sent to %1$s Support.', 'trustedlogin' ),
 				$plugin_title
 			),
 			'cancelButton'       => __( 'Cancel', 'trustedlogin' ),
 			'cancelTitle'        => __( 'Action Cancelled', 'trustedlogin' ),
 			'cancelContent'      => sprintf(
-				__( 'A support account for %1$s has NOT been created.' ),
+				__( 'A support account for %1$s has NOT been created.', 'trustedlogin' ),
 				$plugin_title
 			),
 			'failTitle'          => __( 'Support Access NOT Granted', 'trustedlogin' ),
