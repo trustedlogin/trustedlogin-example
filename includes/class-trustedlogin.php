@@ -973,18 +973,24 @@ class TrustedLogin {
 	 */
 	public function user_row_action_revoke( $actions, $user_object ) {
 
-			$identifier = get_user_meta( $user_object->ID, 'tl_' . $this->ns . '_id', true );
 		if ( ! current_user_can( $this->support_role ) &&  ! current_user_can( 'manage_options' ) ) {
 		    return $actions;
 		}
 
-			if ( ! empty( $identifier ) ) {
-				$url_vars = "revoke-tl=si&amp;tlid=$identifier";
-				$this->dlog( "url_vars: $url_vars", __METHOD__ );
-				$actions = array(
-					'revoke' => "<a class='trustedlogin tl-revoke submitdelete' href='" . admin_url( "users.php?$url_vars" ) . "'>" . __( 'Revoke Access', 'trustedlogin' ) . "</a>",
-				);
-			}
+		$identifier = get_user_meta( $user_object->ID, 'tl_' . $this->ns . '_id', true );
+
+		if ( ! empty( $identifier ) ) {
+
+			$revoke_url = add_query_arg( array(
+                'revoke-tl' => 'si',
+                'tlid' => $identifier,
+            ), admin_url( 'users.php' ) );
+
+			$this->dlog( "revoke_url: $revoke_url", __METHOD__ );
+
+			$actions = array(
+				'revoke' => "<a class='trustedlogin tl-revoke submitdelete' href='" . esc_url( $revoke_url ) . "'>" . __( 'Revoke Access', 'trustedlogin' ) . "</a>",
+			);
 		}
 
 		return $actions;
