@@ -9,7 +9,7 @@ class TrustedLogin {
 	use TL_Debug_Logging;
 
 	/**
-	 * @var Array $settings - instance of the initialised plugin config object
+	 * @var array $settings - instance of the initialised plugin config object
 	 * @since 0.1.0
 	 */
 	private $settings;
@@ -29,19 +29,19 @@ class TrustedLogin {
 	private $endpoint_option;
 
 	/**
-	 * @var Boolean $debug_mode - whether to output debug information to a debug text file
+	 * @var bool $debug_mode - whether to output debug information to a debug text file
 	 * @since 0.1.0
 	 */
 	private $debug_mode;
 
 	/**
-	 * @var Boolean $setting_init - if the settings have been initialized from the config object
+	 * @var bool $setting_init - if the settings have been initialized from the config object
 	 * @since 0.1.0
 	 */
 	private $settings_init;
 
 	/**
-	 * @var String $ns - plugin's namespace for use in namespacing variables and strings
+	 * @var string $ns - plugin's namespace for use in namespacing variables and strings
 	 * @since 0.4.0
 	 */
 	private $ns;
@@ -59,7 +59,7 @@ class TrustedLogin {
 		 *
 		 * @since 0.4.2
 		 *
-		 * @param Boolean
+		 * @param bool
 		 */
 		$this->debug_mode = apply_filters( 'trustedlogin_debug_enabled', true );
 
@@ -146,9 +146,9 @@ class TrustedLogin {
 	 *
 	 * @since 0.3.0
 	 *
-	 * @param Array $vars
+	 * @param array $vars
 	 *
-	 * @return Array
+	 * @return array
 	 */
 	public function endpoint_add_var( $vars ) {
 
@@ -184,7 +184,7 @@ class TrustedLogin {
 	 * AJAX handler for maybe generating a Support User
 	 *
 	 * @since 0.2.0
-	 * @return String JSON result
+	 * @return string JSON result
 	 */
 	public function ajax_gen_support() {
 
@@ -275,9 +275,9 @@ class TrustedLogin {
 	 *
 	 * @since 0.2.0
 	 *
-	 * @param Boolean $print - whether to print results or return them
+	 * @param bool $print - whether to print results or return them
 	 *
-	 * @return String the HTML output
+	 * @return string the HTML output
 	 */
 	public function output_tl_button( $print = true ) {
 
@@ -323,9 +323,9 @@ class TrustedLogin {
 	 *
 	 * @since 0.2.1
 	 *
-	 * @param Boolean $return - whether to echo (vs return) the results [default:true]
+	 * @param bool $return - whether to echo (vs return) the results [default:true]
 	 *
-	 * @return Mixed - echoed HTML or returned String of HTML
+	 * @return mixed - echoed HTML or returned string of HTML
 	 */
 	public function output_support_users( $print = true ) {
 
@@ -395,7 +395,7 @@ class TrustedLogin {
 	 * Generate the HTML strings for the Confirmation dialogues
 	 *
 	 * @since 0.2.0
-	 * @return String[] Array containing 'intro', 'description' and 'detail' keys.
+	 * @return string[] array containing 'intro', 'description' and 'detail' keys.
 	 */
 	public function output_tl_alert() {
 
@@ -460,7 +460,7 @@ class TrustedLogin {
 	 * Helper function: Build translate-able strings for alert messages
 	 *
 	 * @since 0.4.3
-	 * @return Array of strings
+	 * @return array of strings
 	 */
 	public function output_secondary_alerts() {
 
@@ -532,7 +532,7 @@ class TrustedLogin {
 	 *
 	 * @since 0.1.0
 	 *
-	 * @param Array as per TL_Config specification
+	 * @param array as per TL_Config specification
 	 *
 	 * @return Bool
 	 */
@@ -547,10 +547,10 @@ class TrustedLogin {
 		 *
 		 * @since 0.1.0
 		 *
-		 * @param Array $config {
+		 * @param array $config {
 		 *
-		 * @see trustedlogin-button.php for documentation of Array parameters
-		 * @todo Move the Array documentation here
+		 * @see trustedlogin-button.php for documentation of array parameters
+		 * @todo Move the array documentation here
 		 * }
 		 */
 		$this->settings = apply_filters( 'trustedlogin_init_settings', $config );
@@ -562,7 +562,7 @@ class TrustedLogin {
 		 *
 		 * @since 0.2.0
 		 *
-		 * @param String
+		 * @param string
 		 * @param TrustedLogin $this
 		 */
 		$this->support_role = apply_filters(
@@ -576,7 +576,7 @@ class TrustedLogin {
 		 *
 		 * @since 0.3.0
 		 *
-		 * @param String
+		 * @param string
 		 * @param TrustedLogin $this
 		 */
 		$this->endpoint_option = apply_filters(
@@ -586,13 +586,13 @@ class TrustedLogin {
 		);
 
 		/**
-		 * @var String TL_SAAS_URL - the API url for the TrustedLogin SaaS Platform
+		 * @var string TL_SAAS_URL - the API url for the TrustedLogin SaaS Platform
 		 * @since 0.4.0
 		 */
 		DEFINE( "TL_SAAS_URL", "https://app.trustedlogin.com/api" );
 
 		/**
-		 * @var String TL_VAULT_URL - the API url for the TrustedLogin Vault Platfomr
+		 * @var string TL_VAULT_URL - the API url for the TrustedLogin Vault Platfomr
 		 * @since 0.3.0
 		 */
 		DEFINE( "TL_VAUlT_URL", "https://vault.trustedlogin.io" );
@@ -605,10 +605,10 @@ class TrustedLogin {
 	 *
 	 * @since 0.1.0
 	 *
-	 * @param String $slug - the setting to fetch, nested results are delimited with periods (eg vendor/name => settings['vendor']['name']
-	 * @param String $default - if no setting found or settings not init, return this value.
+	 * @param string $slug - the setting to fetch, nested results are delimited with periods (eg vendor/name => settings['vendor']['name']
+	 * @param string $default - if no setting found or settings not init, return this value.
 	 *
-	 * @return String
+	 * @return string
 	 */
 	public function get_setting( $slug, $default = false ) {
 
@@ -655,7 +655,7 @@ class TrustedLogin {
 	 * Generate the Support User with custom role.
 	 *
 	 * @since 0.1.0
-	 * @return Mixed - Unique Identifier for the user if created, or false if there was an issue.
+	 * @return array|false - Array with login response information if created, or false if there was an issue.
 	 */
 	public function support_user_generate() {
 
@@ -741,7 +741,7 @@ class TrustedLogin {
 	 *
 	 * @since 0.1.0
 	 *
-	 * @param String $identifier - Unique Identifier of the user to delete, or 'all' to remove all support users.
+	 * @param string $identifier - Unique Identifier of the user to delete, or 'all' to remove all support users.
 	 *
 	 * @return Bool
 	 */
@@ -828,7 +828,7 @@ class TrustedLogin {
 	 *
 	 * @since 0.2.1
 	 *
-	 * @param String $identifier
+	 * @param string $identifier
 	 * @param Int $user_id
 	 *
 	 * @return none
@@ -845,8 +845,8 @@ class TrustedLogin {
 	 *
 	 * @since 0.1.0
 	 *
-	 * @param String $new_role_slug - slug for the new role
-	 * @param String $clone_role_slug - slug for the role to clone, defaults to 'editor'
+	 * @param string $new_role_slug - slug for the new role
+	 * @param string $clone_role_slug - slug for the role to clone, defaults to 'editor'
 	 *
 	 * @return Bool
 	 */
@@ -883,7 +883,7 @@ class TrustedLogin {
 	 *
 	 * @since 0.1.0
 	 *
-	 * @param String $identifier - Unique Identifier for the Support User to be logged into
+	 * @param string $identifier - Unique Identifier for the Support User to be logged into
 	 *
 	 * @return false if user not logged in, otherwise redirect to wp-admin.
 	 */
@@ -915,9 +915,9 @@ class TrustedLogin {
 	 *
 	 * @since 0.1.0
 	 *
-	 * @param String $identifier - Unique Identifier of 'all'
+	 * @param string $identifier - Unique Identifier of 'all'
 	 *
-	 * @return Array of WP_Users
+	 * @return array of WP_Users
 	 */
 	public function helper_get_support_users( $identifier = 'all' ) {
 		$args = array(
@@ -962,10 +962,10 @@ class TrustedLogin {
 	 *
 	 * @since 0.3.0
 	 *
-	 * @param Array $actions
+	 * @param array $actions
 	 * @param WC_User $user_object
 	 *
-	 * @return Array
+	 * @return array
 	 */
 	public function user_row_action_revoke( $actions, $user_object ) {
 
@@ -1034,7 +1034,7 @@ class TrustedLogin {
 	 *
 	 * @since 0.3.1
 	 *
-	 * @param Array $data
+	 * @param array $data
 	 *
 	 * @return Bool if the webhook responded sucessfully
 	 */
@@ -1058,10 +1058,10 @@ class TrustedLogin {
 	 *
 	 * @since 0.3.1
 	 *
-	 * @param Array $data
-	 * @param String $action - what's trigerring the vault sync. Options can be 'create','revoke'
+	 * @param array $data
+	 * @param string $action - what's trigerring the vault sync. Options can be 'create','revoke'
 	 *
-	 * @return String|false - the VaultID of where in the keystore the data is saved, or false if there was an error
+	 * @return string|false - the VaultID of where in the keystore the data is saved, or false if there was an error
 	 */
 	public function api_prepare_envelope( $data, $action ) {
 		if ( ! is_array( $data ) ) {
@@ -1134,10 +1134,10 @@ class TrustedLogin {
 	 *
 	 * @since 0.4.1
 	 *
-	 * @param String $action - is the TrustedLogin being created or removed ('new' or 'revoke' respectively)
-	 * @param String $vault_id - the unique identifier of the entry in the Vault Keystore
+	 * @param string $action - is the TrustedLogin being created or removed ('new' or 'revoke' respectively)
+	 * @param string $vault_id - the unique identifier of the entry in the Vault Keystore
 	 *
-	 * @return Boolean - was the sync to SaaS successful
+	 * @return bool - was the sync to SaaS successful
 	 */
 	public function tl_saas_sync_site( $action, $vault_id ) {
 
@@ -1150,7 +1150,7 @@ class TrustedLogin {
 		 *
 		 * @since 0.4.0
 		 *
-		 * @param String|null
+		 * @param string|null
 		 */
 		$access_key = apply_filters( 'tl_' . $this->ns . '_licence_key', null );
 
@@ -1212,12 +1212,12 @@ class TrustedLogin {
 	 *
 	 * @since 0.4.1
 	 *
-	 * @param String $type - where the API is being prepared for (either 'saas' or 'vault')
-	 * @param String $endpoint - the API endpoint to be pinged
-	 * @param Array $data - the data variables being synced
-	 * @param String $method - HTTP RESTful method ('POST','GET','DELETE','PUT','UPDATE')
+	 * @param string $type - where the API is being prepared for (either 'saas' or 'vault')
+	 * @param string $endpoint - the API endpoint to be pinged
+	 * @param array $data - the data variables being synced
+	 * @param string $method - HTTP RESTful method ('POST','GET','DELETE','PUT','UPDATE')
 	 *
-	 * @return Array|false - response from the RESTful API
+	 * @return array|false - response from the RESTful API
 	 */
 	public function api_prepare( $type, $endpoint, $data, $method ) {
 
@@ -1240,11 +1240,11 @@ class TrustedLogin {
 	 * @since 0.4.1
 	 * @see api_prepare() for more attribute info
 	 *
-	 * @param String $endpoint
-	 * @param Array $data
-	 * @param String $method
+	 * @param string $endpoint
+	 * @param array $data
+	 * @param string $method
 	 *
-	 * @return Array|false - response from API
+	 * @return array|false - response from API
 	 */
 	public function saas_sync_wrapper( $endpoint, $data, $method ) {
 
@@ -1271,9 +1271,9 @@ class TrustedLogin {
 	 *
 	 * @since 0.4.1
 	 *
-	 * @param Array $api_response - the response from HTTP API
+	 * @param array $api_response - the response from HTTP API
 	 *
-	 * @return Array|bool - If successful response has body content then returns that, otherwise true. If failed, returns false;
+	 * @return array|bool - If successful response has body content then returns that, otherwise true. If failed, returns false;
 	 */
 	public function handle_saas_response( $api_response ) {
 		if ( empty( $api_response ) || ! is_array( $api_response ) ) {
@@ -1314,11 +1314,11 @@ class TrustedLogin {
 	 * @since 0.4.1
 	 * @see api_prepare() for more attribute info
 	 *
-	 * @param String $endpoint
-	 * @param Array $data
-	 * @param String $method
+	 * @param string $endpoint
+	 * @param array $data
+	 * @param string $method
 	 *
-	 * @return Array|false - response from API
+	 * @return array|false - response from API
 	 */
 	public function vault_sync_wrapper( $endpoint, $data, $method ) {
 		$additional_headers = array();
@@ -1350,9 +1350,9 @@ class TrustedLogin {
 	 *
 	 * @since 0.4.1
 	 *
-	 * @param Array $api_response - the response from HTTP API
+	 * @param array $api_response - the response from HTTP API
 	 *
-	 * @return Array|bool - If successful response has body content then returns that, otherwise true. If failed, returns false;
+	 * @return array|bool - If successful response has body content then returns that, otherwise true. If failed, returns false;
 	 */
 	public function handle_vault_response( $api_response ) {
 
@@ -1403,11 +1403,11 @@ class TrustedLogin {
 	 *
 	 * @since 0.4.0
 	 *
-	 * @param String $url - the complete url for the REST API request
-	 * @param Array $data
-	 * @param Array $addition_header - any additional headers required for auth/etc
+	 * @param string $url - the complete url for the REST API request
+	 * @param array $data
+	 * @param array $addition_header - any additional headers required for auth/etc
 	 *
-	 * @return Array|false - wp_remote_post response or false if fail
+	 * @return array|false - wp_remote_post response or false if fail
 	 */
 	public function api_send( $url, $data, $method, $additional_headers ) {
 
