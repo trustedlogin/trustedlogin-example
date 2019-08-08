@@ -1023,6 +1023,8 @@ class TrustedLogin {
 				wp_redirect( home_url() );
 				exit;
 			}
+
+			add_action( 'admin_notices', array( $this, 'admin_notice_revoked' ) );
 		}
 
 	}
