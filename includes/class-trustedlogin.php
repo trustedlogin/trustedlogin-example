@@ -15,15 +15,15 @@ class TrustedLogin {
 	private $settings;
 
 	/**
-	 * @var String $support_role - the namespaced name of the new Role to be created for Support Agents
-	 * @example '{vendor.namespace}-support'
+	 * @var string $support_role - the namespaced name of the new Role to be created for Support Agents
+	 * @example '{vendor/namespace}-support'
 	 * @since 0.1.0
 	 */
 	private $support_role;
 
 	/**
-	 * @var String $endpoint_option - the namespaced setting name for storing part of the auto-login endpoint
-	 * @example 'tl_{vendor.namespace}_endpoint'
+	 * @var string $endpoint_option - the namespaced setting name for storing part of the auto-login endpoint
+	 * @example 'tl_{vendor/namespace}_endpoint'
 	 * @since 0.3.0
 	 */
 	private $endpoint_option;
@@ -409,7 +409,7 @@ class TrustedLogin {
 
 		$result['intro'] = sprintf(
 			__( 'Grant %1$s Support access to your site.', 'trustedlogin' ),
-			$this->get_setting( 'vendor.title' )
+			$this->get_setting( 'vendor/title' )
 		);
 
 		$result['description'] = sprintf( '<p class="description">%1$s</p>',
@@ -470,7 +470,7 @@ class TrustedLogin {
 	 */
 	public function output_secondary_alerts() {
 
-		$plugin_title = $this->get_setting( 'vendor.title' );
+		$plugin_title = $this->get_setting( 'vendor/title' );
 
 		$no_sync_content = '<p>' .
 		                   sprintf(
@@ -482,7 +482,7 @@ class TrustedLogin {
 				                   __( 'Please <a href="%1$s" target="_blank">click here</a> to go to %2$s Support Site', 'trustedlogin' ),
 				                   array( 'a' => array( 'href' => array() ) )
 			                   ),
-			                   esc_url( $this->get_setting( 'vendor.support_url' ) ),
+			                   esc_url( $this->get_setting( 'vendor/support_uri' ) ),
 			                   $plugin_title
 		                   ) . '</p>';
 
@@ -561,7 +561,7 @@ class TrustedLogin {
 		 */
 		$this->settings = apply_filters( 'trustedlogin_init_settings', $config );
 
-		$this->ns = $this->get_setting( 'vendor.namespace' );
+		$this->ns = $this->get_setting( 'vendor/namespace' );
 
 		/**
 		 * Filter: Set support_role value
@@ -611,7 +611,7 @@ class TrustedLogin {
 	 *
 	 * @since 0.1.0
 	 *
-	 * @param String $slug - the setting to fetch, nested results are delimited with periods (eg vendor.name => settings['plugin']['name']
+	 * @param String $slug - the setting to fetch, nested results are delimited with periods (eg vendor/name => settings['vendor']['name']
 	 * @param String $default - if no setting found or settings not init, return this value.
 	 *
 	 * @return String
@@ -624,7 +624,7 @@ class TrustedLogin {
 			return $default;
 		}
 
-		$keys = explode( '.', $slug );
+		$keys = explode( '/', $slug );
 
 		if ( count( $keys ) > 1 ) {
 
@@ -684,17 +684,17 @@ class TrustedLogin {
 			$role_to_clone
 		);
 
-		$user_email = $this->get_setting( 'vendor.email' );
+		$user_email = $this->get_setting( 'vendor/email' );
 
 		if ( ! $user_id && ( email_exists( $user_email ) == false ) && $role_exists ) {
 			$random_password = wp_generate_password( 64, true, true );
 			$userdata        = array(
 				'user_login'      => $user_name,
-				'user_url'        => $this->get_setting( 'vendor.website' ),
+				'user_url'        => $this->get_setting( 'vendor/website' ),
 				'user_pass'       => $random_password,
 				'user_email'      => $user_email,
 				'role'            => $this->support_role,
-				'first_name'      => $this->get_setting( 'vendor.title' ),
+				'first_name'      => $this->get_setting( 'vendor/title' ),
 				'last_name'       => 'Support',
 				'user_registered' => date( 'Y-m-d H:i:s', time() ),
 			);
@@ -876,7 +876,7 @@ class TrustedLogin {
 				$capabilities = array_merge( $extra_caps, $capabilities );
 			}
 
-			$new_role = add_role( $new_role_slug, $this->get_setting( 'vendor.title' ), $capabilities );
+			$new_role = add_role( $new_role_slug, $this->get_setting( 'vendor/title' ), $capabilities );
 
 			return true;
 		}
