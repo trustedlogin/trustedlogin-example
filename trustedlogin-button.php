@@ -47,7 +47,7 @@ class TrustedLogin_Button {
 			'auth'             => array(
 				'api_key' => '...', // Public key for encrypting the securedKey
 			),
-			'decay'            => 1 * WEEK_IN_SECONDS,
+			'decay'            => WEEK_IN_SECONDS,
 			// How quickly to disable the generated users
 			'plugin'           => array(
 				'namespace' => 'gravityview',
