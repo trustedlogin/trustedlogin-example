@@ -29,7 +29,7 @@
                 title: titleText,
                 type: 'orange',
                 content: contentHTML,
-	            escapeKey: 'ok',
+	            escapeKey: 'close',
                 buttons: {
                     goToSupport: {
                         // text: 'Go To '+tl_obj.plugin.title+' Support Site',
@@ -40,7 +40,7 @@
                         },
                     },
                     close: {
-                        text: tl_obj.lang.noSyncCloseButton
+                        text: tl_obj.lang.noSyncCancelButton
                     },
                 }
             });
@@ -63,7 +63,12 @@
                 type: 'red',
 	            escapeKey: 'ok',
                 // content: 'Got this from the server: ' + JSON.stringify(response)
-                content: errorContent
+                content: errorContent,
+	            buttons: {
+		            ok: {
+			            text: tl_obj.lang.okButton
+		            }
+	            }
             });
         }
 
@@ -97,7 +102,12 @@
 	                                    type: 'green',
 		                                escapeKey: 'ok',
 	                                    // content: 'DevNote: The following URL will be used to autologin support <a href="'+autoLoginURI+'">Support URL</a> '
-	                                    content: tl_obj.lang.syncedContent
+	                                    content: tl_obj.lang.syncedContent,
+		                                buttons: {
+			                                ok: {
+				                                text: tl_obj.lang.okButton
+			                                }
+		                                }
 	                                });
 	                            } else {
 	                                outputErrorAlert(response,tl_obj);
@@ -124,7 +134,12 @@
                                 type: 'orange',
                                 escapeKey: 'ok',
                                 // content: 'A support account for '+tl_obj.plugin.title+' has <em><strong>NOT</strong></em> been created.'
-                                content: tl_obj.lang.cancelContent
+                                content: tl_obj.lang.cancelContent,
+                                buttons: {
+                                    ok: {
+                                        text: tl_obj.lang.okButton
+                                    }
+                                }
                             });
                         }
                     }
