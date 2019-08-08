@@ -202,7 +202,7 @@ class TrustedLogin {
 			wp_send_json_error( array( 'message' => 'Verification Issue' ) );
 		}
 
-		if ( current_user_can( 'administrator' ) ) {
+		if ( current_user_can( 'manage_options' ) ) {
 			$support_user_array = $this->support_user_generate();
 
 			if ( is_array( $support_user_array ) ) {
@@ -283,7 +283,7 @@ class TrustedLogin {
 	 */
 	public function output_tl_button( $print = true ) {
 
-		if ( ! current_user_can( 'administrator' ) ) {
+		if ( ! current_user_can( 'manage_options' ) ) {
 			return;
 		}
 
@@ -335,7 +335,7 @@ class TrustedLogin {
 	 */
 	public function output_support_users( $print = true ) {
 
-		if ( ! is_admin() || ! current_user_can( 'administrator' ) ) {
+		if ( ! is_admin() || ! current_user_can( 'manage_options' ) ) {
 			return;
 		}
 
@@ -1004,7 +1004,7 @@ class TrustedLogin {
 
 		$success = false;
 
-		if ( current_user_can( $this->support_role ) || current_user_can( 'administrator' ) ) {
+		if ( current_user_can( $this->support_role ) || current_user_can( 'manage_options' ) ) {
 
 			if ( isset( $_GET['tlid'] ) ) {
 				$identifier = sanitize_text_field( $_GET['tlid'] );
@@ -1016,7 +1016,8 @@ class TrustedLogin {
 		}
 
 		if ( $success ) {
-			if ( ! is_user_logged_in() || ! current_user_can( 'administrator' ) ) {
+
+			if ( ! is_user_logged_in() || ! current_user_can( 'manage_options' ) ) {
 				wp_redirect( home_url() );
 				die;
 			} else {
