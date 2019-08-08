@@ -487,6 +487,8 @@ class TrustedLogin {
 		                   ) . '</p>';
 
 		$secondary_alert_translations = array(
+			'confirmButton'      => __( 'Confirm', 'trustedlogin' ),
+			'okButton'      => __( 'OK', 'trustedlogin' ),
 			'noSyncTitle'        => sprintf(
 				__( 'Error syncing Support User to %1$s', 'trustedlogin' ),
 				$plugin_title
@@ -506,6 +508,7 @@ class TrustedLogin {
 				__( 'A temporary support user has been created, and sent to %1$s Support.' ),
 				$plugin_title
 			),
+			'cancelButton'       => __( 'Cancel', 'trustedlogin' ),
 			'cancelTitle'        => __( 'Action Cancelled', 'trustedlogin' ),
 			'cancelContent'      => sprintf(
 				__( 'A support account for %1$s has NOT been created.' ),
