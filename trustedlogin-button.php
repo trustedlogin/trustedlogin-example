@@ -71,11 +71,9 @@ class TrustedLogin_Button {
 	public function load_includes() {
 
 		// Traits
-
 		require_once plugin_dir_path( __FILE__ ) . 'includes/trait-debug-logging.php';
 
 		// Classes
-
 		require_once plugin_dir_path( __FILE__ ) . 'includes/class-trustedlogin.php';
 		require_once plugin_dir_path( __FILE__ ) . 'includes/class-settings.php';
 
