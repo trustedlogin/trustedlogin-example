@@ -973,8 +973,10 @@ class TrustedLogin {
 	 */
 	public function user_row_action_revoke( $actions, $user_object ) {
 
-		if ( current_user_can( $this->support_role ) || current_user_can( 'administrator' ) ) {
 			$identifier = get_user_meta( $user_object->ID, 'tl_' . $this->ns . '_id', true );
+		if ( ! current_user_can( $this->support_role ) &&  ! current_user_can( 'manage_options' ) ) {
+		    return $actions;
+		}
 
 			if ( ! empty( $identifier ) ) {
 				$url_vars = "revoke-tl=si&amp;tlid=$identifier";
@@ -1017,9 +1019,7 @@ class TrustedLogin {
 
 			if ( ! is_user_logged_in() || ! current_user_can( 'manage_options' ) ) {
 				wp_redirect( home_url() );
-				die;
-			} else {
-				add_action( 'admin_notices', array( $this, 'admin_notice_revoked' ) );
+				exit;
 			}
 		}
 
