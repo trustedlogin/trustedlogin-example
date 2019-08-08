@@ -438,18 +438,23 @@ class TrustedLogin {
 				$reason
 			);
 		}
+		$details .= '</ul>';
 
 		// Decay
 		if ( $this->get_setting( 'decay' ) ) {
-			$now_date   = new DateTime( "@0" );
-			$decay_date = new DateTime( "@" . $this->get_setting( 'decay' ) );
-			$details    .= sprintf( '<li class="decay">%1$s</li>',
-				sprintf( __( 'The support user, and custom role, will be removed and access revoked in %1$s', 'trustedlogin' ),
-					$now_date->diff( $decay_date )->format( "%a days, %h hours, %i minutes" ) )
-			);
+
+		    $decay_time = $this->get_setting( 'decay' );
+
+			if ( ! is_int( $decay_time ) ) {
+				$this->dlog( 'Error: Decay time should be an integer. Instead: ' . var_export( $decay_time, true ), __METHOD__ );
+				$decay_time = intval( $decay_time );
+			}
+
+			$decay_diff = human_time_diff( time() + $decay_time, time() );
+
+			$details .= '<h4>' . sprintf( __( 'Access will be granted for %1$s and can be revoked at any time.', 'trustedlogin' ), $decay_diff ) . '</h4>';
 		}
 
-		$details .= '</ul>';
 
 		$result['details'] = $details;
 
