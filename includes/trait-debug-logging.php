@@ -5,6 +5,11 @@
 trait TL_Debug_Logging {
 
 	/**
+	 * @var string Relative path to the debugging file
+	 */
+	private $debug_filename = 'trustedlogin-debug-log.txt';
+
+	/**
 	 * Plugin Helper: Debug logging within the plugin folder.
 	 *
 	 * @since 0.1.0
@@ -20,7 +25,7 @@ trait TL_Debug_Logging {
 		}
 		// open log file
 		try {
-			$filename = "inz-debug-log.txt";
+			$filename = $this->debug_filename;
 			$fh       = fopen( plugin_dir_path( dirname( __FILE__ ) ) . $filename, "a" );
 
 			if ( false == $fh ) {
