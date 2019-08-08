@@ -29,6 +29,7 @@
                 title: titleText,
                 type: 'orange',
                 content: contentHTML,
+	            escapeKey: 'ok',
                 buttons: {
                     goToSupport: {
                         // text: 'Go To '+tl_obj.plugin.title+' Support Site',
@@ -60,6 +61,7 @@
                 // title: 'Support Access NOT Granted',
                 title: errorTitle,
                 type: 'red',
+	            escapeKey: 'ok',
                 // content: 'Got this from the server: ' + JSON.stringify(response)
                 content: errorContent
             });
@@ -71,6 +73,7 @@
                 content: tl_obj.lang.description + tl_obj.lang.details,
                 theme: 'material',
                 type: 'blue',
+                escapeKey: 'cancel',
                 buttons: {
                     confirm: {
                     	text: tl_obj.lang.confirmButton,
@@ -92,6 +95,7 @@
 	                                    theme: 'material',
 	                                    title: tl_obj.lang.syncedTitle,
 	                                    type: 'green',
+		                                escapeKey: 'ok',
 	                                    // content: 'DevNote: The following URL will be used to autologin support <a href="'+autoLoginURI+'">Support URL</a> '
 	                                    content: tl_obj.lang.syncedContent
 	                                });
@@ -118,6 +122,7 @@
                                 // title: 'Action Cancelled',
                                 title: tl_obj.lang.cancelTitle,
                                 type: 'orange',
+                                escapeKey: 'ok',
                                 // content: 'A support account for '+tl_obj.plugin.title+' has <em><strong>NOT</strong></em> been created.'
                                 content: tl_obj.lang.cancelContent
                             });
