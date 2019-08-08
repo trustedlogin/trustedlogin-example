@@ -1000,7 +1000,7 @@ class TrustedLogin {
 	 */
 	public function admin_maybe_revoke_support() {
 
-		if ( ! isset( $_GET['revoke-tl'] ) || $_GET['revoke-tl'] !== 'si' ) {
+		if ( ! isset( $_GET['revoke-tl'] ) || 'si' !== $_GET['revoke-tl'] ) {
 			return;
 		}
 
