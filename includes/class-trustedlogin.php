@@ -293,19 +293,14 @@ class TrustedLogin {
 		wp_enqueue_style( 'jquery-confirm' );
 		wp_enqueue_style( 'trustedlogin' );
 
-		$tl_obj = array();
+		$button_settings = array(
+            'plugin'  => $this->get_setting( 'plugin' ),
+            'ajaxurl' => admin_url( 'admin-ajax.php' ),
+            '_nonce'  => wp_create_nonce( 'tl_nonce-' . get_current_user_id() ),
+            'lang'    => array_merge( $this->output_tl_alert(), $this->output_secondary_alerts() ),
+        );
 
-		$tl_obj['plugin']  = $this->get_setting( 'plugin' );
-		$tl_obj['ajaxurl'] = admin_url( 'admin-ajax.php' );
-		$tl_obj['_n']      = wp_create_nonce( 'tl_nonce-' . get_current_user_id() );
-
-		$initial_alert_translations = $this->output_tl_alert();
-
-		$secondary_alert_translations = $this->output_secondary_alerts();
-
-		$tl_obj['lang'] = array_merge( $initial_alert_translations, $secondary_alert_translations );
-
-		wp_localize_script( 'trustedlogin', 'tl_obj', $tl_obj );
+		wp_localize_script( 'trustedlogin', 'tl_obj', $button_settings );
 
 		wp_enqueue_script( 'trustedlogin' );
 

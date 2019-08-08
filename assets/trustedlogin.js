@@ -85,7 +85,7 @@
                     	action: function () {
 	                        var data = {
 	                            'action': 'tl_gen_support',
-	                            '_nonce': tl_obj._n,
+	                            '_nonce': tl_obj._nonce,
 	                        };
 
 	                        console.log(data);
