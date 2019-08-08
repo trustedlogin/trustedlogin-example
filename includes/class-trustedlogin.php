@@ -963,7 +963,7 @@ class TrustedLogin {
 	 * @since 0.3.0
 	 *
 	 * @param array $actions
-	 * @param WC_User $user_object
+	 * @param WP_User $user_object
 	 *
 	 * @return array
 	 */
@@ -975,6 +975,23 @@ class TrustedLogin {
 
 		$identifier = get_user_meta( $user_object->ID, 'tl_' . $this->ns . '_id', true );
 
+		if ( empty( $identifier ) ) {
+            return $actions;
+		}
+
+        $revoke_url = add_query_arg( array(
+            'revoke-tl' => 'si',
+            'tlid' => $identifier,
+        ), admin_url( 'users.php' ) );
+
+        $this->dlog( "revoke_url: $revoke_url", __METHOD__ );
+
+        $actions = array(
+            'revoke' => "<a class='trustedlogin tl-revoke submitdelete' href='" . esc_url( $revoke_url ) . "'>" . __( 'Revoke Access', 'trustedlogin' ) . "</a>",
+        );
+
+		return $actions;
+	}
 		if ( ! empty( $identifier ) ) {
 
 			$revoke_url = add_query_arg( array(
