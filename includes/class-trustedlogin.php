@@ -47,14 +47,12 @@ class TrustedLogin {
 	private $ns;
 
 	/**
-	 * @var String $version - the current drop-in file version
+	 * @var string $version - the current drop-in file version
 	 * @since 0.1.0
 	 */
-	public $version;
+	const version = '0.4.2';
 
 	public function __construct( $config = '' ) {
-
-		$this->version = '0.4.2';
 
 		/**
 		 * Filter: Whether debug logging is enabled in trustedlogin drop-in
@@ -258,7 +256,7 @@ class TrustedLogin {
 			'trustedlogin',
 			plugin_dir_url( dirname( __FILE__ ) ) . '/assets/trustedlogin.js',
 			array( 'jquery', 'jquery-confirm' ),
-			$this->version,
+			self::version,
 			true
 		);
 
@@ -266,7 +264,7 @@ class TrustedLogin {
 			'trustedlogin',
 			plugin_dir_url( dirname( __FILE__ ) ) . '/assets/trustedlogin.css',
 			array(),
-			$this->version,
+			self::version,
 			'all'
 		);
 
