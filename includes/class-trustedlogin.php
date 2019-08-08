@@ -969,14 +969,42 @@ class TrustedLogin {
 	 */
 	public function user_row_action_revoke( $actions, $user_object ) {
 
-		if ( ! current_user_can( $this->support_role ) &&  ! current_user_can( 'manage_options' ) ) {
-		    return $actions;
+		if ( ! current_user_can( $this->support_role ) && ! current_user_can( 'manage_options' ) ) {
+			return $actions;
 		}
 
-		$identifier = get_user_meta( $user_object->ID, 'tl_' . $this->ns . '_id', true );
+		$revoke_url = $this->helper_get_user_revoke_url( $user_object );
+
+		if ( ! $revoke_url ) {
+			return $actions;
+		}
+
+		$actions = array(
+			'revoke' => "<a class='trustedlogin tl-revoke submitdelete' href='" . esc_url( $revoke_url ) . "'>" . __( 'Revoke Access', 'trustedlogin' ) . "</a>",
+		);
+
+		return $actions;
+	}
+
+	/**
+     * Returns admin URL to revoke support user
+     *
+	 * @param WP_User $user_object
+     *
+     * @return string|false Unsanitized URL to revoke support user. If $user_object is not WP_User, or no user meta exists, returns false.
+	 */
+	public function helper_get_user_revoke_url( $user_object ) {
+
+		if ( ! $user_object instanceof WP_User ) {
+			$this->dlog( '$user_object not a user object: ' . var_export( $user_object ), __METHOD__ );
+            return false;
+		}
+
+	    $identifier = get_user_meta( $user_object->ID, 'tl_' . $this->ns . '_id', true );
 
 		if ( empty( $identifier ) ) {
-            return $actions;
+			$this->dlog( "Could not generate revoke url: Empty identifier meta", __METHOD__ );
+			return false;
 		}
 
         $revoke_url = add_query_arg( array(
@@ -986,28 +1014,8 @@ class TrustedLogin {
 
         $this->dlog( "revoke_url: $revoke_url", __METHOD__ );
 
-        $actions = array(
-            'revoke' => "<a class='trustedlogin tl-revoke submitdelete' href='" . esc_url( $revoke_url ) . "'>" . __( 'Revoke Access', 'trustedlogin' ) . "</a>",
-        );
-
-		return $actions;
-	}
-		if ( ! empty( $identifier ) ) {
-
-			$revoke_url = add_query_arg( array(
-                'revoke-tl' => 'si',
-                'tlid' => $identifier,
-            ), admin_url( 'users.php' ) );
-
-			$this->dlog( "revoke_url: $revoke_url", __METHOD__ );
-
-			$actions = array(
-				'revoke' => "<a class='trustedlogin tl-revoke submitdelete' href='" . esc_url( $revoke_url ) . "'>" . __( 'Revoke Access', 'trustedlogin' ) . "</a>",
-			);
-		}
-
-		return $actions;
-	}
+		return $revoke_url;
+    }
 
 	/**
 	 * Hooked Action to maybe revoke support if _GET['revoke-tl'] == 'si'
