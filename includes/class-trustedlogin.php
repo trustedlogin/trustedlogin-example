@@ -298,6 +298,7 @@ class TrustedLogin {
             'ajaxurl' => admin_url( 'admin-ajax.php' ),
             '_nonce'  => wp_create_nonce( 'tl_nonce-' . get_current_user_id() ),
             'lang'    => array_merge( $this->output_tl_alert(), $this->output_secondary_alerts() ),
+            'debug'   => $this->debug_mode,
         );
 
 		wp_localize_script( 'trustedlogin', 'tl_obj', $button_settings );

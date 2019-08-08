@@ -87,11 +87,17 @@
 	                            'action': 'tl_gen_support',
 	                            '_nonce': tl_obj._nonce,
 	                        };
-
-	                        console.log(data);
+	                        
+                            if ( tl_obj.debug ) {
+                                console.log( data );
+                            }
 
 	                        $.post(tl_obj.ajaxurl, data, function(response) {
-	                            console.log(response);
+
+                                if ( tl_obj.debug ) {
+                                    console.log( response );
+                                }
+
 	                            if (response.success && typeof response.data == 'object'){
 	                                var autoLoginURI = response.data.siteurl + '/' + response.data.endpoint + '/' + response.data.identifier;
 
