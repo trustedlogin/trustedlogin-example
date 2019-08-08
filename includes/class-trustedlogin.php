@@ -1428,7 +1428,7 @@ class TrustedLogin {
 
 		$data_json = json_encode( $data );
 
-		$response = wp_remote_post( $url, array(
+		$response = wp_remote_request( $url, array(
 			'method'      => $method,
 			'timeout'     => 45,
 			'redirection' => 5,
