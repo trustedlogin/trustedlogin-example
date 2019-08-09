@@ -70,7 +70,7 @@
             });
         }
 
-        $('body').on('click','#trustedlogin-grant',function( e ){
+        $('body').on('click', tl_obj.selector, function( e ){
 
         	e.preventDefault();
 

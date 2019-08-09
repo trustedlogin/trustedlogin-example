@@ -299,17 +299,24 @@ class TrustedLogin {
             '_nonce'  => wp_create_nonce( 'tl_nonce-' . get_current_user_id() ),
             'lang'    => array_merge( $this->output_tl_alert(), $this->output_secondary_alerts() ),
             'debug'   => $this->debug_mode,
+            'selector' => '.trustedlogin–grant-access',
         );
 
 		wp_localize_script( 'trustedlogin', 'tl_obj', $button_settings );
 
 		wp_enqueue_script( 'trustedlogin' );
 
-		$return = '<a href="' . esc_url( $this->get_setting( 'vendor/support_url' ) ) . '" id="trustedlogin-grant" class="button button-secondary trustedlogin-btn">';
-		$return .= sprintf( '%1$s <br/><small>Powered by TrustedLogin</small>',
+		$return = '';
+		$return .= '<h3 style="margin-top:30px;">Link, with <code>.button.button-hero.trustedlogin–grant-access</code> class</h3>';
+		$return .= '<a href="' . esc_url( $this->get_setting( 'vendor/support_url' ) ) . '" id="trustedlogin-grant" class="button button-secondary button-hero button-trustedlogin trustedlogin–grant-access">';
+		$return .= sprintf( '<span><span class="trustedlogin-logo"></span> %1$s</span>',
 			sprintf( __( 'Grant %s Support Access', 'trustedlogin' ), $this->get_setting( 'vendor.title' )
 			) );
+		$return .= '<small>Powered by TrustedLogin</small>';
 		$return .= '</a>';
+
+		$return .= '<h3 style="margin-top:30px;">Plain link, with <code>.trustedlogin–grant-access</code> class</h3>';
+		$return .= '<p><a href="https://google.com" class="trustedlogin–grant-access">Provide access</a></p>';
 
 		if ( ! $print ) {
 			return $return;
