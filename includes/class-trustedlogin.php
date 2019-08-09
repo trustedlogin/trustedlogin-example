@@ -333,7 +333,7 @@ class TrustedLogin {
 			return;
 		}
 
-		// As passed by the tl button action
+		// The `trustedlogin_button` action passes an empty string
 		if ( '' === $print ) {
 			$print = true;
 		}
