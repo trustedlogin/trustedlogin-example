@@ -12,12 +12,12 @@
                 var autoLoginURI = response.data.siteurl + '/' + response.data.endpoint + '/' + response.data.identifier;
                 // var titleText = 'Support Access Created';
                 var titleText = tl_obj.lang.noSyncTitle;
-                // var contentHTML = '<p>Please <a href="'+tl_obj.plugin.support_uri+'" target="_blank">click here</a> to go to the '+tl_obj.plugin.title+' Support Forum. </p><p><em>Pro-tip:</em>  By sharing the following URL it will give them Automatic Support Access:</p> <pre>' + autoLoginURI +' </pre>';
+                // var contentHTML = '<p>Please <a href="'+tl_obj.vendor.support_url+'" target="_blank">click here</a> to go to the '+tl_obj.vendor.title+' Support Forum. </p><p><em>Pro-tip:</em>  By sharing the following URL it will give them Automatic Support Access:</p> <pre>' + autoLoginURI +' </pre>';
                 var contentHTML = tl_obj.lang.noSyncContent + '<pre>'+ autoLoginURI+ '</pre>';
 
             } else {
-                // var titleText = 'Error syncing Support User to '+tl_obj.plugin.title ;
-                // var contentHTML = '<p>Unfortunately the support user could not be created or synced to '+tl_obj.plugin.title+' automatically.</p><p>Please <a href="'+tl_obj.plugin.support_uri+'" target="_blank">click here</a> to go to the '+tl_obj.plugin.title+' Support site instead. </p>';
+                // var titleText = 'Error syncing Support User to '+tl_obj.vendor.title ;
+                // var contentHTML = '<p>Unfortunately the support user could not be created or synced to '+tl_obj.vendor.title+' automatically.</p><p>Please <a href="'+tl_obj.vendor.support_url+'" target="_blank">click here</a> to go to the '+tl_obj.vendor.title+' Support site instead. </p>';
                 var titleText = tl_obj.lang.noSyncTitle;
                 var contentHTML = tl_obj.lang.noSyncContent;
             }
@@ -32,10 +32,10 @@
 	            escapeKey: 'close',
                 buttons: {
                     goToSupport: {
-                        // text: 'Go To '+tl_obj.plugin.title+' Support Site',
+                        // text: 'Go To '+tl_obj.vendor.title+' Support Site',
                         text: tl_obj.lang.noSyncGoButton,
                         action: function(goToSupportButton){
-                            window.open(tl_obj.plugin.support_uri,'_blank');
+                            window.open(tl_obj.vendor.support_url,'_blank');
                             return false; // you shall not pass
                         },
                     },
@@ -133,7 +133,7 @@
                                 title: tl_obj.lang.cancelTitle,
                                 type: 'orange',
                                 escapeKey: 'ok',
-                                // content: 'A support account for '+tl_obj.plugin.title+' has <em><strong>NOT</strong></em> been created.'
+                                // content: 'A support account for '+tl_obj.vendor.title+' has <em><strong>NOT</strong></em> been created.'
                                 content: tl_obj.lang.cancelContent,
                                 buttons: {
                                     ok: {

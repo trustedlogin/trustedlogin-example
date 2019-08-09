@@ -49,7 +49,8 @@ class TrustedLogin_Button {
 			),
 			'decay'            => WEEK_IN_SECONDS,
 			// How quickly to disable the generated users
-			'plugin'           => array(
+			// Details about your support setup
+			'vendor' => array(
 				'namespace' => 'gravityview',
 				'title' => 'GravityView',
 				'email' => 'support@gravityview.com',
