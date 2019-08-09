@@ -264,7 +264,7 @@ class TrustedLogin {
 			'trustedlogin',
 			plugin_dir_url( dirname( __FILE__ ) ) . '/assets/trustedlogin.css',
 			array(),
-			self::version,
+			self::version . ( $this->debug_mode ? rand( 0, 10000 ) : '' ),
 			'all'
 		);
 
@@ -305,7 +305,7 @@ class TrustedLogin {
 
 		wp_enqueue_script( 'trustedlogin' );
 
-		$return = 'Need help? <a href="#" id="trustedlogin-grant" class="trustedlogin-btn btn">';
+		$return = '<a href="#" id="trustedlogin-grant" class="button button-secondary trustedlogin-btn">';
 		$return .= sprintf( '%1$s <br/><small>Powered by TrustedLogin</small>',
 			sprintf( __( 'Grant %s Support Access', 'trustedlogin' ), $this->get_setting( 'vendor.title' )
 			) );
