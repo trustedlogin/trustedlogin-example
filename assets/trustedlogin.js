@@ -70,7 +70,10 @@
             });
         }
 
-        $('body').on('click','#trustedlogin-grant',function(e){
+        $('body').on('click','#trustedlogin-grant',function( e ){
+
+        	e.preventDefault();
+
             $.confirm({
                 title: tl_obj.lang.intro,
                 content: tl_obj.lang.description + tl_obj.lang.details,

@@ -305,7 +305,7 @@ class TrustedLogin {
 
 		wp_enqueue_script( 'trustedlogin' );
 
-		$return = '<a href="#" id="trustedlogin-grant" class="button button-secondary trustedlogin-btn">';
+		$return = '<a href="' . esc_url( $this->get_setting( 'vendor/support_url' ) ) . '" id="trustedlogin-grant" class="button button-secondary trustedlogin-btn">';
 		$return .= sprintf( '%1$s <br/><small>Powered by TrustedLogin</small>',
 			sprintf( __( 'Grant %s Support Access', 'trustedlogin' ), $this->get_setting( 'vendor.title' )
 			) );
