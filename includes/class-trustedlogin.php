@@ -256,7 +256,7 @@ class TrustedLogin {
 			'trustedlogin',
 			plugin_dir_url( dirname( __FILE__ ) ) . '/assets/trustedlogin.js',
 			array( 'jquery', 'jquery-confirm' ),
-			self::version,
+			self::version . ( $this->debug_mode ? rand( 0, 10000 ) : '' ),
 			true
 		);
 
