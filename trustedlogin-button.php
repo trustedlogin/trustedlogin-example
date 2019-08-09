@@ -32,23 +32,32 @@ class TrustedLogin_Button {
 		$this->load_includes();
 
 		$this->tl_config = array(
+
+			// Role(s) provided to created support user
 			'role'             => array(
-				/**
-				 * 'role_name' => 'reason for requesting', // Key = capability/role. Value = Text describing why it's needed.
-				 **/
-				'administrator' => 'Support needs to be able to access your site as an administrator to debug issues effectively.',
+				 // Key = capability/role. Value = Text describing why it's needed.
+				 // 'role_name' => 'reason for requesting',
+				 'editor' => 'Support needs to be able to access your site as an administrator to debug issues effectively.',
 			),
-			'extra_caps'       => array(/**
-			                             * 'cap_name' => 'reason for requesting', // Key = capability/role. Value = Text describing why it's needed.
-			                             **/
+
+			// Extra capabilities to grant the user, in addition to what the defined roles provide
+			'extra_caps'       => array(
+				// 'cap_name' => 'reason for requesting',
+				// Key = capability/role. Value = Text describing why it's needed.
+				'manage_options' => 'we need this to make things work real gud',
+				'edit_posts' => 'Access the posts that you created',
+				'delete_users' => 'In order to manage the users that we thought you would want us to.',
 			),
 			'notification_uri' => '...',
+
 			//  Endpoint for pinging the encrypted envelope to.
-			'auth'             => array(
+			'auth' => array(
 				'api_key' => '...', // Public key for encrypting the securedKey
 			),
-			'decay'            => WEEK_IN_SECONDS,
+
 			// How quickly to disable the generated users
+			'decay' => WEEK_IN_SECONDS,
+
 			// Details about your support setup
 			'vendor' => array(
 				'namespace' => 'gravityview',
@@ -56,9 +65,11 @@ class TrustedLogin_Button {
 				'email' => 'support@gravityview.com',
 				'website' => 'https://gravityview.com',
 				'support_url' => 'https://gravityview.com/support/', // Backup to redirect users if TL is down/etc
+				'logo_url' => '', // Displayed in the authentication modal
 			),
-			'reassign_posts'   => true,
+
 			// Whether or not to re-assign posts created by support account to admin. If not, they'll be deleted.
+			'reassign_posts' => true,
 		);
 
 		add_action( 'plugins_loaded', array( $this, 'init_tl' ) );
