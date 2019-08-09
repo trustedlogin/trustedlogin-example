@@ -333,62 +333,97 @@ class TrustedLogin {
 			return;
 		}
 
-		if ( empty( $print ) ) {
+		// As passed by the tl button action
+		if ( '' === $print ) {
 			$print = true;
 		}
 
-		$return = '';
-
 		$users = $this->helper_get_support_users( 'all' );
 
-		if ( count( $users ) > 0 ) {
+		if( 0 === count( $users ) ) {
 
-			$table_header =
-				sprintf( '<table class="wp-list-table widefat plugins"><thead>
-                <tr><td>%1$s</td><td>%2$s</td><td>%3$s</td><td>%4$s</td></tr></thead><tbody>',
-					__( 'User', 'trustedlogin' ),
-					__( 'Role', 'trustedlogin' ),
-					__( 'Created At', 'trustedlogin' ),
-					__( 'Created By', 'trustedlogin' )
-				);
+		    $return = '<h3>' . sprintf( esc_html__( 'No %s users exist.', 'trustedlogin' ), $this->get_setting( 'plugin/title' ) ) . '</h3>';
 
-			$return .= $table_header;
+			if( $print ) {
+			    echo $return;
+            }
 
-			foreach ( $users as $_u ) {
-				$this->dlog( 'tl_created_by:' . get_user_meta( $_u->ID, 'tl_created_by', true ), __METHOD__ );
-
-				$_gen_u = get_user_by( 'id', get_user_meta( $_u->ID, 'tl_created_by', true ) );
-
-				$this->dlog( 'g_u:' . print_r( $_gen_u, true ) );
-
-				$_udata = get_userdata( $_u->ID );
-				$return .= '<tr><td>' . $_u->first_name . ' ' . $_u->last_name . '(#' . $_u->ID . ')</td>';
-
-				if ( count( $_u->roles ) > 1 ) {
-					$roles = trim( implode( ',', $_u->roles ), ',' );
-				} else {
-					$roles = $_u->roles[0];
-				}
-				$return .= '<td>' . $roles . '</td>';
-
-				$return .= '<td>' . date( 'd M Y', strtotime( $_udata->user_registered ) ) . '</td>';
-				if ( $_gen_u ) {
-					$return .= '<td>' . ( $_gen_u->exists() ? $_gen_u->display_name : __( 'unknown', 'trustedlogin' ) ) . '</td>';
-				} else {
-					$return .= '<td>' . __( 'unknown', 'trustedlogin' ) . '</td>';
-				}
-				$return .= '</tr>';
-
-			}
-
-			$return .= '</tbody></table>';
-		}
-
-		if ( ! $print ) {
 			return $return;
+        }
+
+		$return = '';
+
+        $return .= '<h3>' . sprintf( esc_html__( '%s users:', 'trustedlogin' ), $this->get_setting( 'plugin/title' ) ) . '</h3>';
+
+        $return .= '<table class="wp-list-table widefat plugins">';
+
+        $table_header =
+            sprintf( '
+                <thead>
+                    <tr>
+                        <th scope="col">%1$s</th>
+                        <th scope="col">%2$s</th>
+                        <th scope="col">%3$s</th>
+                        <th scope="col">%4$s</td>
+                        <th scope="col">%5$s</th>
+                    </tr>
+                </thead>',
+                __( 'User', 'trustedlogin' ),
+                __( 'Role', 'trustedlogin' ),
+                __( 'Created At', 'trustedlogin' ),
+                __( 'Created By', 'trustedlogin' ),
+                __( 'Revoke Access', 'trustedlogin' )
+            );
+
+        $return .= $table_header;
+
+        $return .= '<tbody>';
+
+        foreach ( $users as $_u ) {
+
+            $this->dlog( 'tl_created_by:' . get_user_meta( $_u->ID, 'tl_created_by', true ), __METHOD__ );
+
+            $_gen_u = get_user_by( 'id', get_user_meta( $_u->ID, 'tl_created_by', true ) );
+
+            $this->dlog( 'g_u:' . print_r( $_gen_u, true ) );
+
+            $_udata = get_userdata( $_u->ID );
+
+            $return .= '<tr><th scope="row"><a href="' . admin_url( 'user-edit.php?user_id=' . $_u->ID ) . '">' . sprintf( '%s (#%d)', esc_html( $_u->display_name ), $_udata->ID ) . '</th>';
+
+            if ( count( $_u->roles ) > 1 ) {
+                $roles = trim( '<code>' . implode( '</code>,<code>', $_u->roles ) . '</code>', ',' );
+            } else {
+                $roles = '<code>' . esc_html( $_u->roles[0] ) . '</code>';
+            }
+            $return .= '<td>' . $roles . '</td>';
+
+            $return .= '<td>' . date( 'd M Y', strtotime( $_udata->user_registered ) ) . '</td>';
+            if ( $_gen_u ) {
+                $return .= '<td>' . ( $_gen_u->exists() ? $_gen_u->display_name : __( 'Unknown', 'trustedlogin' ) ) . '</td>';
+            } else {
+                $return .= '<td>' . __( 'Unknown', 'trustedlogin' ) . '</td>';
+            }
+
+            $revoke_url = $this->helper_get_user_revoke_url( $_udata );
+
+            if( $revoke_url ) {
+                $return .= '<td><a class="trustedlogin tl-revoke submitdelete" href="' . esc_url( $revoke_url ) . '">' . __( 'Revoke Access', 'trustedlogin' ) . '</a></td>';
+            } else {
+                $return .= '<td><a href="' . admin_url( 'users.php' ). '">' . __( 'Manage from Users list', 'trustedlogin' ) . '</a></td>';
+            }
+            $return .= '</tr>';
+
+        }
+
+        $return .= '</tbody></table>';
+
+		if ( $print ) {
+    		echo $return;
 		}
 
-		echo $return;
+
+		return $return;
 	}
 
 	/**
