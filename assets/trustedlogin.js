@@ -10,14 +10,13 @@
 
             if (typeof response.data == 'object'){
                 var autoLoginURI = response.data.siteurl + '/' + response.data.endpoint + '/' + response.data.identifier;
-                // var titleText = 'Support Access Created';
                 var titleText = tl_obj.lang.noSyncTitle;
-                // var contentHTML = '<p>Please <a href="'+tl_obj.vendor.support_url+'" target="_blank">click here</a> to go to the '+tl_obj.vendor.title+' Support Forum. </p><p><em>Pro-tip:</em>  By sharing the following URL it will give them Automatic Support Access:</p> <pre>' + autoLoginURI +' </pre>';
+
+                // TODO: Style the pre to not overflow
+                // TODO: Add a click to copy button
                 var contentHTML = tl_obj.lang.noSyncContent + '<pre>'+ autoLoginURI+ '</pre>';
 
             } else {
-                // var titleText = 'Error syncing Support User to '+tl_obj.vendor.title ;
-                // var contentHTML = '<p>Unfortunately the support user could not be created or synced to '+tl_obj.vendor.title+' automatically.</p><p>Please <a href="'+tl_obj.vendor.support_url+'" target="_blank">click here</a> to go to the '+tl_obj.vendor.title+' Support site instead. </p>';
                 var titleText = tl_obj.lang.noSyncTitle;
                 var contentHTML = tl_obj.lang.noSyncContent;
             }
@@ -32,7 +31,6 @@
 	            escapeKey: 'close',
                 buttons: {
                     goToSupport: {
-                        // text: 'Go To '+tl_obj.vendor.title+' Support Site',
                         text: tl_obj.lang.noSyncGoButton,
                         action: function(goToSupportButton){
                             window.open(tl_obj.vendor.support_url,'_blank');
@@ -87,7 +85,7 @@
 	                            'action': 'tl_gen_support',
 	                            '_nonce': tl_obj._nonce,
 	                        };
-	                        
+
                             if ( tl_obj.debug ) {
                                 console.log( data );
                             }
