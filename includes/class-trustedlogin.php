@@ -342,7 +342,7 @@ class TrustedLogin {
 
 		if( 0 === count( $users ) ) {
 
-		    $return = '<h3>' . sprintf( esc_html__( 'No %s users exist.', 'trustedlogin' ), $this->get_setting( 'plugin/title' ) ) . '</h3>';
+		    $return = '<h3>' . sprintf( esc_html__( 'No %s users exist.', 'trustedlogin' ), $this->get_setting( 'vendor/title' ) ) . '</h3>';
 
 			if( $print ) {
 			    echo $return;
@@ -353,7 +353,7 @@ class TrustedLogin {
 
 		$return = '';
 
-        $return .= '<h3>' . sprintf( esc_html__( '%s users:', 'trustedlogin' ), $this->get_setting( 'plugin/title' ) ) . '</h3>';
+        $return .= '<h3>' . sprintf( esc_html__( '%s users:', 'trustedlogin' ), $this->get_setting( 'vendor/title' ) ) . '</h3>';
 
         $return .= '<table class="wp-list-table widefat plugins">';
 
