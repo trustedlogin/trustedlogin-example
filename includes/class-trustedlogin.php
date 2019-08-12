@@ -98,7 +98,7 @@ class TrustedLogin {
 			add_action( 'wp_ajax_tl_gen_support', array( $this, 'ajax_gen_support' ) );
 			add_action( 'admin_enqueue_scripts', array( $this, 'enqueue_admin' ) );
 
-			add_action( 'trustedlogin_button', array( $this, 'output_tl_button' ), 10 );
+			add_action( 'trustedlogin_button', array( $this, 'output_tl_button' ), 10, 2 );
 
 			add_filter( 'user_row_actions', array( $this, 'user_row_action_revoke' ), 10, 2 );
 
@@ -279,7 +279,7 @@ class TrustedLogin {
 	 *
 	 * @return string the HTML output
 	 */
-	public function output_tl_button( $print = true ) {
+	public function output_tl_button( $atts = array(), $print = true ) {
 
 		if ( ! current_user_can( 'manage_options' ) ) {
 			return;
@@ -306,78 +306,7 @@ class TrustedLogin {
 
 		wp_enqueue_script( 'trustedlogin' );
 
-		$return = '<div class="about-wrap full-width-layout">';
-
-		$return .= '<p class="description">Examples of using the TrustedLogin button generator:</p><pre lang="php">$TL = new TrustedLogin; 
-echo $TL->get_button( "size=normal&class=button-secondary" );</pre>';
-
-		$return .= '<div class="has-2-columns is-fullwidth">';
-            $return .= '<div class="column">';
-            $return .= '<h3 style="font-weight: normal;">Attributes: <code>size=hero</code></h3>';
-            $return .= $this->get_button( 'size=hero' );
-            $return .= '</div>';
-    
-            $return .= '<div class="column">';
-            $return .= '<h3 style="font-weight: normal;">Attributes: <code>size=hero&class=button-secondary</code></h3>';
-            $return .= $this->get_button( 'size=hero&class=button-secondary' );
-            $return .= '</div>';
-		$return .= '</div>';
-
-		$return .= '<hr />';
-
-		$return .= '<div class="has-2-columns is-fullwidth">';
-            $return .= '<div class="column">';
-            $return .= '<h3 style="font-weight: normal;">Attributes: <code>size=large</code></h3>';
-            $return .= $this->get_button( 'size=large' );
-            $return .= '</div>';
-    
-            $return .= '<div class="column">';
-            $return .= '<h3 style="font-weight: normal;">Attributes: <code>size=large&class=button-secondary</code></h3>';
-            $return .= $this->get_button( 'size=large&class=button-secondary' );
-            $return .= '</div>';
-		$return .= '</div>';
-
-		$return .= '<hr />';
-
-		$return .= '<div class="has-2-columns is-fullwidth">';
-            $return .= '<div class="column">';
-            $return .= '<h3 style="font-weight: normal;">Attributes: <code>size=normal</code></h3>';
-            $return .= $this->get_button( 'size=normal' );
-            $return .= '</div>';
-    
-            $return .= '<div class="column">';
-            $return .= '<h3 style="font-weight: normal;">Attributes: <code>size=normal&class=button-secondary</code></h3>';
-            $return .= $this->get_button( 'size=normal&class=button-secondary' );
-            $return .= '</div>';
-		$return .= '</div>';
-
-		$return .= '<hr />';
-
-		$return .= '<div class="has-2-columns is-fullwidth">';
-            $return .= '<div class="column">';
-            $return .= '<h3 style="font-weight: normal;">Attributes: <code>size=small</code></h3>';
-            $return .= $this->get_button( 'size=small' );
-            $return .= '</div>';
-    
-            $return .= '<div class="column">';
-            $return .= '<h3 style="font-weight: normal;">Attributes: <code>size=small&class=button-secondary</code></h3>';
-            $return .= $this->get_button( 'size=small&class=button-secondary' );
-            $return .= '</div>';
-		$return .= '</div>';
-
-		$return .= '<hr />';
-
-		$return .= '<div class="has-2-columns is-fullwidth">';
-            $return .= '<div class="column">';
-            $return .= '<h3 style="font-weight: normal;">Attributes: <code>size=&class=&powered_by=</code></h3>';
-            $return .= $this->get_button( 'size=&class=&powered_by=' );
-            $return .= '</div>';
-		$return .= '</div>';
-
-		$return .= '</div>';
-
-		if ( ! $print ) {
-			return $return;
+		$return = $this->get_button( $atts );
 
 		if ( $print ) {
 			echo $return;

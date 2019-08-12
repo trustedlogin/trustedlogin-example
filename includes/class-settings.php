@@ -54,9 +54,82 @@ class TestSettingsPage {
 	 * Options page callback
 	 */
 	public function create_admin_page() {
-		print( '<div class="wrap"><h1>TrustedLogin Demo</h1>' );
-		do_action( 'trustedlogin_button' );
-		print( '</div>' );
+		?>
+	<div class="wrap">
+		<h1>TrustedLogin Demo</h1>
+		<div class="about-wrap full-width-layout">
+
+		<p class="description">Examples of using the TrustedLogin button generator:</p>
+		<pre lang="php">$TL = new TrustedLogin; 
+echo $TL->get_button( "size=normal&class=button-secondary" );
+</pre>
+
+		<div class="has-2-columns is-fullwidth">
+			<div class="column">
+				<h3 style="font-weight: normal;">Attributes: <code>size=hero</code></h3>
+				<?php do_action( 'trustedlogin_button', 'size=hero'); ?>
+			</div>
+
+			<div class="column">
+				<h3 style="font-weight: normal;">Attributes: <code>size=hero&class=button-secondary</code></h3>
+				<?php do_action( 'trustedlogin_button', 'size=hero&class=button-secondary'); ?>
+			</div>
+		</div>
+
+		<hr />
+
+		<div class="has-2-columns is-fullwidth">
+			<div class="column">
+				<h3 style="font-weight: normal;">Attributes: <code>size=large</code></h3>
+				<?php do_action( 'trustedlogin_button', 'size=large'); ?>
+			</div>
+
+			<div class="column">
+				<h3 style="font-weight: normal;">Attributes: <code>size=large&class=button-secondary</code></h3>
+				<?php do_action( 'trustedlogin_button', 'size=large&class=button-secondary'); ?>
+			</div>
+		</div>
+
+		<hr />
+
+		<div class="has-2-columns is-fullwidth">
+			<div class="column">
+				<h3 style="font-weight: normal;">Attributes: <code>size=normal</code></h3>
+				<?php do_action( 'trustedlogin_button', 'size=normal'); ?>
+			</div>
+
+			<div class="column">
+				<h3 style="font-weight: normal;">Attributes: <code>size=normal&class=button-secondary</code></h3>
+				<?php do_action( 'trustedlogin_button', 'size=normal&class=button-secondary'); ?>
+			</div>
+		</div>
+
+		<hr />
+
+		<div class="has-2-columns is-fullwidth">
+			<div class="column">
+			<h3 style="font-weight: normal;">Attributes: <code>size=small</code></h3>
+				<?php do_action( 'trustedlogin_button', 'size=small'); ?>
+			</div>
+
+			<div class="column">
+				<h3 style="font-weight: normal;">Attributes: <code>size=small&class=button-secondary</code></h3>
+				<?php do_action( 'trustedlogin_button', 'size=small&class=button-secondary'); ?>
+			</div>
+		</div>
+
+		<hr />
+
+		<div class="has-2-columns is-fullwidth">
+			<div class="column">
+			<h3 style="font-weight: normal;">Attributes: <code>size=&class=&powered_by=</code></h3>
+				<?php do_action( 'trustedlogin_button', 'size=&class=&powered_by=', false); ?>
+			</div>
+		</div>
+
+		</div>
+	</div>
+<?php
 	}
 
 }
