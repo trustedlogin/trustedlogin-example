@@ -378,9 +378,12 @@ echo $TL->get_button( "size=normal&class=button-secondary" );</pre>';
 
 		if ( ! $print ) {
 			return $return;
+
+		if ( $print ) {
+			echo $return;
 		}
 
-		echo $return;
+        return $return;
 	}
 
 	/**
