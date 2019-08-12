@@ -294,7 +294,7 @@ class TrustedLogin {
 		wp_enqueue_style( 'trustedlogin' );
 
 		$button_settings = array(
-            'plugin'  => $this->get_setting( 'plugin' ),
+            'vendor'  => $this->get_setting( 'vendor' ),
             'ajaxurl' => admin_url( 'admin-ajax.php' ),
             '_nonce'  => wp_create_nonce( 'tl_nonce-' . get_current_user_id() ),
             'lang'    => array_merge( $this->output_tl_alert(), $this->output_secondary_alerts() ),
