@@ -306,23 +306,137 @@ class TrustedLogin {
 
 		wp_enqueue_script( 'trustedlogin' );
 
-		$return = '';
-		$return .= '<h3 style="margin-top:30px;">Link, with <code>.button.button-hero.trustedlogin–grant-access</code> class</h3>';
-		$return .= '<a href="' . esc_url( $this->get_setting( 'vendor/support_url' ) ) . '" id="trustedlogin-grant" class="button button-secondary button-hero button-trustedlogin trustedlogin–grant-access">';
-		$return .= sprintf( '<span><span class="trustedlogin-logo"></span> %1$s</span>',
-			sprintf( __( 'Grant %s Support Access', 'trustedlogin' ), $this->get_setting( 'vendor.title' )
-			) );
-		$return .= '<small>Powered by TrustedLogin</small>';
-		$return .= '</a>';
+		$return = '<div class="about-wrap full-width-layout">';
 
-		$return .= '<h3 style="margin-top:30px;">Plain link, with <code>.trustedlogin–grant-access</code> class</h3>';
-		$return .= '<p><a href="https://google.com" class="trustedlogin–grant-access">Provide access</a></p>';
+		$return .= '<p class="description">Examples of using the TrustedLogin button generator:</p><pre lang="php">$TL = new TrustedLogin; 
+echo $TL->get_button( "size=normal&class=button-secondary" );</pre>';
+
+		$return .= '<div class="has-2-columns is-fullwidth">';
+            $return .= '<div class="column">';
+            $return .= '<h3 style="font-weight: normal;">Attributes: <code>size=hero</code></h3>';
+            $return .= $this->get_button( 'size=hero' );
+            $return .= '</div>';
+    
+            $return .= '<div class="column">';
+            $return .= '<h3 style="font-weight: normal;">Attributes: <code>size=hero&class=button-secondary</code></h3>';
+            $return .= $this->get_button( 'size=hero&class=button-secondary' );
+            $return .= '</div>';
+		$return .= '</div>';
+
+		$return .= '<hr />';
+
+		$return .= '<div class="has-2-columns is-fullwidth">';
+            $return .= '<div class="column">';
+            $return .= '<h3 style="font-weight: normal;">Attributes: <code>size=large</code></h3>';
+            $return .= $this->get_button( 'size=large' );
+            $return .= '</div>';
+    
+            $return .= '<div class="column">';
+            $return .= '<h3 style="font-weight: normal;">Attributes: <code>size=large&class=button-secondary</code></h3>';
+            $return .= $this->get_button( 'size=large&class=button-secondary' );
+            $return .= '</div>';
+		$return .= '</div>';
+
+		$return .= '<hr />';
+
+		$return .= '<div class="has-2-columns is-fullwidth">';
+            $return .= '<div class="column">';
+            $return .= '<h3 style="font-weight: normal;">Attributes: <code>size=normal</code></h3>';
+            $return .= $this->get_button( 'size=normal' );
+            $return .= '</div>';
+    
+            $return .= '<div class="column">';
+            $return .= '<h3 style="font-weight: normal;">Attributes: <code>size=normal&class=button-secondary</code></h3>';
+            $return .= $this->get_button( 'size=normal&class=button-secondary' );
+            $return .= '</div>';
+		$return .= '</div>';
+
+		$return .= '<hr />';
+
+		$return .= '<div class="has-2-columns is-fullwidth">';
+            $return .= '<div class="column">';
+            $return .= '<h3 style="font-weight: normal;">Attributes: <code>size=small</code></h3>';
+            $return .= $this->get_button( 'size=small' );
+            $return .= '</div>';
+    
+            $return .= '<div class="column">';
+            $return .= '<h3 style="font-weight: normal;">Attributes: <code>size=small&class=button-secondary</code></h3>';
+            $return .= $this->get_button( 'size=small&class=button-secondary' );
+            $return .= '</div>';
+		$return .= '</div>';
+
+		$return .= '<hr />';
+
+		$return .= '<div class="has-2-columns is-fullwidth">';
+            $return .= '<div class="column">';
+            $return .= '<h3 style="font-weight: normal;">Attributes: <code>size=&class=&powered_by=</code></h3>';
+            $return .= $this->get_button( 'size=&class=&powered_by=' );
+            $return .= '</div>';
+		$return .= '</div>';
+
+		$return .= '</div>';
 
 		if ( ! $print ) {
 			return $return;
 		}
 
 		echo $return;
+	}
+
+	/**
+     *
+	 * @param array $atts
+	 *
+	 * @return string
+	 */
+	public function get_button( $atts = array() ) {
+
+		$defaults = array(
+			'text'       => sprintf( __( 'Grant %s Support Access', 'trustedlogin' ), $this->get_setting( 'vendor/title' ) ),
+			'size'       => 'hero',
+			'class'      => 'button-primary',
+			'tag'        => 'a', // "a", "button", "span"
+			'id'         => null,
+			'powered_by' => true,
+            'support_url' => $this->get_setting( 'vendor/support_url' ),
+		);
+
+		$sizes = array( 'small', 'normal', 'large', 'hero' );
+
+		$atts = wp_parse_args( $atts, $defaults );
+
+		switch( $atts['size'] ) {
+            case '':
+	            $size_class = '';
+                break;
+			case 'normal':
+				$size_class = 'button';
+				break;
+            default:
+	            if ( ! in_array( $atts['size'], $sizes ) ) {
+		            $atts['size'] = 'hero';
+	            }
+
+                $size_class = 'button button-' . $atts['size'];
+        }
+
+		$tags = array( 'a', 'button', 'span' );
+
+		if ( ! in_array( $atts['tag'], $tags ) ) {
+			$atts['tag'] = 'a';
+		}
+
+		$tag = empty( $atts['tag'] ) ? 'a' : $atts['tag'];
+
+		$href      = esc_url( $atts['support_url'] );
+		$css_class = esc_attr( implode( ' ', array( $size_class, $atts['class'] ) ) );
+
+		$powered_by  = $atts['powered_by'] ? '<small><span class="trustedlogin-logo"></span>Powered by TrustedLogin</small>' : false;
+		$anchor_html = esc_html( $atts['text'] ) . $powered_by;
+
+		$button = sprintf( '<%s href="%s" class="%s button-trustedlogin trustedlogin–grant-access">%s</%s>', $tag, $href, $css_class, $anchor_html, $tag );
+
+		return $button;
 	}
 
 	/**
