@@ -13,78 +13,83 @@
  * License URI: http://www.gnu.org/licenses/gpl-3.0.html
  */
 
-if (!defined('ABSPATH')) {
-    exit;
+if ( ! defined('ABSPATH') ) {
+	exit;
 }
 // Exit if accessed directly
 
-class TrustedLogin_Button
-{
+class TrustedLogin_Button {
 
-    private $tl_config;
-    public $trustedlogin;
+	/**
+	 * @var array $tl_config Configuration array passed to TrustedLogin class
+	 */
+	private $tl_config;
 
-    public function __construct()
-    {
+	public $trustedlogin;
 
-        $this->load_includes();
+	public function __construct() {
 
-        $this->tl_config = array(
-            'role' => array(
-                /**
-                'role_name' => 'reason for requesting', // Key = capability/role. Value = Text describing why it's needed.
-                 **/
-                'administrator' => 'Support needs to be able to access your site as an administrator to debug issues effectively.',
-            ),
-            'extra_caps' => array(
-                /**
-                'cap_name' => 'reason for requesting', // Key = capability/role. Value = Text describing why it's needed.
-                 **/
-            ),
-            /**
-             * @deprecated v0.4.1 - moved to defined variable in class-trustedlogin.php
-             *
-            'vault' => array(
-            'server' => '', //
-            'pkey' => '...', // Plugin's Public Key for getting write access to vault
-            ), */
-            'notification_uri' => '...', //  Endpoint for pinging the encrypted envelope to.
-            'auth' => array(
-                'api_key' => '...', // Public key for encrypting the securedKey
-            ),
-            'decay' => 1 * WEEK_IN_SECONDS, // How quickly to disable the generated users
-            'plugin' => array(
-                'namespace' => 'gravityview',
-                'title' => 'GravityView',
-                'email' => 'support@gravityview.com',
-                'website' => 'https://gravityview.com',
-                'support_uri' => 'https://gravityview.com/support', // Backup to redirect users if TL is down/etc
-            ),
-            'reassign_posts' => true, // Whether or not to re-assign posts created by support account to admin. If not, they'll be deleted.
-        );
+		$this->load_includes();
 
-        add_action('plugins_loaded', array($this, 'init_tl'));
+		$this->tl_config = array(
 
-    }
+			// Role(s) provided to created support user
+			'role'             => array(
+				 // Key = capability/role. Value = Text describing why it's needed.
+				 // 'role_name' => 'reason for requesting',
+				 'editor' => 'Support needs to be able to access your site as an administrator to debug issues effectively.',
+			),
 
-    public function init_tl()
-    {
-        $trustedlogin = new TrustedLogin($this->tl_config);
-    }
+			// Extra capabilities to grant the user, in addition to what the defined roles provide
+			'extra_caps'       => array(
+				// 'cap_name' => 'reason for requesting',
+				// Key = capability/role. Value = Text describing why it's needed.
+				'manage_options' => 'we need this to make things work real gud',
+				'edit_posts' => 'Access the posts that you created',
+				'delete_users' => 'In order to manage the users that we thought you would want us to.',
+			),
+			'notification_uri' => '...',
 
-    public function load_includes()
-    {
+			//  Endpoint for pinging the encrypted envelope to.
+			'auth' => array(
+				'api_key' => '...', // Public key for encrypting the securedKey
+			),
 
-        // Traits
+			// How quickly to disable the generated users
+			'decay' => WEEK_IN_SECONDS,
 
-        require_once plugin_dir_path(__FILE__) . 'includes/trait-debug-logging.php';
+			// Details about your support setup
+			'vendor' => array(
+				'namespace' => 'gravityview',
+				'title' => 'GravityView',
+				'email' => 'support@gravityview.com',
+				'website' => 'https://gravityview.com',
+				'support_url' => 'https://gravityview.com/support/', // Backup to redirect users if TL is down/etc
+				'logo_url' => '', // Displayed in the authentication modal
+			),
 
-        // Classes
+			// Whether or not to re-assign posts created by support account to admin. If not, they'll be deleted.
+			'reassign_posts' => true,
+		);
 
-        require_once plugin_dir_path(__FILE__) . 'includes/class-trustedlogin.php';
-        require_once plugin_dir_path(__FILE__) . 'includes/class-settings.php';
+		add_action( 'plugins_loaded', array( $this, 'init_tl' ) );
 
-    }
+	}
+
+	public function init_tl() {
+		$trustedlogin = new TrustedLogin( $this->tl_config );
+	}
+
+	public function load_includes() {
+
+		// Traits
+		require_once plugin_dir_path( __FILE__ ) . 'includes/trait-debug-logging.php';
+
+		// Classes
+		require_once plugin_dir_path( __FILE__ ) . 'includes/class-trustedlogin.php';
+		require_once plugin_dir_path( __FILE__ ) . 'includes/class-settings.php';
+
+	}
 
 }
 
