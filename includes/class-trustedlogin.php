@@ -1133,15 +1133,8 @@ class TrustedLogin
         );
 
         if ('revoke' == $action) {
-
-            $keys = get_site_option('tl_' . $this->ns . '_slt', false);
-
-            if (!$keys || !is_array($keys) || !array_key_exists('authToken', $keys)) {
-                $this->dlog('Delete key not found in local db: ' . print_r($keys, true), __METHOD__);
-                return false;
-            }
             $method = 'DELETE';
-            $endpoint = 'sites/' . $keys['authToken'];
+            $endpoint = 'sites/' . $vault_id;
         } else {
             $method = 'POST';
             $endpoint = 'sites';
