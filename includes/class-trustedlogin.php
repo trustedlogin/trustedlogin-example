@@ -1228,9 +1228,15 @@ class TrustedLogin {
 			'keyStoreID' => $vault_id,
 		);
 
+        $keys = get_site_option('tl_' . $this->ns . '_slt', false);
+        if (!$keys || !is_array($keys) || !array_key_exists('authToken', $keys)) {
+            $this->dlog('SaaS Key not found in local db: ' . print_r($keys, true), __METHOD__);
+            return false;
+        }
+
 		if ( 'revoke' == $action ) {
 			$method   = 'DELETE';
-			$endpoint = 'sites/' . $vault_id;
+			$endpoint = 'sites/' . $keys['authToken'];
 		} else {
 			$method   = 'POST';
 			$endpoint = 'sites';
