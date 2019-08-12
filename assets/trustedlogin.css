@@ -4,17 +4,6 @@
     text-align: center;
 }
 
-.wp-core-ui .button.button-hero.button-trustedlogin,
-.button-trustedlogin {
-    margin-bottom: 15px;
-}
-
-.button-trustedlogin.button-primary small {
-    text-shadow: none;
-    box-shadow: none;
-    color: #333;
-}
-
 .button-trustedlogin small {
     text-align: center;
     position: relative;
@@ -24,8 +13,16 @@
     line-height: 15px;
     padding-top: 5px;
     vertical-align: middle;
-    opacity: .75;
+    opacity: .8;
+    transition: opacity .2s;
 }
+
+.button-trustedlogin.button-primary small {
+    text-shadow: none;
+    box-shadow: none;
+    color: #333;
+}
+
 .button-trustedlogin .trustedlogin-logo {
     display: inline-block;
     margin-right: .175rem;
@@ -40,9 +37,11 @@
     background-size: contain;
 
 }
+.button-trustedlogin:hover small {
+    opacity: 1;
+}
 .button-trustedlogin:active small {
     padding-top: 4px;
-    opacity: 1;
 }
 
 /**
@@ -52,7 +51,6 @@
     padding-top: 6px;
     font-size: 13px;
     line-height: 26px;
-    opacity: .9;
 }
 .button-hero.button-trustedlogin .trustedlogin-logo {
     height: 24px;
@@ -69,7 +67,6 @@
 .button-large.button-trustedlogin small {
     line-height: 21px;
     font-size: 12px;
-    opacity: .9;
 }
 
 .button-large.button-trustedlogin .trustedlogin-logo {
@@ -86,7 +83,6 @@
 .button-small.button-trustedlogin small {
     line-height: 18px;
     font-size: 11px;
-    opacity: .7;
 }
 .button-small.button-trustedlogin .trustedlogin-logo {
     height: 15px;
