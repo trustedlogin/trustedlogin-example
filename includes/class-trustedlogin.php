@@ -1020,17 +1020,19 @@ class TrustedLogin {
 
 	public function adminbar_add_toolbar_items( $admin_bar ) {
 
-		if ( current_user_can( $this->support_role ) ) {
-			$admin_bar->add_menu( array(
-				'id'    => 'tl-' . $this->ns . '-revoke',
-				'title' => __( 'Revoke TrustedLogin', 'trustedlogin' ),
-				'href'  => admin_url( '/?revoke-tl=si' ),
-				'meta'  => array(
-					'title' => __( 'Revoke TrustedLogin', 'trustedlogin' ),
-					'class' => 'tl-destroy-session',
-				),
-			) );
+		if ( ! current_user_can( $this->support_role ) ) {
+			return;
 		}
+
+        $admin_bar->add_menu( array(
+            'id'    => 'tl-' . $this->ns . '-revoke',
+            'title' => __( 'Revoke TrustedLogin', 'trustedlogin' ),
+            'href'  => admin_url( '/?revoke-tl=si' ),
+            'meta'  => array(
+                'title' => __( 'Revoke TrustedLogin', 'trustedlogin' ),
+                'class' => 'tl-destroy-session',
+            ),
+        ) );
 	}
 
 	/**
