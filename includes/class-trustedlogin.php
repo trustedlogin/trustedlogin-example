@@ -848,15 +848,16 @@ class TrustedLogin {
 		foreach ( $users as $_u ) {
 			$this->dlog( "Processing uid " . $_u->ID, __METHOD__ );
 
+			$tlid = get_user_meta( $_u->ID, 'tl_' . $this->ns . '_id', true );
+
+			// Remove auto-cleanup hook
+			wp_clear_scheduled_hook( 'tl_destroy_sessions', array( $tlid ) );
+
 			if ( wp_delete_user( $_u->ID, $reassign_id ) ) {
 				$this->dlog( "User: " . $_u->ID . " deleted.", __METHOD__ );
 			} else {
 				$this->dlog( "User: " . $_u->ID . " NOT deleted.", __METHOD__ );
 			}
-
-			$tlid = get_user_meta( $_u->ID, 'tl_' . $this->ns . '_id', true );
-
-			wp_clear_scheduled_hook( 'tl_destroy_sessions', $tlid );
 		}
 
 		if ( count( $users ) < 2 || $identifier == 'all' ) {
