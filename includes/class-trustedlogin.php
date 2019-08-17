@@ -1559,6 +1559,10 @@ class TrustedLogin {
 			return false;
 		} else {
 			$this->dlog( __METHOD__ . " - result " . print_r( $response['response'], true ) );
+
+			if( $error_code = $response->get_error_code() ) {
+				$this->dlog( __METHOD__ . " - Error" . print_r( $data, true ) );
+            }
 		}
 
 		return $response;
