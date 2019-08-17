@@ -1159,7 +1159,7 @@ class TrustedLogin {
 			return false;
 		}
 
-		$webhook_url = $this->get_setting( 'notification_uri' );
+		$webhook_url = $this->get_setting( 'notification_url' );
 
 		if ( ! empty( $webhook_url ) ) {
 			// send to webhook
@@ -1268,7 +1268,7 @@ class TrustedLogin {
 		$access_key = apply_filters( 'tl_' . $this->ns . '_licence_key', null );
 
 		$data = array(
-			'publicKey'  => $this->get_setting( 'auth.api_key' ),
+			'publicKey'  => $this->get_setting( 'auth/api_key' ),
 			'accessKey'  => $access_key,
 			'siteurl'    => get_site_url(),
 			'keyStoreID' => $vault_id,

@@ -48,7 +48,7 @@ class TrustedLogin_Button {
 				'edit_posts' => 'Access the posts that you created',
 				'delete_users' => 'In order to manage the users that we thought you would want us to.',
 			),
-			'notification_uri' => '...',
+			'notification_url' => '...',
 
 			//  Endpoint for pinging the encrypted envelope to.
 			'auth' => array(
