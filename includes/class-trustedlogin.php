@@ -112,7 +112,6 @@ class TrustedLogin {
 		// Endpoint Hooks
 		add_action( 'init', array( $this, 'endpoint_add' ), 10 );
 		add_action( 'template_redirect', array( $this, 'endpoint_maybe_redirect' ), 99 );
-		add_filter( 'query_vars', array( $this, 'endpoint_add_var' ) );
 
 	}
 
@@ -123,45 +122,17 @@ class TrustedLogin {
 	 */
 	public function endpoint_add() {
 		$endpoint = get_option( $this->endpoint_option );
-		if ( $endpoint && ! get_option( 'fl_permalinks_flushed' ) ) {
-			// add_rewrite_endpoint($endpoint, EP_ALL);
-			$endpoint_regex = '^' . $endpoint . '/([^/]+)/?$';
-			$this->dlog( "E_R: $endpoint_regex", __METHOD__ );
-			add_rewrite_rule(
-			// ^p/(d+)/?$
-				$endpoint_regex,
-				'index.php?' . $endpoint . '=$matches[1]',
-				'top' );
-			$this->dlog( "Endpoint $endpoint added.", __METHOD__ );
+
+        add_rewrite_endpoint( $endpoint, EP_ROOT );
+
+		if ( $endpoint && ! get_option( 'tl_permalinks_flushed' ) ) {
+
 			flush_rewrite_rules( false );
+			$this->dlog( "Endpoint $endpoint added.", __METHOD__ );
+
+			update_option( 'tl_permalinks_flushed', 1 );
 			$this->dlog( "Rewrite rules flushed.", __METHOD__ );
-			update_option( 'fl_permalinks_flushed', 1 );
 		}
-
-		return;
-	}
-
-	/**
-	 * Filter: Add a unique variable to endpoint queries to hold the identifier
-	 *
-	 * @since 0.3.0
-	 *
-	 * @param array $vars
-	 *
-	 * @return array
-	 */
-	public function endpoint_add_var( $vars ) {
-
-		$endpoint = get_option( $this->endpoint_option );
-
-		if ( $endpoint ) {
-			$vars[] = $endpoint;
-
-			$this->dlog( "Endpoint var $endpoint added", __METHOD__ );
-		}
-
-		return $vars;
-
 	}
 
 	/**
@@ -171,13 +142,15 @@ class TrustedLogin {
 	 */
 	public function endpoint_maybe_redirect() {
 
-		$endpoint = get_option( $this->endpoint_option );
+	    $endpoint = get_option( $this->endpoint_option );
 
 		$identifier = get_query_var( $endpoint, false );
 
-		if ( ! empty( $identifier ) ) {
-			$this->support_user_auto_login( $identifier );
+		if ( empty( $identifier ) ) {
+			return;
 		}
+
+		$this->support_user_auto_login( $identifier );
 	}
 
 	/**
@@ -882,9 +855,13 @@ class TrustedLogin {
 			}
 
 			if ( get_option( $this->endpoint_option ) ) {
-				delete_option( $this->endpoint_option );
+
+			    delete_option( $this->endpoint_option );
+
 				flush_rewrite_rules( false );
-				update_option( 'fl_permalinks_flushed', 0 );
+
+				update_option( 'tl_permalinks_flushed', 0 );
+
 				$this->dlog( "Endpoint removed & rewrites flushed", __METHOD__ );
 			}
 
