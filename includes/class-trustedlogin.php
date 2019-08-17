@@ -1320,17 +1320,23 @@ class TrustedLogin {
 	}
 
 	/**
-	 * @param $vault_keyStoreID
+     * Creates a site in the SaaS app using the identifier hash as the keyStoreID
+     *
+     * Stores the tokens in the options table under $this->key_storage_option
+     *
+	 * @param string $identifier Unique ID used across this site/saas/vault
 	 *
-	 * @return bool
+     * @todo Convert false returns to WP_Error
+     *
+	 * @return bool Success creating site?
 	 */
-	public function saas_create_site( $vault_keyStoreID ) {
+	public function saas_create_site( $identifier ) {
 
 		$data = array(
 			'publicKey'  => $this->get_setting( 'auth/api_key' ),
 			'accessKey'  => $this->get_access_key(),
 			'siteUrl'    => get_site_url(),
-			'keyStoreID' => $vault_keyStoreID,
+			'keyStoreID' => $identifier,
 		);
 
 		$method   = 'POST';
@@ -1484,6 +1490,8 @@ class TrustedLogin {
 	 * @param array $data - the data variables being synced
 	 * @param string $method - HTTP RESTful method ('POST','GET','DELETE','PUT','UPDATE')
 	 *
+     * @todo Convert false returns to WP_Error
+     *
 	 * @return array|false - response from API
 	 */
 	public function vault_sync_wrapper( $vault_keyStoreID, $data, $method ) {
