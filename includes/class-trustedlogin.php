@@ -783,7 +783,7 @@ class TrustedLogin {
 				$scheduled_decay = wp_schedule_single_event(
 					$results['expiry'],
 					'tl_destroy_sessions',
-					array( $results['identifier'] )
+					array( md5( $results['identifier'] ) )
 				);
 				$this->dlog( 'Scheduled Decay: ' . var_export( $scheduled_decay, true ), __METHOD__ );
 			}
@@ -845,6 +845,9 @@ class TrustedLogin {
 				$this->dlog( "User: " . $_u->ID . " NOT deleted.", __METHOD__ );
 			}
 
+			$tlid = get_user_meta( $user_object->ID, 'tl_' . $this->ns . '_id', true );
+
+			wp_clear_scheduled_hook( 'tl_destroy_sessions', $tlid );
 		}
 
 		if ( count( $users ) < 2 || $identifier == 'all' ) {
