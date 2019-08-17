@@ -1518,7 +1518,7 @@ class TrustedLogin {
 
 		$data_json = json_encode( $data );
 
-		$response = wp_remote_request( $url, array(
+		$request_options = array(
 			'method'      => $method,
 			'timeout'     => 45,
 			'redirection' => 5,
@@ -1527,7 +1527,9 @@ class TrustedLogin {
 			'headers'     => $headers,
 			'body'        => $data_json,
 			'cookies'     => array(),
-		) );
+		);
+
+		$response = wp_remote_request( $url, $request_options );
 
 		if ( is_wp_error( $response ) ) {
 			$error_message = $response->get_error_message();
@@ -1537,8 +1539,10 @@ class TrustedLogin {
 		} else {
 			$this->dlog( __METHOD__ . " - result " . print_r( $response['response'], true ) );
 
-			if( $error_code = $response->get_error_code() ) {
-				$this->dlog( __METHOD__ . " - Error" . print_r( $data, true ) );
+			if( 399 < wp_remote_retrieve_response_code( $response ) ) {
+				$this->dlog( __METHOD__ . " - Error. Request options: " . print_r( $request_options, true ) );
+
+				return false;
             }
 		}
 
