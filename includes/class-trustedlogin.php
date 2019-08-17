@@ -564,7 +564,7 @@ class TrustedLogin {
 				                   __( 'Please <a href="%1$s" target="_blank">click here</a> to go to %2$s Support Site', 'trustedlogin' ),
 				                   array( 'a' => array( 'href' => array() ) )
 			                   ),
-			                   esc_url( $this->get_setting( 'vendor/support_uri' ) ),
+			                   esc_url( $this->get_setting( 'vendor/support_url' ) ),
 			                   $plugin_title
 		                   ) . '</p>';
 
