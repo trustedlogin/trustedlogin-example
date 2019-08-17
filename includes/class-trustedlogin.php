@@ -333,13 +333,21 @@ class TrustedLogin {
 
 		$tag = empty( $atts['tag'] ) ? 'a' : $atts['tag'];
 
-		$href      = esc_url( $atts['support_url'] );
-		$css_class = esc_attr( implode( ' ', array( $size_class, $atts['class'] ) ) );
+		if( $this->helper_get_support_users() ) {
+		    $text = esc_html( $atts['exists_text'] );
+			$href = admin_url( 'users.php?role=' . $this->support_role );
+        } else {
+			$text = esc_html( $atts['text'] );
+			$css_class .= ' trustedlogin–grant-access'; // Tell JS to grant access on click
+		    $href = esc_html( $atts['support_url'] );
+        }
+
+		$css_class = implode( ' ', array( $css_class, $atts['class'] ) );
 
 		$powered_by  = $atts['powered_by'] ? '<small><span class="trustedlogin-logo"></span>Powered by TrustedLogin</small>' : false;
-		$anchor_html = esc_html( $atts['text'] ) . $powered_by;
+		$anchor_html = $text . $powered_by;
 
-		$button = sprintf( '<%s href="%s" class="%s button-trustedlogin trustedlogin–grant-access">%s</%s>', $tag, $href, $css_class, $anchor_html, $tag );
+		$button = sprintf( '<%s href="%s" class="%s button-trustedlogin">%s</%s>', $tag, esc_url( $href ), esc_attr( $css_class ), $anchor_html, $tag );
 
 		return $button;
 	}
