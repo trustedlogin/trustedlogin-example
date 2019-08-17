@@ -1198,7 +1198,7 @@ class TrustedLogin {
 			}
 
 			// Else ping the envelope into vault, trigger webhook fire
-			$vault_sync = $this->api_prepare( 'vault', $vault_endpoint, $data, $method );
+			$vault_sync = $this->vault_sync_wrapper( $vault_endpoint, $data, $method );
 
 			if ( ! $vault_sync ) {
 				$this->dlog( "There was an issue syncing to Vault for $action. Bouncing out to redirect.", __METHOD__ );
@@ -1217,7 +1217,7 @@ class TrustedLogin {
 			}
 
 			// Try ping Vault to revoke the keyset
-			$vault_sync = $this->api_prepare( 'vault', $vault_endpoint, $data, $method );
+			$vault_sync = $this->vault_sync_wrapper( $vault_endpoint, $data, $method );
 
 			if ( ! $vault_sync ) {
 				// Couldn't sync to Vault
@@ -1275,7 +1275,7 @@ class TrustedLogin {
 			$endpoint = 'sites';
 		}
 
-		$response = $this->api_prepare( 'saas', $endpoint, $data, $method );
+		$response = $this->saas_sync_wrapper( $endpoint, $data, $method );
 
 		if ( $response ) {
 
@@ -1322,33 +1322,6 @@ class TrustedLogin {
 	 * @param string $endpoint - the API endpoint to be pinged
 	 * @param array $data - the data variables being synced
 	 * @param string $method - HTTP RESTful method ('POST','GET','DELETE','PUT','UPDATE')
-	 *
-	 * @return array|false - response from the RESTful API
-	 */
-	public function api_prepare( $type, $endpoint, $data, $method ) {
-
-		$type = sanitize_title( $type );
-
-		if ( 'saas' == $type ) {
-			return $this->saas_sync_wrapper( $endpoint, $data, $method );
-		} else if ( 'vault' == $type ) {
-			return $this->vault_sync_wrapper( $endpoint, $data, $method );
-		} else {
-			$this->dlog( 'Unrecognised value for type:' . $type, __METHOD__ );
-
-			return false;
-		}
-	}
-
-	/**
-	 * API Helper: SaaS Wrapper
-	 *
-	 * @since 0.4.1
-	 * @see api_prepare() for more attribute info
-	 *
-	 * @param string $endpoint
-	 * @param array $data
-	 * @param string $method
 	 *
 	 * @return array|false - response from API
 	 */
@@ -1418,11 +1391,10 @@ class TrustedLogin {
 	 * API Helper: Vault Wrapper
 	 *
 	 * @since 0.4.1
-	 * @see api_prepare() for more attribute info
 	 *
-	 * @param string $endpoint
-	 * @param array $data
-	 * @param string $method
+	 * @param string $endpoint - the API endpoint to be pinged
+	 * @param array $data - the data variables being synced
+	 * @param string $method - HTTP RESTful method ('POST','GET','DELETE','PUT','UPDATE')
 	 *
 	 * @return array|false - response from API
 	 */
