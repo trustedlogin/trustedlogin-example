@@ -62,9 +62,9 @@ class TrustedLogin_Button {
 			'vendor' => array(
 				'namespace' => 'gravityview',
 				'title' => 'GravityView',
-				'email' => 'support@gravityview.com',
-				'website' => 'https://gravityview.com',
-				'support_url' => 'https://gravityview.com/support/', // Backup to redirect users if TL is down/etc
+				'email' => 'support@gravityview.co',
+				'website' => 'https://gravityview.co',
+				'support_url' => 'https://gravityview.co/support/', // Backup to redirect users if TL is down/etc
 				'logo_url' => '', // Displayed in the authentication modal
 			),
 
