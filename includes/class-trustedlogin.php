@@ -793,7 +793,7 @@ class TrustedLogin {
 					'tl_destroy_sessions',
 					array( md5( $results['identifier'] ) )
 				);
-				$this->dlog( 'Scheduled Decay: ' . var_export( $scheduled_decay, true ), __METHOD__ );
+				$this->dlog( 'Scheduled Decay: ' . var_export( $scheduled_decay, true ) . '; identifier: ' . $results['identifier'], __METHOD__ );
 			}
 
 			return $results;
@@ -1553,7 +1553,7 @@ class TrustedLogin {
 			$this->dlog( __METHOD__ . " - result " . print_r( $response['response'], true ) );
 
 			if( 399 < wp_remote_retrieve_response_code( $response ) ) {
-				$this->dlog( __METHOD__ . " - Error. Request options: " . print_r( $request_options, true ) );
+				$this->dlog( __METHOD__ . " - Error. URL: {$url} . Request options: " . print_r( $request_options, true ) );
 
 				return false;
             }
