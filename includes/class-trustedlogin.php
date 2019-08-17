@@ -113,6 +113,8 @@ class TrustedLogin {
 		add_action( 'init', array( $this, 'endpoint_add' ), 10 );
 		add_action( 'template_redirect', array( $this, 'endpoint_maybe_redirect' ), 99 );
 
+		add_action( 'trustedlogin/access/created', array( $this, 'send_webhook' ) );
+		add_action( 'trustedlogin/access/revoked', array( $this, 'send_webhook' ) );
 	}
 
 	/**
@@ -1144,18 +1146,12 @@ class TrustedLogin {
 	 *
 	 * @return Bool if the webhook responded sucessfully
 	 */
-	public function send_support_webhook( $data ) {
+	public function send_webhook( $data ) {
 
-		if ( ! is_array( $data ) ) {
-			$this->dlog( "Data is not an array: " . print_r( $data, true ), __METHOD__ );
-
-			return false;
-		}
-
-		$webhook_url = $this->get_setting( 'notification_url' );
+		$webhook_url = $this->get_setting( 'webhook_url' );
 
 		if ( ! empty( $webhook_url ) ) {
-			// send to webhook
+			wp_remote_post( $webhook_url, $data );
 		}
 	}
 
