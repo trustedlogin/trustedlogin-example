@@ -659,13 +659,13 @@ class TrustedLogin {
 		 * @var string TL_SAAS_URL - the API url for the TrustedLogin SaaS Platform
 		 * @since 0.4.0
 		 */
-		DEFINE( "TL_SAAS_URL", "https://app.trustedlogin.com/api" );
+		define( "TL_SAAS_URL", "https://app.trustedlogin.com/api" );
 
 		/**
 		 * @var string TL_VAULT_URL - the API url for the TrustedLogin Vault Platfomr
 		 * @since 0.3.0
 		 */
-		DEFINE( "TL_VAUlT_URL", "https://vault.trustedlogin.io" );
+		define( "TL_VAULT_URL", "https://vault.trustedlogin.io" );
 
 		return true;
 	}
@@ -1401,8 +1401,7 @@ class TrustedLogin {
 	public function vault_sync_wrapper( $endpoint, $data, $method ) {
 		$additional_headers = array();
 
-		// $vault_url = $this->get_setting('vault.url');
-		$url = TL_VAUlT_URL . '/v1/' . $endpoint;
+		$url = TL_VAULT_URL . '/v1/' . $endpoint;
 
 		$auth = get_site_option( 'tl_' . $this->ns . '_slt', false );
 
