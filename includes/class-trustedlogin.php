@@ -854,7 +854,7 @@ class TrustedLogin {
 				$this->dlog( "User: " . $_u->ID . " NOT deleted.", __METHOD__ );
 			}
 
-			$tlid = get_user_meta( $user_object->ID, 'tl_' . $this->ns . '_id', true );
+			$tlid = get_user_meta( $_u->ID, 'tl_' . $this->ns . '_id', true );
 
 			wp_clear_scheduled_hook( 'tl_destroy_sessions', $tlid );
 		}
