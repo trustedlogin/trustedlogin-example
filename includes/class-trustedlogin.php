@@ -298,6 +298,7 @@ class TrustedLogin {
 
 		$defaults = array(
 			'text'       => sprintf( __( 'Grant %s Support Access', 'trustedlogin' ), $this->get_setting( 'vendor/title' ) ),
+			'exists_text' => sprintf( __( '✅ %s Support Has An Account', 'trustedlogin' ), $this->get_setting( 'vendor/title' ) ),
 			'size'       => 'hero',
 			'class'      => 'button-primary',
 			'tag'        => 'a', // "a", "button", "span"
@@ -312,17 +313,17 @@ class TrustedLogin {
 
 		switch( $atts['size'] ) {
             case '':
-	            $size_class = '';
+	            $css_class = '';
                 break;
 			case 'normal':
-				$size_class = 'button';
+				$css_class = 'button';
 				break;
             default:
 	            if ( ! in_array( $atts['size'], $sizes ) ) {
 		            $atts['size'] = 'hero';
 	            }
 
-                $size_class = 'button button-' . $atts['size'];
+	            $css_class = 'button button-' . $atts['size'];
         }
 
 		$tags = array( 'a', 'button', 'span' );
@@ -838,7 +839,7 @@ class TrustedLogin {
 
 		$this->dlog( "reassign_id: $reassign_id", __METHOD__ );
 
-		if ( count( $users ) == 0 ) {
+		if ( empty( $users ) ) {
 			return false;
 		}
 
@@ -996,7 +997,8 @@ class TrustedLogin {
 	 * @return array of WP_Users
 	 */
 	public function helper_get_support_users( $identifier = 'all' ) {
-		$args = array(
+
+	    $args = array(
 			'role' => $this->support_role,
 		);
 
@@ -1058,7 +1060,7 @@ class TrustedLogin {
 		}
 
 		$actions = array(
-			'revoke' => "<a class='trustedlogin tl-revoke submitdelete' href='" . esc_url( $revoke_url ) . "'>" . __( 'Revoke Access', 'trustedlogin' ) . "</a>",
+			'revoke' => "<a class='trustedlogin tl-revoke submitdelete' href='" . esc_url( $revoke_url ) . "'>" . esc_html__( 'Revoke Access', 'trustedlogin' ) . "</a>",
 		);
 
 		return $actions;
