@@ -840,10 +840,15 @@ class TrustedLogin {
 			return false;
 		}
 
-		$role_exists = $this->support_user_create_role( $this->support_role );
+		$role_setting = $this->get_setting( 'role', array( 'editor' => '' ) );
+
+		// Get the role value from the key
+		$clone_role_slug = key( $role_setting );
+
+		$role_exists = $this->support_user_create_role( $this->support_role, $clone_role_slug );
 
 		if ( ! $role_exists ) {
-			$this->dlog( 'Support role could not be created.', __METHOD__ );
+			$this->dlog( 'Support role could not be created (based on ' . $clone_role_slug . ')', __METHOD__ );
 
 			return false;
 		}
@@ -1001,20 +1006,21 @@ class TrustedLogin {
 	 *
 	 * @return bool
 	 */
-	public function support_user_create_role( $new_role_slug ) {
+	public function support_user_create_role( $new_role_slug, $clone_role_slug = 'editor' ) {
 
-		$this->dlog( 'N: ' . $new_role_slug . ', O: ' . $clone_role_slug, __METHOD__ );
+		if ( empty( $new_role_slug ) || empty( $clone_role_slug ) ) {
+            return false;
+		}
 
 		$role_exists = get_role( $new_role_slug );
 
 		if ( $role_exists ) {
+			$this->dlog( 'Not creating user role; it already exists', __METHOD__ );
+
 			return true;
 		}
 
-		foreach ( $this->get_setting( 'role' ) as $key => $reason ) {
-			$clone_role_slug = $key;
-		}
-
+		$this->dlog( 'N: ' . $new_role_slug . ', O: ' . $clone_role_slug, __METHOD__ );
 
 		$old_role = get_role( $clone_role_slug );
 
