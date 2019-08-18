@@ -1498,7 +1498,7 @@ class TrustedLogin {
 
 		$url = TL_VAULT_URL . '/v1/' . $this->ns . 'Store/' . $vault_keyStoreID;
 
-		$vault_token = $this->get_vault_token();
+		$vault_token = $this->get_vault_tokens( 'vaultToken' );
 
 		if ( empty( $vault_token ) ) {
 			$this->dlog( "No auth token provided to Vault API sync.", __METHOD__ );
@@ -1522,7 +1522,7 @@ class TrustedLogin {
      *
 	 * @return false|string If vault not found, false. Otherwise, the vaultToken.
 	 */
-	private function get_vault_token() {
+	private function get_vault_tokens( $token = null ) {
 
 	    $key_storage = get_site_option( $this->key_storage_option, false );
 
@@ -1531,12 +1531,16 @@ class TrustedLogin {
 		    return false;
 		}
 
-		if ( ! isset( $key_storage['vaultToken'] ) ) {
+		if ( $token && ! isset( $key_storage[ $token ] ) ) {
 			$this->dlog( "vaultToken not set in key store: " . print_r( $key_storage, true ), __METHOD__ );
 		    return false;
         }
 
-        return $key_storage['vaultToken'];
+		if( $token ) {
+		    return $key_storage[ $token ];
+        }
+
+        return $key_storage;
     }
 
 	/**
