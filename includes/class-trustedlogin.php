@@ -1495,28 +1495,49 @@ class TrustedLogin {
 	 * @return array|false - response from API
 	 */
 	public function vault_sync_wrapper( $vault_keyStoreID, $data, $method ) {
-		$additional_headers = array();
 
 		$url = TL_VAULT_URL . '/v1/' . $this->ns . 'Store/' . $vault_keyStoreID;
 
-		$auth = get_site_option( $this->key_storage_option, false );
+		$vault_token = $this->get_vault_token();
 
-		if ( $auth ) {
-			if ( isset( $auth['vaultToken'] ) ) {
-				$additional_headers['X-Vault-Token'] = $auth['vaultToken'];
-			}
-		}
-
-		if ( empty( $additional_headers ) ) {
+		if ( empty( $vault_token ) ) {
 			$this->dlog( "No auth token provided to Vault API sync.", __METHOD__ );
 
 			return false;
 		}
 
+		$additional_headers = array(
+			'X-Vault-Token' => $vault_token,
+		);
+
 		$api_response = $this->api_send( $url, $data, $method, $additional_headers );
 
 		return $this->handle_vault_response( $api_response );
 	}
+
+	/**
+     * Get the vaultToken from the key store
+     *
+     * @since 0.7.0
+     *
+	 * @return false|string If vault not found, false. Otherwise, the vaultToken.
+	 */
+	private function get_vault_token() {
+
+	    $key_storage = get_site_option( $this->key_storage_option, false );
+
+		if ( ! $key_storage ) {
+			$this->dlog( "Could not get vault token; keys not yet stored.", __METHOD__ );
+		    return false;
+		}
+
+		if ( ! isset( $key_storage['vaultToken'] ) ) {
+			$this->dlog( "vaultToken not set in key store: " . print_r( $key_storage, true ), __METHOD__ );
+		    return false;
+        }
+
+        return $key_storage['vaultToken'];
+    }
 
 	/**
 	 * API Response Handler - Vault side
