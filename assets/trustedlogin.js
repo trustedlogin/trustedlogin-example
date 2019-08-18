@@ -51,16 +51,14 @@
                 var errorContent = tl_obj.lang.fail409Content;
             } else {
                 var errorTitle = tl_obj.lang.failTitle;
-                var errorContent = tl_obj.lang.failContent + response;
+                var errorContent = tl_obj.lang.failContent + '<pre>' + JSON.stringify( response ) + '</pre>';
             }
             $.alert({
                 icon: 'fa fa-times-circle',
                 theme: 'material',
-                // title: 'Support Access NOT Granted',
                 title: errorTitle,
                 type: 'red',
 	            escapeKey: 'ok',
-                // content: 'Got this from the server: ' + JSON.stringify(response)
                 content: errorContent,
 	            buttons: {
 		            ok: {
