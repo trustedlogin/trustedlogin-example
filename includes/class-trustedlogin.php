@@ -1067,8 +1067,6 @@ class TrustedLogin {
 		 */
 		$role_display_name = apply_filters( 'trustedlogin/' . $this->ns . '/support_role/display_name', sprintf( esc_html__( '%s Support', 'trustedlogin' ), $this->get_setting('vendor/title') ), $this );
 
-		$this->dlog( __LINE__, __METHOD__ );
-
 		$new_role = add_role( $new_role_slug, $role_display_name, $capabilities );
 
 		return true;
