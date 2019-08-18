@@ -102,17 +102,7 @@ class TrustedLogin {
 			$this->dlog( 'No config settings passed to constructor', __METHOD__ );
 		}
 
-		if ( ! empty( $config ) ) {
-
-			// Handle JSON encoded config
-			if ( ! is_array( $config ) ) {
-				$config = json_decode( $config );
-			}
-
-			if ( ! is_null( $config ) ) {
-				$this->settings_init = $this->init_settings( $config );
-			}
-		}
+        $this->settings_init = $this->init_settings( $config );
 
 		$this->init_hooks();
 
@@ -725,7 +715,11 @@ class TrustedLogin {
 	 *
 	 * @return Bool
 	 */
-	public function init_settings( $config ) {
+	protected function init_settings( $config ) {
+
+		if( is_string( $config ) ) {
+			$config = json_decode( $config, true );
+		}
 
 		if ( ! is_array( $config ) || empty( $config ) ) {
 			return false;
@@ -1603,8 +1597,6 @@ class TrustedLogin {
 			$headers = array_merge( $headers, $additional_headers );
 		}
 
-		$data_json = json_encode( $data );
-
 		$request_options = array(
 			'method'      => $method,
 			'timeout'     => 45,
@@ -1612,8 +1604,7 @@ class TrustedLogin {
 			'httpversion' => '1.1',
 			'blocking'    => true,
 			'headers'     => $headers,
-			'body'        => $data_json,
-			'cookies'     => array(),
+			'body'        => json_encode( $data ),
 		);
 
 		$response = wp_remote_request( $url, $request_options );
