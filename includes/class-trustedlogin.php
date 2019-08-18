@@ -68,10 +68,10 @@ class TrustedLogin {
 	private $debug_mode;
 
 	/**
-	 * @var bool $setting_init - if the settings have been initialized from the config object
+	 * @var bool $is_initialized - if the settings have been initialized from the config object
 	 * @since 0.1.0
 	 */
-	private $settings_init;
+	private $is_initialized = false;
 
 	/**
 	 * @var string $ns - plugin's namespace for use in namespacing variables and strings
@@ -85,7 +85,7 @@ class TrustedLogin {
 	 */
 	const version = '0.4.2';
 
-	public function __construct( $config = '' ) {
+	public function __construct( $config ) {
 
 		/**
 		 * Filter: Whether debug logging is enabled in trustedlogin drop-in
@@ -96,17 +96,28 @@ class TrustedLogin {
 		 */
 		$this->debug_mode = apply_filters( 'trustedlogin_debug_enabled', true );
 
-		$this->settings_init = false;
-
+		// TODO: Show error when config hasn't happened.
 		if ( empty( $config ) ) {
 			$this->dlog( 'No config settings passed to constructor', __METHOD__ );
+			return;
 		}
 
-        $this->settings_init = $this->init_settings( $config );
+        $this->is_initialized = $this->init_settings( $config );
 
 		$this->init_hooks();
 
 	}
+
+	/**
+     * Returns whether class has been initialized
+     *
+     * @since 0.7.0
+     *
+	 * @return bool Whether the class has initialized successfully (configuration settings were set)
+	 */
+	public function is_initialized() {
+	    return $this->is_initialized;
+    }
 
 	/**
 	 * Initialise the action hooks required
@@ -713,7 +724,7 @@ class TrustedLogin {
 	 *
 	 * @param array as per TL_Config specification
 	 *
-	 * @return Bool
+	 * @return bool Initialization succeeded
 	 */
 	protected function init_settings( $config ) {
 
@@ -769,6 +780,8 @@ class TrustedLogin {
 		);
 
 		$this->key_storage_option = 'tl_' . $this->ns . '_slt';
+
+		return true;
 	}
 
 	/**
