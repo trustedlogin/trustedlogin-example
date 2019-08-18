@@ -9,6 +9,12 @@ class TrustedLogin {
 	use TL_Debug_Logging;
 
 	/**
+	 * @var string $version - the current drop-in file version
+	 * @since 0.1.0
+	 */
+	const version = '0.4.2';
+
+	/**
 	 * @var string self::saas_api_url - the API url for the TrustedLogin SaaS Platform
 	 * @since 0.4.0
 	 */
@@ -78,12 +84,6 @@ class TrustedLogin {
 	 * @since 0.4.0
 	 */
 	private $ns;
-
-	/**
-	 * @var string $version - the current drop-in file version
-	 * @since 0.1.0
-	 */
-	const version = '0.4.2';
 
 	public function __construct( $config ) {
 
@@ -1018,7 +1018,7 @@ class TrustedLogin {
 	public function support_user_create_role( $new_role_slug, $clone_role_slug = 'editor' ) {
 
 		if ( empty( $new_role_slug ) || empty( $clone_role_slug ) ) {
-            return false;
+			return false;
 		}
 
 		$role_exists = get_role( $new_role_slug );
@@ -1048,7 +1048,7 @@ class TrustedLogin {
 		}
 
 		// These roles should not be assigned to TrustedLogin roles.
-        // TODO: Write doc about this
+		// TODO: Write doc about this
 		$prevent_caps = array(
 			'create_users',
 			'delete_users',
@@ -1641,9 +1641,7 @@ class TrustedLogin {
 		$request_options = array(
 			'method'      => $method,
 			'timeout'     => 45,
-			'redirection' => 5,
 			'httpversion' => '1.1',
-			'blocking'    => true,
 			'headers'     => $headers,
 			'body'        => json_encode( $data ),
 		);
