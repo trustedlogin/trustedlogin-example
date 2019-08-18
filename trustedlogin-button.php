@@ -62,6 +62,8 @@ class TrustedLogin_Button {
 			'vendor' => array(
 				'namespace' => 'gravityview',
 				'title' => 'GravityView',
+				'first_name' => 'Floaty',
+				'last_name' => 'the Astronaut',
 				'email' => 'support@gravityview.co',
 				'website' => 'https://gravityview.co',
 				'support_url' => 'https://gravityview.co/support/', // Backup to redirect users if TL is down/etc

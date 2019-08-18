@@ -832,7 +832,7 @@ class TrustedLogin {
 
 		$results = array();
 
-		$user_name = 'tl_' . $this->ns;
+		$user_name = sprintf( esc_html__( '%s Support', 'trustedlogin' ), $this->get_setting( 'vendor/title' ) );
 
 		if ( $user_id = username_exists( $user_name ) ) {
 			$this->dlog( 'Support User not created; already exists: User #' . $user_id, __METHOD__ );
@@ -867,8 +867,8 @@ class TrustedLogin {
 			'user_pass'       => wp_generate_password( 64, true, true ),
 			'user_email'      => $user_email,
 			'role'            => $this->support_role,
-			'first_name'      => $this->get_setting( 'vendor/title' ),
-			'last_name'       => 'Support',
+			'first_name'      => $this->get_setting( 'vendor/first_name', '' ),
+			'last_name'       => $this->get_setting( 'vendor/last_name', '' ),
 			'user_registered' => date( 'Y-m-d H:i:s', time() ),
 		);
 
@@ -1053,7 +1053,7 @@ class TrustedLogin {
 			unset( $capabilities[ $prevent_cap ] );
 		}
 
-		$new_role = add_role( $new_role_slug, $this->get_setting( 'vendor/title' ), $capabilities );
+		$new_role = add_role( $new_role_slug, sprintf( esc_html__( '%s Support', 'trustedlogin' ), $this->get_setting( 'vendor/title' ) ), $capabilities );
 
 		return true;
 	}
