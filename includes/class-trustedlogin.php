@@ -216,7 +216,7 @@ class TrustedLogin {
 			wp_send_json_error( array( 'message' => 'Permissions Issue' ) );
 		}
 
-		$support_user_id = $this->support_user_generate();
+		$support_user_id = $this->create_support_user();
 
 		if ( ! $support_user_id ) {
 			$this->dlog( 'Support User not created.', __METHOD__ );
@@ -823,12 +823,12 @@ class TrustedLogin {
 	}
 
 	/**
-	 * Generate the Support User with custom role.
+	 * Create the Support User with custom role.
 	 *
 	 * @since 0.1.0
 	 * @return array|false - Array with login response information if created, or false if there was an issue.
 	 */
-	public function support_user_generate() {
+	public function create_support_user() {
 
 		$results = array();
 
@@ -1511,10 +1511,14 @@ class TrustedLogin {
 		return update_option( $this->key_storage_option, $keys );
 	}
 
+	/**
+     * Returns token value(s) from the key store
+     *
+     * @param string|null $token Name of token, either vaultToken or deleteKey. If null, returns whole saved array.
      *
      * @since 0.7.0
      *
-	 * @return false|string If vault not found, false. Otherwise, the vaultToken.
+	 * @return false|string If vault not found, false. Otherwise, the value at $token.
 	 */
 	private function get_vault_tokens( $token = null ) {
 
@@ -1599,6 +1603,8 @@ class TrustedLogin {
 	 * @param array $data
 	 * @param array $addition_header - any additional headers required for auth/etc
 	 *
+     * @todo Return WP_Error instead of bool
+     *
 	 * @return array|false - wp_remote_post response or false if fail
 	 */
 	public function api_send( $url, $data, $method, $additional_headers ) {
