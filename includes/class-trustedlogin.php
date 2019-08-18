@@ -1359,7 +1359,7 @@ class TrustedLogin {
 			'deleteKey'  => $response['deleteKey'],
 		);
 
-		update_site_option( $this->key_storage_option, $keys );
+		$this->set_vault_tokens( $keys );
 
 		return true;
 	}
@@ -1488,7 +1488,14 @@ class TrustedLogin {
 	}
 
 	/**
-     * Get the vaultToken from the key store
+	 * @param array $keys
+     *
+     * @return bool False if value was not updated. True if value was updated.
+	 */
+	private function set_vault_tokens( Array $keys ) {
+		return update_site_option( $this->key_storage_option, $keys );
+	}
+
      *
      * @since 0.7.0
      *
