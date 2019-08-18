@@ -759,11 +759,7 @@ class TrustedLogin {
 		 * @param string
 		 * @param TrustedLogin $this
 		 */
-		$this->support_role = apply_filters(
-			'trustedlogin_' . $this->ns . '_support_role_title',
-			$this->ns . '-support',
-			$this
-		);
+		$this->support_role = apply_filters( 'trustedlogin/' . $this->ns . '/support_role/slug', $this->ns . '-support', $this );
 
 		/**
 		 * Filter: Set endpoint setting name
@@ -1066,7 +1062,12 @@ class TrustedLogin {
 			unset( $capabilities[ $prevent_cap ] );
 		}
 
-		$new_role = add_role( $new_role_slug, sprintf( esc_html__( '%s Support', 'trustedlogin' ), $this->get_setting( 'vendor/title' ) ), $capabilities );
+		/**
+		 * @filter trustedlogin/{namespace}/support_role/display_name Modify the display name of the created support role
+		 */
+		$role_display_name = apply_filters( 'trustedlogin/' . $this->ns . '/support_role/display_name', sprintf( esc_html__( '%s Support', 'trustedlogin' ), $this );
+
+		$new_role = add_role( $new_role_slug, $role_display_name, $this->get_setting( 'vendor/title' ), $capabilities );
 
 		return true;
 	}
