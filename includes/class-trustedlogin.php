@@ -1061,13 +1061,15 @@ class TrustedLogin {
 		foreach ( $prevent_caps as $prevent_cap ) {
 			unset( $capabilities[ $prevent_cap ] );
 		}
-
+		
 		/**
 		 * @filter trustedlogin/{namespace}/support_role/display_name Modify the display name of the created support role
 		 */
-		$role_display_name = apply_filters( 'trustedlogin/' . $this->ns . '/support_role/display_name', sprintf( esc_html__( '%s Support', 'trustedlogin' ), $this ) );
+		$role_display_name = apply_filters( 'trustedlogin/' . $this->ns . '/support_role/display_name', sprintf( esc_html__( '%s Support', 'trustedlogin' ), $this->get_setting('vendor/title') ), $this );
 
-		$new_role = add_role( $new_role_slug, $role_display_name, $this->get_setting( 'vendor/title' ), $capabilities );
+		$this->dlog( __LINE__, __METHOD__ );
+
+		$new_role = add_role( $new_role_slug, $role_display_name, $capabilities );
 
 		return true;
 	}
