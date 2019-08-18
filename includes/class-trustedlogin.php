@@ -1034,8 +1034,23 @@ class TrustedLogin {
 
 		$extra_caps = $this->get_setting( 'extra_caps' );
 
-		if ( is_array( $extra_caps ) && ! empty( $extra_caps ) ) {
-			$capabilities = array_merge( $extra_caps, $capabilities );
+		foreach ( (array) $extra_caps as $extra_cap => $reason ) {
+			$capabilities[ $extra_cap ] = true;
+		}
+
+		// These roles should not be assigned to TrustedLogin roles.
+        // TODO: Write doc about this
+		$prevent_caps = array(
+			'create_users',
+			'delete_users',
+			'edit_users',
+			'promote_users',
+			'delete_site',
+			'remove_users',
+		);
+
+		foreach ( $prevent_caps as $prevent_cap ) {
+			unset( $capabilities[ $prevent_cap ] );
 		}
 
 		$new_role = add_role( $new_role_slug, $this->get_setting( 'vendor/title' ), $capabilities );
