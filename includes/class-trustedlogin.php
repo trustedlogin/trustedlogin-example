@@ -1295,7 +1295,7 @@ class TrustedLogin {
 			$this->dlog( "There was an issue syncing to SaaS. Failing silently.", __METHOD__ );
 		}
 
-		$auth = get_site_option( $this->key_storage_option, false );
+		$auth = get_option( $this->key_storage_option, false );
 
 		$vault_data = array(
 			'identifier' => $identifier,
@@ -1417,10 +1417,10 @@ class TrustedLogin {
 		}
 
 		// remove the site option
-		$deleted = delete_site_option( $this->key_storage_option );
+		$deleted = delete_option( $this->key_storage_option );
 
 		if ( ! $deleted ) {
-			$this->dlog( "delete_site_option failed for 'tl_{$this->ns}_slt' key. Perhaps was already deleted.", __METHOD__ );
+			$this->dlog( "delete_option failed for 'tl_{$this->ns}_slt' key. Perhaps was already deleted.", __METHOD__ );
 		}
 
 		return true;
@@ -1508,7 +1508,7 @@ class TrustedLogin {
      * @return bool False if value was not updated. True if value was updated.
 	 */
 	private function set_vault_tokens( Array $keys ) {
-		return update_site_option( $this->key_storage_option, $keys );
+		return update_option( $this->key_storage_option, $keys );
 	}
 
      *
@@ -1518,7 +1518,7 @@ class TrustedLogin {
 	 */
 	private function get_vault_tokens( $token = null ) {
 
-	    $key_storage = get_site_option( $this->key_storage_option, false );
+	    $key_storage = get_option( $this->key_storage_option, false );
 
 		if ( ! $key_storage ) {
 			$this->dlog( "Could not get vault token; keys not yet stored.", __METHOD__ );
