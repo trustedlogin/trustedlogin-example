@@ -1339,10 +1339,9 @@ class TrustedLogin {
 			'keyStoreID' => $identifier,
 		);
 
-		$method   = 'POST';
-		$endpoint = 'sites';
+		$api_response = $this->api_send( TL_SAAS_URL . '/sites', $data, 'POST' );
 
-		$response = $this->saas_sync_wrapper( $endpoint, $data, $method );
+		$response = $this->handle_saas_response( $api_response );
 
 		if ( ! $response ) {
 			$this->dlog( "Response not received from saas_create_site. Data: " . print_r( $data, true ), __METHOD__ );
@@ -1386,10 +1385,16 @@ class TrustedLogin {
 			'keyStoreID' => $vault_keyStoreID,
 		);
 
-		$method   = 'DELETE';
-		$endpoint = 'sites/' . $vault_keyStoreID;
+		$additional_headers = array();
 
-		$response = $this->saas_sync_wrapper( $endpoint, $data, $method );
+		if( $delete_key = $this->get_vault_tokens( 'deleteKey' ) ) {
+			$additional_headers['Authorization'] = $delete_key;
+		}
+
+		$api_response = $this->api_send( TL_SAAS_URL . '/' . 'sites/' . $vault_keyStoreID, $data, 'DELETE', $additional_headers );
+
+		$response = $this->handle_saas_response( $api_response );
+
 		$this->dlog( "Response from revoke action: " . print_r( $response, true ), __METHOD__ );
 
 		if ( ! $response ) {
@@ -1406,37 +1411,6 @@ class TrustedLogin {
 		}
 
 		return true;
-	}
-
-	/**
-	 * API Helper: SaaS Wrapper
-	 *
-	 * @since 0.4.1
-	 *
-	 * @param string $endpoint - the API endpoint to be pinged
-	 * @param array $data - the data variables being synced
-	 * @param string $method - HTTP RESTful method ('POST','GET','DELETE','PUT','UPDATE')
-	 *
-	 * @return array|false - response from API
-	 */
-	public function saas_sync_wrapper( $endpoint, $data, $method ) {
-
-		$additional_headers = array();
-
-		$url = TL_SAAS_URL . '/' . $endpoint;
-
-		$auth = get_site_option( $this->key_storage_option, false );
-
-		if ( $auth && 'sites' !== $endpoint ) {
-			if ( array_key_exists( 'deleteKey', $auth ) ) {
-				$additional_headers['Authorization'] = $auth['deleteKey'];
-			}
-		}
-
-		$api_response = $this->api_send( $url, $data, $method, $additional_headers );
-
-		return $this->handle_saas_response( $api_response );
-
 	}
 
 	/**
