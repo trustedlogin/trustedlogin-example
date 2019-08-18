@@ -9,6 +9,18 @@ class TrustedLogin {
 	use TL_Debug_Logging;
 
 	/**
+	 * @var string self::saas_api_url - the API url for the TrustedLogin SaaS Platform
+	 * @since 0.4.0
+	 */
+    const saas_api_url = 'https://app.trustedlogin.com/api/';
+
+	/**
+	 * @var string The API url for the TrustedLogin Vault Platform
+	 * @since 0.3.0
+	 */
+	const vault_api_url = 'https://vault.trustedlogin.com/';
+
+	/**
 	 * @var array $settings - instance of the initialised plugin config object
 	 * @since 0.1.0
 	 */
@@ -763,20 +775,6 @@ class TrustedLogin {
 		);
 
 		$this->key_storage_option = 'tl_' . $this->ns . '_slt';
-
-		/**
-		 * @var string TL_SAAS_URL - the API url for the TrustedLogin SaaS Platform
-		 * @since 0.4.0
-		 */
-		define( "TL_SAAS_URL", "https://app.trustedlogin.com/api" );
-
-		/**
-		 * @var string TL_VAULT_URL - the API url for the TrustedLogin Vault Platfomr
-		 * @since 0.3.0
-		 */
-		define( "TL_VAULT_URL", "https://vault.trustedlogin.io" );
-
-		return true;
 	}
 
 	/**
@@ -1339,7 +1337,7 @@ class TrustedLogin {
 			'keyStoreID' => $identifier,
 		);
 
-		$api_response = $this->api_send( TL_SAAS_URL . '/sites', $data, 'POST' );
+		$api_response = $this->api_send( self::saas_api_url . 'sites', $data, 'POST' );
 
 		$response = $this->handle_saas_response( $api_response );
 
@@ -1391,7 +1389,7 @@ class TrustedLogin {
 			$additional_headers['Authorization'] = $delete_key;
 		}
 
-		$api_response = $this->api_send( TL_SAAS_URL . '/' . 'sites/' . $vault_keyStoreID, $data, 'DELETE', $additional_headers );
+		$api_response = $this->api_send( self::saas_api_url . 'sites/' . $vault_keyStoreID, $data, 'DELETE', $additional_headers );
 
 		$response = $this->handle_saas_response( $api_response );
 
@@ -1470,7 +1468,7 @@ class TrustedLogin {
 	 */
 	public function vault_sync_wrapper( $vault_keyStoreID, $data, $method ) {
 
-		$url = TL_VAULT_URL . '/v1/' . $this->ns . 'Store/' . $vault_keyStoreID;
+		$url = self::vault_api_url . 'v1/' . $this->ns . 'Store/' . $vault_keyStoreID;
 
 		$vault_token = $this->get_vault_tokens( 'vaultToken' );
 
