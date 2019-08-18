@@ -20,24 +20,24 @@ if ( ! defined('ABSPATH') ) {
 
 class TrustedLogin_Button {
 
-	/**
-	 * @var array $tl_config Configuration array passed to TrustedLogin class
-	 */
-	private $tl_config;
-
 	public $trustedlogin;
 
 	public function __construct() {
 
 		$this->load_includes();
 
-		$this->tl_config = array(
+		add_action( 'plugins_loaded', array( $this, 'init_tl' ) );
 
+	}
+
+	public function init_tl() {
+
+		$config = array(
 			// Role(s) provided to created support user
 			'role'             => array(
-				 // Key = capability/role. Value = Text describing why it's needed.
-				 // 'role_name' => 'reason for requesting',
-				 'editor' => 'Support needs to be able to access your site as an administrator to debug issues effectively.',
+				// Key = capability/role. Value = Text describing why it's needed.
+				// 'role_name' => 'reason for requesting',
+				'editor' => 'Support needs to be able to access your site as an administrator to debug issues effectively.',
 			),
 
 			// Extra capabilities to grant the user, in addition to what the defined roles provide
@@ -72,12 +72,7 @@ class TrustedLogin_Button {
 			'reassign_posts' => true,
 		);
 
-		add_action( 'plugins_loaded', array( $this, 'init_tl' ) );
-
-	}
-
-	public function init_tl() {
-		$trustedlogin = new TrustedLogin( $this->tl_config );
+		$trustedlogin = new TrustedLogin( $config );
 	}
 
 	public function load_includes() {
