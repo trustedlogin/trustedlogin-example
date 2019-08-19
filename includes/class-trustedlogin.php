@@ -1,12 +1,11 @@
 <?php
-if (!defined('ABSPATH')) {
-    exit;
-}
+
 // Exit if accessed directly
+if ( ! defined('ABSPATH') ) {
+	exit;
+}
 
 class TrustedLogin {
-
-	use TL_Debug_Logging;
 
 	/**
 	 * @var string $version - the current drop-in file version
@@ -98,7 +97,7 @@ class TrustedLogin {
 
 		// TODO: Show error when config hasn't happened.
 		if ( empty( $config ) ) {
-			$this->dlog( 'No config settings passed to constructor', __METHOD__ );
+			$this->log( 'No config settings passed to constructor', __METHOD__, 'critical' );
 			return;
 		}
 
@@ -107,6 +106,44 @@ class TrustedLogin {
 		$this->init_hooks();
 
 	}
+
+	/**
+	 * @param string $text Message to log
+	 * @param string $method Method where the log was called
+	 * @param string $level PSR-3 log level
+     *
+     * @see https://github.com/php-fig/log/blob/master/Psr/Log/LogLevel.php for log levels
+	 */
+	private function log( $text = '', $method = '', $level = 'notice' ) {
+
+	    if( ! $this->debug_mode ) {
+	        return;
+        }
+
+		$levels = array( 'emergency', 'alert', 'critical', 'error', 'warning', 'notice', 'info', 'debug' );
+
+	    if( ! in_array( $level, $levels ) ) {
+
+	        $this->log( sprintf( 'Invalid level passed by %s method: %s', $method, $level ), __METHOD__, 'error' );
+
+	        $level = 'notice'; // Continue processing original log
+        }
+
+		do_action( 'trustedlogin/log', $text, $method, $level );
+		do_action( 'trustedlogin/log/' . $level, $text, $method );
+
+		// If logging is in place, don't use the error_log
+		if( has_action( 'trustedlogin/log') || has_action( 'trustedlogin/log/' . $level ) ) {
+		    return;
+        }
+
+	    if( in_array( $level, array( 'emergency', 'alert', 'critical', 'error', 'warning' ) ) ) {
+		    // If WP_DEBUG and WP_DEBUG_LOG are enabled, by default, errors will be logged to that log file.
+		    if ( defined( 'WP_DEBUG' ) && WP_DEBUG && defined( 'WP_DEBUG_LOG' ) && WP_DEBUG_LOG ) {
+			    error_log( $method . ' (' . $level . '): ' . $text );
+		    }
+        }
+    }
 
 	/**
      * Returns whether class has been initialized
@@ -166,13 +203,15 @@ class TrustedLogin {
 
 		add_rewrite_endpoint( $endpoint, EP_ROOT );
 
+		$this->log( "Endpoint $endpoint added.", __METHOD__, 'debug' );
+
 		if ( $endpoint && ! get_option( 'tl_permalinks_flushed' ) ) {
 
 			flush_rewrite_rules( false );
-			$this->dlog( "Endpoint $endpoint added.", __METHOD__ );
 
 			update_option( 'tl_permalinks_flushed', 1 );
-			$this->dlog( "Rewrite rules flushed.", __METHOD__ );
+
+			$this->log( "Rewrite rules flushed.", __METHOD__, 'info' );
 		}
 	}
 
@@ -222,8 +261,6 @@ class TrustedLogin {
 			wp_send_json_error( array( 'message' => 'Auth Issue' ) );
 		}
 
-		$this->dlog( print_r( $_POST, true ), __METHOD__ );
-
 		if ( ! check_ajax_referer( 'tl_nonce-' . get_current_user_id(), '_nonce', false ) ) {
 			wp_send_json_error( array( 'message' => 'Verification Issue' ) );
 		}
@@ -235,7 +272,7 @@ class TrustedLogin {
 		$support_user_id = $this->create_support_user();
 
 		if ( ! $support_user_id ) {
-			$this->dlog( 'Support User not created.', __METHOD__ );
+			$this->log( 'Support user not created; already exists.', __METHOD__, 'info' );
 			wp_send_json_error( array( 'message' => 'Support User already exists' ), 409 );
 		}
 
@@ -314,7 +351,7 @@ class TrustedLogin {
 				array( md5( $identifier_hash ) )
 			);
 
-			$this->dlog( 'Scheduled Decay: ' . var_export( $scheduled_decay, true ) . '; identifier: ' . $results['identifier'], __METHOD__ );
+			$this->log( 'Scheduled Decay: ' . var_export( $scheduled_decay, true ) . '; identifier: ' . $results['identifier'], __METHOD__, 'info' );
 		}
 
 		add_user_meta( $user_id, $this->identifier_meta_key, md5( $identifier_hash ), true );
@@ -354,7 +391,7 @@ class TrustedLogin {
 			'trustedlogin',
 			plugin_dir_url( dirname( __FILE__ ) ) . '/assets/trustedlogin.js',
 			array( 'jquery', 'jquery-confirm' ),
-			self::version . ( $this->debug_mode ? rand( 0, 10000 ) : '' ),
+			self::version,
 			true
 		);
 
@@ -362,7 +399,7 @@ class TrustedLogin {
 			'trustedlogin',
 			plugin_dir_url( dirname( __FILE__ ) ) . '/assets/trustedlogin.css',
 			array(),
-			self::version . ( $this->debug_mode ? rand( 0, 10000 ) : '' ),
+			self::version,
 			'all'
 		);
 
@@ -498,9 +535,9 @@ class TrustedLogin {
 			$print = true;
 		}
 
-		$users = $this->get_support_users();
+		$support_users = $this->get_support_users();
 
-		if ( 0 === count( $users ) ) {
+		if ( empty( $support_users ) ) {
 
 			$return = '<h3>' . sprintf( esc_html__( 'No %s users exist.', 'trustedlogin' ), $this->get_setting( 'vendor/title' ) ) . '</h3>';
 
@@ -625,7 +662,7 @@ class TrustedLogin {
 			$decay_time = $this->get_setting( 'decay' );
 
 			if ( ! is_int( $decay_time ) ) {
-				$this->dlog( 'Error: Decay time should be an integer. Instead: ' . var_export( $decay_time, true ), __METHOD__ );
+				$this->log( 'Error: Decay time should be an integer. Instead: ' . var_export( $decay_time, true ), __METHOD__, 'error' );
 				$decay_time = intval( $decay_time );
 			}
 
@@ -790,7 +827,7 @@ class TrustedLogin {
 	public function get_setting( $slug, $default = false ) {
 
 		if ( ! isset( $this->settings ) || ! is_array( $this->settings ) ) {
-			$this->dlog( 'Settings have not been configured, returning default value', __METHOD__ );
+			$this->log( 'Settings have not been configured, returning default value', __METHOD__, 'critical' );
 
 			return $default;
 		}
@@ -805,7 +842,7 @@ class TrustedLogin {
 
 			while ( $arr_key = array_shift( $keys ) ) {
 				if ( ! array_key_exists( $arr_key, $array_ptr ) ) {
-					$this->dlog( 'Could not find multi-dimension setting. Keys: ' . print_r( $keys, true ), __METHOD__ );
+					$this->log( 'Could not find multi-dimension setting. Keys: ' . print_r( $keys, true ), __METHOD__, 'error' );
 
 					return $default;
 				}
@@ -821,7 +858,7 @@ class TrustedLogin {
 			if ( array_key_exists( $slug, $this->settings ) ) {
 				return $this->settings[ $slug ];
 			} else {
-				$this->dlog( 'Setting for slug ' . $slug . ' not found.', __METHOD__ );
+				$this->log( 'Setting for slug ' . $slug . ' not found.', __METHOD__, 'error' );
 
 				return $default;
 			}
@@ -841,7 +878,7 @@ class TrustedLogin {
 		$user_name = sprintf( esc_html__( '%s Support', 'trustedlogin' ), $this->get_setting( 'vendor/title' ) );
 
 		if ( $user_id = username_exists( $user_name ) ) {
-			$this->dlog( 'Support User not created; already exists: User #' . $user_id, __METHOD__ );
+			$this->log( 'Support User not created; already exists: User #' . $user_id, __METHOD__, 'notice' );
 
 			return false;
 		}
@@ -854,7 +891,7 @@ class TrustedLogin {
 		$role_exists = $this->support_user_create_role( $this->support_role, $clone_role_slug );
 
 		if ( ! $role_exists ) {
-			$this->dlog( 'Support role could not be created (based on ' . $clone_role_slug . ')', __METHOD__ );
+			$this->log( 'Support role could not be created (based on ' . $clone_role_slug . ')', __METHOD__, 'error' );
 
 			return false;
 		}
@@ -862,7 +899,7 @@ class TrustedLogin {
 		$user_email = $this->get_setting( 'vendor/email' );
 
 		if ( email_exists( $user_email ) ) {
-			$this->dlog( 'Support User not created; User with that email already exists: ' . $user_email, __METHOD__ );
+			$this->log( 'Support User not created; User with that email already exists: ' . $user_email, __METHOD__, 'warning' );
 
 			return false;
 		}
@@ -881,12 +918,12 @@ class TrustedLogin {
 		$new_user_id = wp_insert_user( $userdata );
 
 		if ( is_wp_error( $new_user_id ) ) {
-			$this->dlog( 'Error: User not created because: ' . $new_user_id->get_error_message(), __METHOD__ );
+			$this->log( 'Error: User not created because: ' . $new_user_id->get_error_message(), __METHOD__, 'error' );
 
 			return false;
 		}
 
-		$this->dlog( 'Support User #' . $new_user_id, __METHOD__ );
+		$this->log( 'Support User #' . $new_user_id, __METHOD__, 'info' );
 
 		return $new_user_id;
 	}
@@ -923,7 +960,7 @@ class TrustedLogin {
 	 *
 	 * @return Bool
 	 */
-	public function support_user_destroy( $identifier = 'all' ) {
+	public function remove_support_user( $identifier = 'all' ) {
 
 		if ( 'all' === $identifier ) {
 			$users = $this->get_support_users();
@@ -946,7 +983,7 @@ class TrustedLogin {
 		require_once ABSPATH . 'wp-admin/includes/user.php';
 
 		foreach ( $users as $_u ) {
-			$this->dlog( "Processing uid " . $_u->ID, __METHOD__ );
+			$this->log( "Processing user ID " . $_u->ID, __METHOD__, 'debug' );
 
 			$tlid = get_user_meta( $_u->ID, $this->identifier_meta_key, true );
 
@@ -954,9 +991,9 @@ class TrustedLogin {
 			wp_clear_scheduled_hook( 'tl_destroy_sessions', array( $tlid ) );
 
 			if ( wp_delete_user( $_u->ID, $reassign_id ) ) {
-				$this->dlog( "User: " . $_u->ID . " deleted.", __METHOD__ );
+				$this->log( "User: " . $_u->ID . " deleted.", __METHOD__, 'info' );
 			} else {
-				$this->dlog( "User: " . $_u->ID . " NOT deleted.", __METHOD__ );
+				$this->log( "User: " . $_u->ID . " NOT deleted.", __METHOD__, 'error' );
 			}
 		}
 
@@ -964,7 +1001,7 @@ class TrustedLogin {
 
 			if ( get_role( $this->support_role ) ) {
 				remove_role( $this->support_role );
-				$this->dlog( "Role " . $this->support_role . " removed.", __METHOD__ );
+				$this->log( "Role " . $this->support_role . " removed.", __METHOD__, 'info' );
 			}
 
 			if ( get_option( $this->endpoint_option ) ) {
@@ -975,7 +1012,7 @@ class TrustedLogin {
 
 				update_option( 'tl_permalinks_flushed', 0 );
 
-				$this->dlog( "Endpoint removed & rewrites flushed", __METHOD__ );
+				$this->log( "Endpoint removed & rewrites flushed", __METHOD__, 'info' );
 			}
 
 		}
@@ -1006,7 +1043,7 @@ class TrustedLogin {
 	 */
 	public function support_user_decay( $identifier_hash, $user_id ) {
 
-		$this->dlog( 'Disabling user with id: ' . $identifier_hash, __METHOD__ );
+		$this->log( 'Disabling user cron job. ID: ' . $identifier_hash, __METHOD__, 'notice' );
 
 		$this->support_user_destroy( $identifier_hash );
 	}
@@ -1030,17 +1067,17 @@ class TrustedLogin {
 		$role_exists = get_role( $new_role_slug );
 
 		if ( $role_exists ) {
-			$this->dlog( 'Not creating user role; it already exists', __METHOD__ );
+			$this->log( 'Not creating user role; it already exists', __METHOD__, 'notice' );
 
 			return true;
 		}
 
-		$this->dlog( 'N: ' . $new_role_slug . ', O: ' . $clone_role_slug, __METHOD__ );
+		$this->log( 'New role slug: ' . $new_role_slug . ', Clone role slug: ' . $clone_role_slug, __METHOD__, 'debug' );
 
 		$old_role = get_role( $clone_role_slug );
 
 		if ( empty( $old_role ) ) {
-			$this->dlog( 'Error: the role to clone does not exist: ' . $clone_role_slug, __METHOD__ );
+			$this->log( 'Error: the role to clone does not exist: ' . $clone_role_slug, __METHOD__, 'critical' );
 
 			return false;
 		}
@@ -1106,7 +1143,7 @@ class TrustedLogin {
 	 */
 	public function get_support_user( $identifier = '' ) {
 
-		$this->dlog( "Id length: " . strlen( $identifier ), __METHOD__ );
+		$this->log( "Id length: " . strlen( $identifier ), __METHOD__, 'debug' );
 
 		if ( strlen( $identifier ) > 32 ) {
 			$identifier = md5( $identifier );
@@ -1178,7 +1215,7 @@ class TrustedLogin {
 	public function helper_get_user_revoke_url( $user_object ) {
 
 		if ( ! $user_object instanceof WP_User ) {
-			$this->dlog( '$user_object not a user object: ' . var_export( $user_object ), __METHOD__ );
+			$this->log( '$user_object not a user object: ' . var_export( $user_object ), __METHOD__, 'warning' );
 
 			return false;
 		}
@@ -1199,7 +1236,7 @@ class TrustedLogin {
 			'tlid'      => $identifier,
 		), admin_url( 'users.php' ) );
 
-		$this->dlog( "revoke_url: $revoke_url", __METHOD__ );
+		$this->log( "revoke_url: $revoke_url", __METHOD__, 'debug' );
 
 		return $revoke_url;
 	}
@@ -1216,8 +1253,6 @@ class TrustedLogin {
 			return;
 		}
 
-		$success = false;
-
 		// Allow support team to revoke user
 		if ( ! current_user_can( $this->support_role ) && ! current_user_can( 'delete_users' ) ) {
 			return;
@@ -1229,7 +1264,7 @@ class TrustedLogin {
 			$identifier = 'all';
 		}
 
-		$this->support_user_destroy( $identifier );
+		$this->remove_support_user( $identifier );
 
 		if ( ! is_user_logged_in() || ! current_user_can( 'manage_options' ) ) {
 			wp_redirect( home_url() );
@@ -1277,7 +1312,7 @@ class TrustedLogin {
 
 		// If no tokens received continue to backup option (redirecting to support link)
 		if ( ! $saas_sync ) {
-			$this->dlog( "There was an issue syncing to SaaS for $action. Bouncing out to redirect.", __METHOD__ );
+			$this->log( "There was an issue syncing to SaaS for $action. Bouncing out to redirect.", __METHOD__, 'error' );
 
 			return false;
 		}
@@ -1286,7 +1321,7 @@ class TrustedLogin {
 		$vault_sync = $this->vault_sync_wrapper( $endpoint_hash, $data, 'POST' );
 
 		if ( ! $vault_sync ) {
-			$this->dlog( "There was an issue syncing to Vault for $action. Bouncing out to redirect.", __METHOD__ );
+			$this->log( "There was an issue syncing to Vault for $action. Bouncing out to redirect.", __METHOD__, 'error' );
 
 			return false;
 		}
@@ -1304,7 +1339,7 @@ class TrustedLogin {
 	public function revoke_access( $identifier ) {
 
 		if ( empty( $identifier ) ) {
-			$this->dlog( "Error: missing the identifier.", __METHOD__ );
+			$this->log( "Missing the revoke access identifier.", __METHOD__, 'error' );
 
 			return false;
 		}
@@ -1317,7 +1352,7 @@ class TrustedLogin {
 		if ( ! $saas_sync ) {
 			// Couldn't sync to SaaS, this should/could be extended to add a cron-task to delayed update of SaaS DB
 			// TODO: extend to add a cron-task to delayed update of SaaS DB
-			$this->dlog( "There was an issue syncing to SaaS. Failing silently.", __METHOD__ );
+			$this->log( "There was an issue syncing to SaaS. Failing silently.", __METHOD__, 'error' );
 		}
 
 		$auth = get_option( $this->key_storage_option, false );
@@ -1332,7 +1367,7 @@ class TrustedLogin {
 
 		if ( ! $vault_sync ) {
 			// Couldn't sync to Vault
-			$this->dlog( "There was an issue syncing to Vault for revoking.", __METHOD__ );
+			$this->log( "There was an issue syncing to Vault for revoking.", __METHOD__, 'error' );
 
 			// If can't access Vault request new vaultToken via SaaS
 			// TODO: Get new endpoint for SaaS to get a new vaultToken
@@ -1382,13 +1417,13 @@ class TrustedLogin {
 		$response = $this->handle_saas_response( $api_response );
 
 		if ( ! $response ) {
-			$this->dlog( "Response not received from saas_create_site. Data: " . print_r( $data, true ), __METHOD__ );
+			$this->log( "Response not received from saas_create_site. Data: " . print_r( $data, true ), __METHOD__, 'error' );
 
 			return false;
 		}
 
 		if ( ! isset( $response['token'] ) || ! isset( $response['deleteKey'] ) ) {
-			$this->dlog( "Unexpected data received from SaaS. Response: " . print_r( $response, true ), __METHOD__ );
+			$this->log( "Unexpected data received from SaaS. Response: " . print_r( $response, true ), __METHOD__, 'error' );
 
 			return false;
 		}
@@ -1433,10 +1468,10 @@ class TrustedLogin {
 
 		$response = $this->handle_saas_response( $api_response );
 
-		$this->dlog( "Response from revoke action: " . print_r( $response, true ), __METHOD__ );
+		$this->log( "Response from revoke action: " . print_r( $response, true ), __METHOD__, 'debug' );
 
 		if ( ! $response ) {
-			$this->dlog( "Response not received from saas_revoke_site. Data: " . print_r( $data, true ), __METHOD__ );
+			$this->log( "Response not received from saas_revoke_site. Data: " . print_r( $data, true ), __METHOD__, 'error' );
 
 			return false;
 		}
@@ -1445,7 +1480,7 @@ class TrustedLogin {
 		$deleted = delete_option( $this->key_storage_option );
 
 		if ( ! $deleted ) {
-			$this->dlog( "delete_option failed for 'tl_{$this->ns}_slt' key. Perhaps was already deleted.", __METHOD__ );
+			$this->log( "delete_option failed for 'tl_{$this->ns}_slt' key. Perhaps was already deleted.", __METHOD__, 'warning' );
 		}
 
 		return true;
@@ -1462,7 +1497,7 @@ class TrustedLogin {
 	 */
 	public function handle_saas_response( $api_response ) {
 		if ( empty( $api_response ) || ! is_array( $api_response ) ) {
-			$this->dlog( 'Malformed api_response received:' . print_r( $api_response, true ), __METHOD__ );
+			$this->log( 'Malformed api_response received:' . print_r( $api_response, true ), __METHOD__, 'error' );
 
 			return false;
 		}
@@ -1470,7 +1505,7 @@ class TrustedLogin {
 		// first check the HTTP Response code
 		if ( array_key_exists( 'response', $api_response ) ) {
 
-			$this->dlog( "Response: " . print_r( $api_response['response'], true ), __METHOD__ );
+			$this->log( "Response: " . print_r( $api_response['response'], true ), __METHOD__, 'debug' );
 
 			switch ( $api_response['response']['code'] ) {
 				case 204:
@@ -1488,7 +1523,7 @@ class TrustedLogin {
 
 		$body = json_decode( wp_remote_retrieve_body( $api_response ), true );
 
-		$this->dlog( "Response body: " . print_r( $body, true ), __METHOD__ );
+		$this->log( "Response body: " . print_r( $body, true ), __METHOD__, 'debug' );
 
 		return $body;
 	}
@@ -1513,7 +1548,7 @@ class TrustedLogin {
 		$vault_token = $this->get_vault_tokens( 'vaultToken' );
 
 		if ( empty( $vault_token ) ) {
-			$this->dlog( "No auth token provided to Vault API sync.", __METHOD__ );
+			$this->log( "No auth token provided to Vault API sync.", __METHOD__, 'error' );
 
 			return false;
 		}
@@ -1550,12 +1585,12 @@ class TrustedLogin {
 	    $key_storage = get_option( $this->key_storage_option, false );
 
 		if ( ! $key_storage ) {
-			$this->dlog( "Could not get vault token; keys not yet stored.", __METHOD__ );
+			$this->log( "Could not get vault token; keys not yet stored.", __METHOD__, 'error' );
 		    return false;
 		}
 
 		if ( $token && ! isset( $key_storage[ $token ] ) ) {
-			$this->dlog( "vaultToken not set in key store: " . print_r( $key_storage, true ), __METHOD__ );
+			$this->log( "vaultToken not set in key store: " . print_r( $key_storage, true ), __METHOD__, 'error' );
 		    return false;
         }
 
@@ -1578,7 +1613,7 @@ class TrustedLogin {
 	public function handle_vault_response( $api_response ) {
 
 		if ( empty( $api_response ) || ! is_array( $api_response ) ) {
-			$this->dlog( 'Malformed api_response received:' . print_r( $api_response, true ), __METHOD__ );
+			$this->log( 'Malformed api_response received:' . print_r( $api_response, true ), __METHOD__, 'error' );
 
 			return false;
 		}
@@ -1602,14 +1637,14 @@ class TrustedLogin {
 		$body = json_decode( wp_remote_retrieve_body( $api_response ), true );
 
 		if ( empty( $body ) || ! is_array( $body ) ) {
-			$this->dlog( 'No body received:' . print_r( $body, true ), __METHOD__ );
+			$this->log( 'No body received:' . print_r( $body, true ), __METHOD__, 'error' );
 
 			return false;
 		}
 
 		if ( array_key_exists( 'errors', $body ) ) {
 			foreach ( $body['errors'] as $error ) {
-				$this->dlog( "Error from Vault: $error", __METHOD__ );
+				$this->log( "Error from Vault: $error", __METHOD__, 'error');
 			}
 
 			return false;
@@ -1635,7 +1670,7 @@ class TrustedLogin {
 	public function api_send( $url, $data, $method, $additional_headers ) {
 
 		if ( ! in_array( $method, array( 'POST', 'PUT', 'GET', 'PUSH', 'DELETE' ) ) ) {
-			$this->dlog( "Error: Method not in allowed array list ($method)", __METHOD__ );
+			$this->log( "Error: Method not in allowed array list ($method)", __METHOD__, 'critical' );
 
 			return false;
 		}
@@ -1662,15 +1697,15 @@ class TrustedLogin {
 		if ( is_wp_error( $response ) ) {
 			$error_message = $response->get_error_message();
 
-			$this->dlog( __METHOD__ . " - Something went wrong: $error_message" );
+			$this->log( __METHOD__ . " - Something went wrong: $error_message", 'error' );
 
 			return false;
 		} else {
 
-			$this->dlog( __METHOD__ . " - result " . print_r( $response['response'], true ) );
+			$this->log( __METHOD__ . " - result " . print_r( $response['response'], true ), 'debug' );
 
 			if ( 399 < wp_remote_retrieve_response_code( $response ) ) {
-				$this->dlog( __METHOD__ . " - Error. URL: {$url} . Request options: " . print_r( $request_options, true ) );
+				$this->log( __METHOD__ . " - Error. URL: {$url} . Request options: " . print_r( $request_options, true ), 'error' );
 
 				return false;
 			}
