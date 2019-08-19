@@ -136,7 +136,7 @@ class TrustedLogin {
 
 			add_filter( 'user_row_actions', array( $this, 'user_row_action_revoke' ), 10, 2 );
 
-			// add_action('trustedlogin_button', array($this, 'output_support_users'), 20);
+			add_action('trustedlogin_users_table', array($this, 'output_support_users'), 20);
 		}
 
 		add_action( 'admin_bar_menu', array( $this, 'adminbar_add_toolbar_items' ), 100 );
@@ -539,38 +539,28 @@ class TrustedLogin {
 
 		$return .= '<tbody>';
 
-		foreach ( $users as $_u ) {
+		foreach ( $support_users as $support_user ) {
 
-			$this->dlog( 'tl_created_by:' . get_user_meta( $_u->ID, 'tl_created_by', true ), __METHOD__ );
+			$_user_creator = get_user_by( 'id', get_user_meta( $support_user->ID, 'tl_created_by', true ) );
 
-			$_gen_u = get_user_by( 'id', get_user_meta( $_u->ID, 'tl_created_by', true ) );
+			$return .= '<tr>';
+			$return .= '<th scope="row"><a href="' . esc_url( admin_url( 'user-edit.php?user_id=' . $support_user->ID ) ) . '">';
+			$return .= sprintf( '%s (#%d)', esc_html( $support_user->display_name ), $support_user->ID );
+			$return .= '</th>';
 
-			$this->dlog( 'g_u:' . print_r( $_gen_u, true ) );
+			$return .= '<td>' . trim( '<code>' . implode( '</code>,<code>', $support_user->roles ) . '</code>', ',' ) . '</td>';
+			$return .= '<td>' . sprintf( esc_html__( '%s ago' ), human_time_diff( strtotime( $support_user->user_registered ) ) ) . '</td>';
 
-			$_udata = get_userdata( $_u->ID );
-
-			$return .= '<tr><th scope="row"><a href="' . admin_url( 'user-edit.php?user_id=' . $_u->ID ) . '">' . sprintf( '%s (#%d)', esc_html( $_u->display_name ), $_udata->ID ) . '</th>';
-
-			if ( count( $_u->roles ) > 1 ) {
-				$roles = trim( '<code>' . implode( '</code>,<code>', $_u->roles ) . '</code>', ',' );
+			if ( $_user_creator && $_user_creator->exists() ) {
+				$return .= '<td>' . ( $_user_creator->exists() ? esc_html( $_user_creator->display_name ) : esc_html__( 'Unknown', 'trustedlogin' ) ) . '</td>';
 			} else {
-				$roles = '<code>' . esc_html( $_u->roles[0] ) . '</code>';
-			}
-			$return .= '<td>' . $roles . '</td>';
-
-			$return .= '<td>' . date( 'd M Y', strtotime( $_udata->user_registered ) ) . '</td>';
-			if ( $_gen_u ) {
-				$return .= '<td>' . ( $_gen_u->exists() ? $_gen_u->display_name : __( 'Unknown', 'trustedlogin' ) ) . '</td>';
-			} else {
-				$return .= '<td>' . __( 'Unknown', 'trustedlogin' ) . '</td>';
+				$return .= '<td>' . esc_html__( 'Unknown', 'trustedlogin' ) . '</td>';
 			}
 
-			$revoke_url = $this->helper_get_user_revoke_url( $_udata, true );
-
-			if ( $revoke_url ) {
-				$return .= '<td><a class="trustedlogin tl-revoke submitdelete" href="' . esc_url( $revoke_url ) . '">' . __( 'Revoke Access', 'trustedlogin' ) . '</a></td>';
+			if ( $revoke_url = $this->helper_get_user_revoke_url( $support_user, true ) ) {
+				$return .= '<td><a class="trustedlogin tl-revoke submitdelete" href="' . esc_url( $revoke_url ) . '">' . esc_html__( 'Revoke Access', 'trustedlogin' ) . '</a></td>';
 			} else {
-				$return .= '<td><a href="' . admin_url( 'users.php' ) . '">' . __( 'Manage from Users list', 'trustedlogin' ) . '</a></td>';
+				$return .= '<td><a href="' . esc_url( admin_url( 'users.php?role=' . $this->support_role ) ) . '">' . esc_html__( 'Manage from Users list', 'trustedlogin' ) . '</a></td>';
 			}
 			$return .= '</tr>';
 

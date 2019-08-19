@@ -58,10 +58,10 @@ class TestSettingsPage {
 	<div class="wrap">
 		<h1>TrustedLogin Demo</h1>
 		<div class="about-wrap full-width-layout">
-
+            <h2>Output a TrustedLogin button</h2>
 		<p class="description">Examples of using the TrustedLogin button generator:</p>
 		<pre lang="php">$TL = new TrustedLogin; 
-echo $TL->get_button( "size=normal&class=button-secondary" );
+echo $TL->get_button( 'size=normal&class=button-secondary' );
 </pre>
 
 		<div class="has-2-columns is-fullwidth">
@@ -128,6 +128,17 @@ echo $TL->get_button( "size=normal&class=button-secondary" );
 		</div>
 
 		</div>
+
+        <hr>
+
+        <div class="about-wrap full-width-layout">
+            <h2>Output a table of users</h2>
+            <p class="description">To include a table of your active support users created with TrustedLogin:</p>
+            <pre lang="php">do_action( 'trustedlogin_users_table' );</pre>
+            <?php
+                do_action( 'trustedlogin_users_table' );
+            ?>
+        </div>
 	</div>
 <?php
 	}
