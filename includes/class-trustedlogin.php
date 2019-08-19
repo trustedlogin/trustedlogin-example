@@ -951,7 +951,7 @@ class TrustedLogin {
 
 	    return $reassign_id;
     }
-    
+
     /**
 	 *
 	 * @since 0.1.0
@@ -1144,12 +1144,6 @@ class TrustedLogin {
 	 * @return array of WP_Users
 	 */
 	public function get_support_user( $identifier = '' ) {
-
-		$this->log( "Id length: " . strlen( $identifier ), __METHOD__, 'debug' );
-
-		if ( strlen( $identifier ) > 32 ) {
-			$identifier = md5( $identifier );
-		}
 
 		$args = array(
 			'role'       => $this->support_role,
