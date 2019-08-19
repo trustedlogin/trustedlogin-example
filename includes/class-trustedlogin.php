@@ -54,11 +54,11 @@ class TrustedLogin {
 	private $key_storage_option;
 
 	/**
-	 * @var string $identifier_option - The namespaced setting name for storing the unique identifier hash
+	 * @var string $identifier_meta_key - The namespaced setting name for storing the unique identifier hash in user meta
 	 * @example tl_{vendor/namespace}_id
 	 * @since 0.7.0
 	 */
-	private $identifier_option;
+	private $identifier_meta_key;
 
 	/**
 	 * @var int $expires_option - [Currently not used] The namespaced setting name for storing the timestamp the user expires
@@ -317,12 +317,12 @@ class TrustedLogin {
 			$this->dlog( 'Scheduled Decay: ' . var_export( $scheduled_decay, true ) . '; identifier: ' . $results['identifier'], __METHOD__ );
 		}
 
-		add_user_meta( $user_id, $this->identifier_option, md5( $identifier_hash ), true );
+		add_user_meta( $user_id, $this->identifier_meta_key, md5( $identifier_hash ), true );
 		add_user_meta( $user_id, $this->expires_option, $expiry );
 		add_user_meta( $user_id, 'tl_created_by', get_current_user_id() );
 
 		// Make extra sure that the identifier was saved. Otherwise, things won't work!
-		return get_user_meta( $user_id, $this->identifier_option, true );
+		return get_user_meta( $user_id, $this->identifier_meta_key, true );
 	}
 
 	/**
@@ -782,6 +782,8 @@ class TrustedLogin {
 
 		$this->key_storage_option = 'tl_' . $this->ns . '_slt';
 
+		$this->identifier_meta_key = 'tl_' . $this->ns . '_id';
+
 		return true;
 	}
 
@@ -956,7 +958,7 @@ class TrustedLogin {
 		foreach ( $users as $_u ) {
 			$this->dlog( "Processing uid " . $_u->ID, __METHOD__ );
 
-			$tlid = get_user_meta( $_u->ID, $this->identifier_option, true );
+			$tlid = get_user_meta( $_u->ID, $this->identifier_meta_key, true );
 
 			// Remove auto-cleanup hook
 			wp_clear_scheduled_hook( 'tl_destroy_sessions', array( $tlid ) );
@@ -1123,7 +1125,7 @@ class TrustedLogin {
 		$args = array(
 			'role'       => $this->support_role,
 			'number'     => 1,
-			'meta_key'   => $this->identifier_option,
+			'meta_key'   => $this->identifier_meta_key,
 			'meta_value' => $identifier,
 		);
 
@@ -1191,12 +1193,12 @@ class TrustedLogin {
 			return false;
 		}
 
-		if ( empty( $this->identifier_option ) ) {
-			$this->log( 'No endpoint has been set.: ' . var_export( $user_object ), __METHOD__, 'warning' );
+		if ( empty( $this->identifier_meta_key ) ) {
+			$this->log( 'The meta key to identify users is not set.', __METHOD__, 'error' );
             return false;
 		}
 
-		$identifier = get_user_meta( $user_object->ID, $this->identifier_option, true );
+		$identifier = get_user_meta( $user_object->ID, $this->identifier_meta_key, true );
 
 		if ( empty( $identifier ) ) {
 			return false;
