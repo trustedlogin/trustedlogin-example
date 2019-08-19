@@ -175,6 +175,6 @@ class TrustedLoginUsersTest extends WP_UnitTestCase {
 		$this->assertSame( $this->TrustedLogin->get_setting('vendor/last_name'), $support_user->last_name );
 		$this->assertSame( $this->TrustedLogin->get_setting('vendor/email'), $support_user->user_email );
 		$this->assertSame( $this->TrustedLogin->get_setting('vendor/website'), $support_user->user_url );
-		$this->assertSame( $username, $support_user->user_login );
+		$this->assertSame( sanitize_user( $username ), $support_user->user_login );
 	}
 }
