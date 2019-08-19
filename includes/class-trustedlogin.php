@@ -1186,6 +1186,11 @@ class TrustedLogin {
 			return false;
 		}
 
+		if ( empty( $this->identifier_option ) ) {
+			$this->log( 'No endpoint has been set.: ' . var_export( $user_object ), __METHOD__, 'warning' );
+            return false;
+		}
+
 		$identifier = get_user_meta( $user_object->ID, $this->identifier_option, true );
 
 		if ( empty( $identifier ) ) {
