@@ -1667,7 +1667,7 @@ class TrustedLogin {
      *
 	 * @return array|false - wp_remote_post response or false if fail
 	 */
-	public function api_send( $url, $data, $method, $additional_headers ) {
+	public function api_send( $url, $data, $method, $additional_headers = array() ) {
 
 		if ( ! in_array( $method, array( 'POST', 'PUT', 'GET', 'PUSH', 'DELETE' ) ) ) {
 			$this->log( "Error: Method not in allowed array list ($method)", __METHOD__, 'critical' );
