@@ -1145,8 +1145,7 @@ class TrustedLogin {
 	 */
 	public function get_support_user( $identifier = '' ) {
 
-		$this->log( "Id length: " . strlen( $identifier ), __METHOD__, 'debug' );
-
+	    // When passed in the endpoint URL, the unique ID will be the raw value, not the md5 hash.
 		if ( strlen( $identifier ) > 32 ) {
 			$identifier = md5( $identifier );
 		}
