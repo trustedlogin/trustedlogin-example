@@ -895,7 +895,28 @@ class TrustedLogin {
 	}
 
 	/**
-	 * Destroy one or all of the Support Users
+	 * Get the ID of the best-guess appropriate admin user
+     *
+     * @since 0.7.0
+     *
+     * @return int|false User ID if there are admins, false if not
+	 */
+    private function get_reassign_user_id() {
+
+	    // TODO: Filter here?
+	    $admins = get_users( array(
+		    'role'    => 'administrator',
+		    'orderby' => 'registered',
+		    'order'   => 'DESC',
+		    'number'  => 1,
+	    ) );
+
+        $reassign_id = empty( $admins ) ? null : $admins[0]->ID;
+
+	    $this->log( 'Reassign user ID: ' . var_export( $reassign_id ), __METHOD__, 'info' );
+
+	    return $reassign_id;
+    }
 	 *
 	 * @since 0.1.0
 	 *
@@ -913,29 +934,17 @@ class TrustedLogin {
 			$users = $this->get_support_user( $identifier );
 		}
 
-		$this->dlog( count( $users ) . " support users found", __METHOD__ );
-
-		$reassign_id = null;
-
-		if ( $this->settings['reassign_posts'] ) {
-			$admins = get_users(
-				array(
-					'role'    => 'administrator',
-					'orderby' => 'registered',
-					'order'   => 'DESC',
-					'number'  => 1,
-				)
-			);
-			if ( ! empty( $admins ) ) {
-				$reassign_id = $admins[0]->ID;
-			}
-		}
-
-		$this->dlog( "reassign_id: $reassign_id", __METHOD__ );
-
 		if ( empty( $users ) ) {
 			return false;
 		}
+
+		$this->log( count( $users ) . " support users found", __METHOD__, 'debug' );
+
+		if( $this->settings['reassign_posts'] ) {
+			$reassign_id = $this->get_reassign_user_id();
+		} else {
+			$reassign_id = null;
+        }
 
 		require_once ABSPATH . 'wp-admin/includes/user.php';
 
