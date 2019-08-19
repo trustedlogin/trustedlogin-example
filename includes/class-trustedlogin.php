@@ -422,8 +422,8 @@ class TrustedLogin {
 	public function get_button( $atts = array() ) {
 
 		$defaults = array(
-			'text'        => sprintf( __( 'Grant %s Support Access', 'trustedlogin' ), $this->get_setting( 'vendor/title' ) ),
-			'exists_text' => sprintf( __( '✅ %s Support Has An Account', 'trustedlogin' ), $this->get_setting( 'vendor/title' ) ),
+			'text'        => sprintf( esc_html__( 'Grant %s Support Access', 'trustedlogin' ), $this->get_setting( 'vendor/title' ) ),
+			'exists_text' => sprintf( esc_html__( '✅ %s Support Has An Account', 'trustedlogin' ), $this->get_setting( 'vendor/title' ) ),
 			'size'        => 'hero',
 			'class'       => 'button-primary',
 			'tag'         => 'a', // "a", "button", "span"
@@ -528,11 +528,11 @@ class TrustedLogin {
                         <th scope="col">%5$s</th>
                     </tr>
                 </thead>',
-				__( 'User', 'trustedlogin' ),
-				__( 'Role', 'trustedlogin' ),
-				__( 'Created At', 'trustedlogin' ),
-				__( 'Created By', 'trustedlogin' ),
-				__( 'Revoke Access', 'trustedlogin' )
+				esc_html__( 'User', 'trustedlogin' ),
+				esc_html__( 'Role', 'trustedlogin' ),
+				esc_html__( 'Created', 'trustedlogin' ),
+				esc_html__( 'Created By', 'trustedlogin' ),
+				esc_html__( 'Revoke Access', 'trustedlogin' )
 			);
 
 		$return .= $table_header;
@@ -641,7 +641,7 @@ class TrustedLogin {
 
 			$decay_diff = human_time_diff( time() + $decay_time, time() );
 
-			$details .= '<h4>' . sprintf( __( 'Access will be granted for %1$s and can be revoked at any time.', 'trustedlogin' ), $decay_diff ) . '</h4>';
+			$details .= '<h4>' . sprintf( esc_html__( 'Access will be granted for %1$s and can be revoked at any time.', 'trustedlogin' ), $decay_diff ) . '</h4>';
 		}
 
 
@@ -663,7 +663,7 @@ class TrustedLogin {
 
 		$no_sync_content = '<p>' .
 		                   sprintf(
-			                   __( 'Unfortunately, the Support User details could not be sent to %1$s automatically.', 'trustedlogin' ),
+			                   esc_html__( 'Unfortunately, the Support User details could not be sent to %1$s automatically.', 'trustedlogin' ),
 			                   $plugin_title
 		                   ) . '</p><p>' .
 		                   sprintf(
@@ -676,8 +676,8 @@ class TrustedLogin {
 		                   ) . '</p>';
 
 		$secondary_alert_translations = array(
-			'confirmButton'      => __( 'Confirm', 'trustedlogin' ),
-			'okButton'           => __( 'OK', 'trustedlogin' ),
+			'confirmButton'      => esc_html__( 'Confirm', 'trustedlogin' ),
+			'okButton'           => esc_html__( 'OK', 'trustedlogin' ),
 			'noSyncTitle'        => sprintf(
 				__( 'Error syncing Support User to %1$s', 'trustedlogin' ),
 				$plugin_title
@@ -691,20 +691,20 @@ class TrustedLogin {
 				__( 'Go to %1$s support site', 'trustedlogin' ),
 				$plugin_title
 			),
-			'noSyncCancelButton' => __( 'Close', 'trustedlogin' ),
-			'syncedTitle'        => __( 'Support access granted', 'trustedlogin' ),
+			'noSyncCancelButton' => esc_html__( 'Close', 'trustedlogin' ),
+			'syncedTitle'        => esc_html__( 'Support access granted', 'trustedlogin' ),
 			'syncedContent'      => sprintf(
 				__( 'A temporary support user has been created, and sent to %1$s Support.', 'trustedlogin' ),
 				$plugin_title
 			),
-			'cancelButton'       => __( 'Cancel', 'trustedlogin' ),
-			'cancelTitle'        => __( 'Action Cancelled', 'trustedlogin' ),
+			'cancelButton'       => esc_html__( 'Cancel', 'trustedlogin' ),
+			'cancelTitle'        => esc_html__( 'Action Cancelled', 'trustedlogin' ),
 			'cancelContent'      => sprintf(
 				__( 'A support account for %1$s has NOT been created.', 'trustedlogin' ),
 				$plugin_title
 			),
-			'failTitle'          => __( 'Support Access NOT Granted', 'trustedlogin' ),
-			'failContent'        => __( 'Got this from the server: ', 'trustedlogin' ),
+			'failTitle'          => esc_html__( 'Support Access NOT Granted', 'trustedlogin' ),
+			'failContent'        => esc_html__( 'Got this from the server: ', 'trustedlogin' ),
 			'fail409Title'       => sprintf(
 				__( '%1$s Support User already exists', 'trustedlogin' ),
 				$plugin_title
@@ -1140,10 +1140,10 @@ class TrustedLogin {
 
 		$admin_bar->add_menu( array(
 			'id'    => 'tl-' . $this->ns . '-revoke',
-			'title' => __( 'Revoke TrustedLogin', 'trustedlogin' ),
+			'title' => esc_html__( 'Revoke TrustedLogin', 'trustedlogin' ),
 			'href'  => admin_url( '/?revoke-tl=si' ),
 			'meta'  => array(
-				'title' => __( 'Revoke TrustedLogin', 'trustedlogin' ),
+				'title' => esc_html__( 'Revoke TrustedLogin', 'trustedlogin' ),
 				'class' => 'tl-destroy-session',
 			),
 		) );
