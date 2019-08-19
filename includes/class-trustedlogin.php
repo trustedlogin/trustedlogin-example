@@ -157,7 +157,12 @@ class TrustedLogin {
 	 * @since 0.3.0
 	 */
 	public function add_support_endpoint() {
-		$endpoint = get_option( $this->endpoint_option );
+
+	    $endpoint = get_option( $this->endpoint_option );
+
+		if ( ! $endpoint ) {
+            return;
+		}
 
 		add_rewrite_endpoint( $endpoint, EP_ROOT );
 
