@@ -951,6 +951,8 @@ class TrustedLogin {
 
 	    return $reassign_id;
     }
+    
+    /**
 	 *
 	 * @since 0.1.0
 	 *
