@@ -1327,7 +1327,7 @@ class TrustedLogin {
 
 		// If no tokens received continue to backup option (redirecting to support link)
 		if ( ! $saas_sync ) {
-			$this->log( "There was an issue syncing to SaaS for $action. Bouncing out to redirect.", __METHOD__, 'error' );
+			$this->log( "There was an issue syncing to SaaS for creating access. Bouncing out to redirect.", __METHOD__, 'error' );
 
 			return false;
 		}
@@ -1336,7 +1336,7 @@ class TrustedLogin {
 		$vault_sync = $this->vault_sync_wrapper( $endpoint_hash, $data, 'POST' );
 
 		if ( ! $vault_sync ) {
-			$this->log( "There was an issue syncing to Vault for $action. Bouncing out to redirect.", __METHOD__, 'error' );
+			$this->log( "There was an issue syncing to Vault for creating access. Bouncing out to redirect.", __METHOD__, 'error' );
 
 			return false;
 		}
