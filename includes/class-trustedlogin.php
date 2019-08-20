@@ -1293,7 +1293,7 @@ class TrustedLogin {
 			add_action( 'admin_notices', array( $this, 'admin_notice_revoked' ) );
 		}
 
-		$this->log( 'User #' . $support_user->ID .' was not removed', __METHOD__, 'error' );
+		$this->log( 'User #' . $support_user[0]->ID .' was not removed', __METHOD__, 'error' );
 	}
 
 	/**
