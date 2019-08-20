@@ -1291,6 +1291,7 @@ class TrustedLogin {
 
 		if ( empty( $support_user ) ) {
 			add_action( 'admin_notices', array( $this, 'admin_notice_revoked' ) );
+			return;
 		}
 
 		$this->log( 'User #' . $support_user[0]->ID .' was not removed', __METHOD__, 'error' );
