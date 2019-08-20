@@ -17,7 +17,7 @@ class TrustedLogin {
 	 * @var string self::saas_api_url - the API url for the TrustedLogin SaaS Platform
 	 * @since 0.4.0
 	 */
-    const saas_api_url = 'https://app.trustedlogin.com/api/';
+	const saas_api_url = 'https://app.trustedlogin.com/api/';
 
 	/**
 	 * @var string The API url for the TrustedLogin Vault Platform
@@ -98,10 +98,11 @@ class TrustedLogin {
 		// TODO: Show error when config hasn't happened.
 		if ( empty( $config ) ) {
 			$this->log( 'No config settings passed to constructor', __METHOD__, 'critical' );
+
 			return;
 		}
 
-        $this->is_initialized = $this->init_settings( $config );
+		$this->is_initialized = $this->init_settings( $config );
 
 		$this->init_hooks();
 
@@ -111,50 +112,50 @@ class TrustedLogin {
 	 * @param string $text Message to log
 	 * @param string $method Method where the log was called
 	 * @param string $level PSR-3 log level
-     *
-     * @see https://github.com/php-fig/log/blob/master/Psr/Log/LogLevel.php for log levels
+	 *
+	 * @see https://github.com/php-fig/log/blob/master/Psr/Log/LogLevel.php for log levels
 	 */
 	private function log( $text = '', $method = '', $level = 'notice' ) {
 
-	    if( ! $this->debug_mode ) {
-	        return;
-        }
+		if ( ! $this->debug_mode ) {
+			return;
+		}
 
 		$levels = array( 'emergency', 'alert', 'critical', 'error', 'warning', 'notice', 'info', 'debug' );
 
-	    if( ! in_array( $level, $levels ) ) {
+		if ( ! in_array( $level, $levels ) ) {
 
-	        $this->log( sprintf( 'Invalid level passed by %s method: %s', $method, $level ), __METHOD__, 'error' );
+			$this->log( sprintf( 'Invalid level passed by %s method: %s', $method, $level ), __METHOD__, 'error' );
 
-	        $level = 'notice'; // Continue processing original log
-        }
+			$level = 'notice'; // Continue processing original log
+		}
 
 		do_action( 'trustedlogin/log', $text, $method, $level );
 		do_action( 'trustedlogin/log/' . $level, $text, $method );
 
 		// If logging is in place, don't use the error_log
-		if( has_action( 'trustedlogin/log') || has_action( 'trustedlogin/log/' . $level ) ) {
-		    return;
-        }
+		if ( has_action( 'trustedlogin/log' ) || has_action( 'trustedlogin/log/' . $level ) ) {
+			#    return;
+		}
 
-	    if( in_array( $level, array( 'emergency', 'alert', 'critical', 'error', 'warning' ) ) ) {
-		    // If WP_DEBUG and WP_DEBUG_LOG are enabled, by default, errors will be logged to that log file.
-		    if ( defined( 'WP_DEBUG' ) && WP_DEBUG && defined( 'WP_DEBUG_LOG' ) && WP_DEBUG_LOG ) {
-			    error_log( $method . ' (' . $level . '): ' . $text );
-		    }
-        }
-    }
+		if ( in_array( $level, array( 'emergency', 'alert', 'critical', 'error', 'warning' ) ) ) {
+			// If WP_DEBUG and WP_DEBUG_LOG are enabled, by default, errors will be logged to that log file.
+			if ( defined( 'WP_DEBUG' ) && WP_DEBUG && defined( 'WP_DEBUG_LOG' ) && WP_DEBUG_LOG ) {
+				error_log( $method . ' (' . $level . '): ' . $text );
+			}
+		}
+	}
 
 	/**
-     * Returns whether class has been initialized
-     *
-     * @since 0.7.0
-     *
+	 * Returns whether class has been initialized
+	 *
+	 * @since 0.7.0
+	 *
 	 * @return bool Whether the class has initialized successfully (configuration settings were set)
 	 */
 	public function is_initialized() {
-	    return $this->is_initialized;
-    }
+		return $this->is_initialized;
+	}
 
 	/**
 	 * Initialise the action hooks required
@@ -173,7 +174,7 @@ class TrustedLogin {
 
 			add_filter( 'user_row_actions', array( $this, 'user_row_action_revoke' ), 10, 2 );
 
-			add_action('trustedlogin_users_table', array($this, 'output_support_users'), 20);
+			add_action( 'trustedlogin_users_table', array( $this, 'output_support_users' ), 20 );
 		}
 
 		add_action( 'admin_bar_menu', array( $this, 'adminbar_add_toolbar_items' ), 100 );
@@ -195,10 +196,10 @@ class TrustedLogin {
 	 */
 	public function add_support_endpoint() {
 
-	    $endpoint = get_option( $this->endpoint_option );
+		$endpoint = get_option( $this->endpoint_option );
 
 		if ( ! $endpoint ) {
-            return;
+			return;
 		}
 
 		add_rewrite_endpoint( $endpoint, EP_ROOT );
@@ -241,16 +242,15 @@ class TrustedLogin {
 		$expires = get_user_meta( $support_user->ID, $this->expires_meta_key, true );
 
 		// This user has expired, but the cron didn't run...
-		if( $expires && time() > (int) $expires ) {
-
+		if ( $expires && time() > (int) $expires ) {
 			$this->log( 'The user was supposed to expire on ' . $expires . '; revoking now.', __METHOD__, 'warning' );
 
-            $identifier = get_user_meta( $support_user->ID, $this->identifier_meta_key, true );
+			$identifier = get_user_meta( $support_user->ID, $this->identifier_meta_key, true );
 
 			$this->remove_support_user( $identifier );
 
 			return;
-        }
+		}
 
 		wp_set_current_user( $support_user->ID, $support_user->user_login );
 		wp_set_auth_cookie( $support_user->ID );
@@ -355,7 +355,7 @@ class TrustedLogin {
 
 		$decay_time = $this->get_setting( 'decay', 300 );
 
-		$expiry = time() + $decay_time;
+		$expiry = time() + (int) $decay_time;
 
 		if ( $decay_time ) {
 
@@ -774,7 +774,7 @@ class TrustedLogin {
 	 */
 	protected function init_settings( $config ) {
 
-		if( is_string( $config ) ) {
+		if ( is_string( $config ) ) {
 			$config = json_decode( $config, true );
 		}
 
@@ -821,9 +821,9 @@ class TrustedLogin {
 			$this
 		);
 
-		$this->key_storage_option = 'tl_' . $this->ns . '_slt';
+		$this->key_storage_option  = 'tl_' . $this->ns . '_slt';
 		$this->identifier_meta_key = 'tl_' . $this->ns . '_id';
-		$this->expires_meta_key = 'tl_' . $this->ns . '_expires';
+		$this->expires_meta_key    = 'tl_' . $this->ns . '_expires';
 
 		return true;
 	}
@@ -944,29 +944,29 @@ class TrustedLogin {
 
 	/**
 	 * Get the ID of the best-guess appropriate admin user
-     *
-     * @since 0.7.0
-     *
-     * @return int|false User ID if there are admins, false if not
+	 *
+	 * @since 0.7.0
+	 *
+	 * @return int|false User ID if there are admins, false if not
 	 */
-    private function get_reassign_user_id() {
+	private function get_reassign_user_id() {
 
-	    // TODO: Filter here?
-	    $admins = get_users( array(
-		    'role'    => 'administrator',
-		    'orderby' => 'registered',
-		    'order'   => 'DESC',
-		    'number'  => 1,
-	    ) );
+		// TODO: Filter here?
+		$admins = get_users( array(
+			'role'    => 'administrator',
+			'orderby' => 'registered',
+			'order'   => 'DESC',
+			'number'  => 1,
+		) );
 
-        $reassign_id = empty( $admins ) ? null : $admins[0]->ID;
+		$reassign_id = empty( $admins ) ? null : $admins[0]->ID;
 
-	    $this->log( 'Reassign user ID: ' . var_export( $reassign_id ), __METHOD__, 'info' );
+		$this->log( 'Reassign user ID: ' . var_export( $reassign_id ), __METHOD__, 'info' );
 
-	    return $reassign_id;
-    }
-    
-    /**
+		return $reassign_id;
+	}
+
+	/**
 	 *
 	 * @since 0.1.0
 	 *
@@ -990,11 +990,11 @@ class TrustedLogin {
 
 		$this->log( count( $users ) . " support users found", __METHOD__, 'debug' );
 
-		if( $this->settings['reassign_posts'] ) {
+		if ( $this->settings['reassign_posts'] ) {
 			$reassign_id = $this->get_reassign_user_id();
 		} else {
 			$reassign_id = null;
-        }
+		}
 
 		require_once ABSPATH . 'wp-admin/includes/user.php';
 
@@ -1120,11 +1120,11 @@ class TrustedLogin {
 		foreach ( $prevent_caps as $prevent_cap ) {
 			unset( $capabilities[ $prevent_cap ] );
 		}
-		
+
 		/**
 		 * @filter trustedlogin/{namespace}/support_role/display_name Modify the display name of the created support role
 		 */
-		$role_display_name = apply_filters( 'trustedlogin/' . $this->ns . '/support_role/display_name', sprintf( esc_html__( '%s Support', 'trustedlogin' ), $this->get_setting('vendor/title') ), $this );
+		$role_display_name = apply_filters( 'trustedlogin/' . $this->ns . '/support_role/display_name', sprintf( esc_html__( '%s Support', 'trustedlogin' ), $this->get_setting( 'vendor/title' ) ), $this );
 
 		$new_role = add_role( $new_role_slug, $role_display_name, $capabilities );
 
@@ -1159,7 +1159,7 @@ class TrustedLogin {
 	 */
 	public function get_support_user( $identifier = '' ) {
 
-	    // When passed in the endpoint URL, the unique ID will be the raw value, not the md5 hash.
+		// When passed in the endpoint URL, the unique ID will be the raw value, not the md5 hash.
 		if ( strlen( $identifier ) > 32 ) {
 			$identifier = md5( $identifier );
 		}
@@ -1237,7 +1237,8 @@ class TrustedLogin {
 
 		if ( empty( $this->identifier_meta_key ) ) {
 			$this->log( 'The meta key to identify users is not set.', __METHOD__, 'error' );
-            return false;
+
+			return false;
 		}
 
 		$identifier = get_user_meta( $user_object->ID, $this->identifier_meta_key, true );
@@ -1408,14 +1409,14 @@ class TrustedLogin {
 	}
 
 	/**
-     * Creates a site in the SaaS app using the identifier hash as the keyStoreID
-     *
-     * Stores the tokens in the options table under $this->key_storage_option
-     *
+	 * Creates a site in the SaaS app using the identifier hash as the keyStoreID
+	 *
+	 * Stores the tokens in the options table under $this->key_storage_option
+	 *
 	 * @param string $identifier Unique ID used across this site/saas/vault
 	 *
-     * @todo Convert false returns to WP_Error
-     *
+	 * @todo Convert false returns to WP_Error
+	 *
 	 * @return bool Success creating site?
 	 */
 	public function saas_create_site( $identifier ) {
@@ -1475,7 +1476,7 @@ class TrustedLogin {
 
 		$additional_headers = array();
 
-		if( $delete_key = $this->get_vault_tokens( 'deleteKey' ) ) {
+		if ( $delete_key = $this->get_vault_tokens( 'deleteKey' ) ) {
 			$additional_headers['Authorization'] = $delete_key;
 		}
 
@@ -1552,8 +1553,8 @@ class TrustedLogin {
 	 * @param array $data - the data variables being synced
 	 * @param string $method - HTTP RESTful method ('POST','GET','DELETE','PUT','UPDATE')
 	 *
-     * @todo Convert false returns to WP_Error
-     *
+	 * @todo Convert false returns to WP_Error
+	 *
 	 * @return array|false - response from API
 	 */
 	public function vault_sync_wrapper( $vault_keyStoreID, $data, $method ) {
@@ -1579,42 +1580,44 @@ class TrustedLogin {
 
 	/**
 	 * @param array $keys
-     *
-     * @return bool False if value was not updated. True if value was updated.
+	 *
+	 * @return bool False if value was not updated. True if value was updated.
 	 */
 	private function set_vault_tokens( Array $keys ) {
 		return update_option( $this->key_storage_option, $keys );
 	}
 
 	/**
-     * Returns token value(s) from the key store
-     *
-     * @param string|null $token Name of token, either vaultToken or deleteKey. If null, returns whole saved array.
-     *
-     * @since 0.7.0
-     *
+	 * Returns token value(s) from the key store
+	 *
+	 * @param string|null $token Name of token, either vaultToken or deleteKey. If null, returns whole saved array.
+	 *
+	 * @since 0.7.0
+	 *
 	 * @return false|string If vault not found, false. Otherwise, the value at $token.
 	 */
 	private function get_vault_tokens( $token = null ) {
 
-	    $key_storage = get_option( $this->key_storage_option, false );
+		$key_storage = get_option( $this->key_storage_option, false );
 
 		if ( ! $key_storage ) {
 			$this->log( "Could not get vault token; keys not yet stored.", __METHOD__, 'error' );
-		    return false;
+
+			return false;
 		}
 
 		if ( $token && ! isset( $key_storage[ $token ] ) ) {
 			$this->log( "vaultToken not set in key store: " . print_r( $key_storage, true ), __METHOD__, 'error' );
-		    return false;
-        }
 
-		if( $token ) {
-		    return $key_storage[ $token ];
-        }
+			return false;
+		}
 
-        return $key_storage;
-    }
+		if ( $token ) {
+			return $key_storage[ $token ];
+		}
+
+		return $key_storage;
+	}
 
 	/**
 	 * API Response Handler - Vault side
@@ -1659,7 +1662,7 @@ class TrustedLogin {
 
 		if ( array_key_exists( 'errors', $body ) ) {
 			foreach ( $body['errors'] as $error ) {
-				$this->log( "Error from Vault: $error", __METHOD__, 'error');
+				$this->log( "Error from Vault: $error", __METHOD__, 'error' );
 			}
 
 			return false;
@@ -1678,8 +1681,8 @@ class TrustedLogin {
 	 * @param array $data
 	 * @param array $addition_header - any additional headers required for auth/etc
 	 *
-     * @todo Return WP_Error instead of bool
-     *
+	 * @todo Return WP_Error instead of bool
+	 *
 	 * @return array|false - wp_remote_post response or false if fail
 	 */
 	public function api_send( $url, $data, $method, $additional_headers = array() ) {
