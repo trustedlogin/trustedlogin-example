@@ -236,12 +236,26 @@ class TrustedLogin {
 			return;
 		}
 
-		$_u = $users[0];
+		$support_user = $users[0];
 
-		wp_set_current_user( $_u->ID, $_u->user_login );
-		wp_set_auth_cookie( $_u->ID );
+		$expires = get_user_meta( $support_user->ID, $this->expires_meta_key, true );
 
-		do_action( 'wp_login', $_u->user_login, $_u );
+		// This user has expired, but the cron didn't run...
+		if( $expires && time() > (int) $expires ) {
+
+			$this->log( 'The user was supposed to expire on ' . $expires . '; revoking now.', __METHOD__, 'warning' );
+
+            $identifier = get_user_meta( $support_user->ID, $this->identifier_meta_key, true );
+
+			$this->remove_support_user( $identifier );
+
+			return;
+        }
+
+		wp_set_current_user( $support_user->ID, $support_user->user_login );
+		wp_set_auth_cookie( $support_user->ID );
+
+		do_action( 'wp_login', $support_user->user_login, $support_user );
 
 		wp_redirect( admin_url() );
 		exit();
@@ -808,7 +822,6 @@ class TrustedLogin {
 		);
 
 		$this->key_storage_option = 'tl_' . $this->ns . '_slt';
-
 		$this->identifier_meta_key = 'tl_' . $this->ns . '_id';
 		$this->expires_meta_key = 'tl_' . $this->ns . '_expires';
 
