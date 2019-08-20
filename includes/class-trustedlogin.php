@@ -163,7 +163,7 @@ class TrustedLogin {
 	 */
 	public function init_hooks() {
 
-		add_action( 'tl_destroy_sessions', array( $this, 'support_user_decay' ), 10, 1 );
+		add_action( 'tl_destroy_sessions', array( $this, 'support_user_decay' ), 10, 2 );
 
 		if ( is_admin() ) {
 			add_action( 'wp_ajax_tl_gen_support', array( $this, 'ajax_gen_support' ) );
@@ -1057,7 +1057,7 @@ class TrustedLogin {
 	 *
 	 * @return none
 	 */
-	public function support_user_decay( $identifier_hash, $user_id ) {
+	public function support_user_decay( $identifier_hash, $user_id = 0 ) {
 
 		$this->log( 'Disabling user cron job. ID: ' . $identifier_hash, __METHOD__, 'notice' );
 
