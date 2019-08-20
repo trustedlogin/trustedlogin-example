@@ -1338,7 +1338,7 @@ class TrustedLogin {
 	 *
 	 * @return bool Both saas and vault synced. False: either or both failed to sync.
 	 */
-	public function revoke_access( $identifier ) {
+	public function revoke_access( $identifier = '' ) {
 
 		if ( empty( $identifier ) ) {
 			$this->log( "Missing the revoke access identifier.", __METHOD__, 'error' );
