@@ -1432,15 +1432,38 @@ class TrustedLogin {
 
 		$api_response = $this->api_send( self::saas_api_url . 'sites', $data, 'POST' );
 
-		$response = $this->handle_saas_response( $api_response );
+		if( is_wp_error( $api_response ) ) {
+			$this->log( sprintf( 'Error creating site (Code %s): %s', $api_response->get_error_code(), $api_response->get_error_message() ), __METHOD__, 'error' );
 
-		if ( ! $response ) {
-			$this->log( "Response not received from saas_create_site. Data: " . print_r( $data, true ), __METHOD__, 'error' );
+		    return false;
+        }
+
+		switch ( wp_remote_retrieve_response_code( $api_response ) ) {
+			case 204:
+				// does not return any body content, so can bounce out successfully here
+				return true;
+				break;
+			case 403:
+				// Problem with Token
+				// maybe do something here to handle this
+			case 404:
+				// the KV store was not found, possible issue with endpoint
+			default:
+		}
+
+		$this->log( "Response: " . print_r( $api_response, true ), __METHOD__, 'error' );
+
+		$response_body = wp_remote_retrieve_body( $api_response );
+
+		if ( empty( $response_body ) ) {
+			$this->log( "Response body not set: " . print_r( $response_body, true ), __METHOD__, 'error' );
 
 			return false;
 		}
 
-		if ( ! isset( $response['token'] ) || ! isset( $response['deleteKey'] ) ) {
+		$response_keys = json_decode( $response_body, true );
+
+		if ( empty( $response_keys ) || ! isset( $response_keys['token'] ) || ! isset( $response_keys['deleteKey'] ) ) {
 			$this->log( "Unexpected data received from SaaS. Response: " . print_r( $response, true ), __METHOD__, 'error' );
 
 			return false;
@@ -1448,8 +1471,8 @@ class TrustedLogin {
 
 		// handle short-lived tokens for Vault and SaaS
 		$keys = array(
-			'vaultToken' => $response['token'],
-			'deleteKey'  => $response['deleteKey'],
+			'vaultToken' => $response_keys['token'],
+			'deleteKey'  => $response_keys['deleteKey'],
 		);
 
 		$this->set_vault_tokens( $keys );
@@ -1484,6 +1507,11 @@ class TrustedLogin {
 
 		$api_response = $this->api_send( self::saas_api_url . 'sites/' . $vault_keyStoreID, $data, 'DELETE', $additional_headers );
 
+		if ( is_wp_error( $api_response ) ) {
+			$this->log( "Request resulted in an error: " . print_r( $api_response, true ), __METHOD__, 'error' );
+			return false;
+		}
+
 		$response = $this->handle_saas_response( $api_response );
 
 		$this->log( "Response from revoke action: " . print_r( $response, true ), __METHOD__, 'debug' );
@@ -1514,11 +1542,6 @@ class TrustedLogin {
 	 * @return array|bool - If successful response has body content then returns that, otherwise true. If failed, returns false;
 	 */
 	public function handle_saas_response( $api_response ) {
-		if ( empty( $api_response ) || ! is_array( $api_response ) ) {
-			$this->log( 'Malformed api_response received:' . print_r( $api_response, true ), __METHOD__, 'error' );
-
-			return false;
-		}
 
 		// first check the HTTP Response code
 		if ( array_key_exists( 'response', $api_response ) ) {
@@ -1585,7 +1608,7 @@ class TrustedLogin {
 	 *
 	 * @return bool False if value was not updated. True if value was updated.
 	 */
-	private function set_vault_tokens( Array $keys ) {
+	private function set_vault_tokens( array $keys ) {
 		return update_option( $this->key_storage_option, $keys );
 	}
 
@@ -1685,7 +1708,7 @@ class TrustedLogin {
 	 *
 	 * @todo Return WP_Error instead of bool
 	 *
-	 * @return array|false - wp_remote_post response or false if fail
+	 * @return WP_Error|array - wp_remote_post response or false if $method isn't valid
 	 */
 	public function api_send( $url, $data, $method, $additional_headers = array() ) {
 
