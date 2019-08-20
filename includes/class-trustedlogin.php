@@ -163,7 +163,7 @@ class TrustedLogin {
 	 */
 	public function init_hooks() {
 
-		add_action( 'tl_destroy_sessions', array( $this, 'support_user_decay' ), 10, 2 );
+		add_action( 'trustedlogin_revoke_access', array( $this, 'support_user_decay' ), 10, 2 );
 
 		if ( is_admin() ) {
 			add_action( 'wp_ajax_tl_gen_support', array( $this, 'ajax_gen_support' ) );
@@ -361,7 +361,7 @@ class TrustedLogin {
 
 			$scheduled_decay = wp_schedule_single_event(
 				time() + $decay_time,
-				'tl_destroy_sessions',
+				'trustedlogin_revoke_access',
 				array( md5( $identifier_hash ) )
 			);
 
@@ -1004,7 +1004,7 @@ class TrustedLogin {
 			$tlid = get_user_meta( $_u->ID, $this->identifier_meta_key, true );
 
 			// Remove auto-cleanup hook
-			wp_clear_scheduled_hook( 'tl_destroy_sessions', array( $tlid ) );
+			wp_clear_scheduled_hook( 'trustedlogin_revoke_access', array( $tlid ) );
 
 			if ( wp_delete_user( $_u->ID, $reassign_id ) ) {
 				$this->log( "User: " . $_u->ID . " deleted.", __METHOD__, 'info' );
