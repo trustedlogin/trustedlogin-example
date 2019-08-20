@@ -1733,7 +1733,11 @@ class TrustedLogin {
 			'body'        => json_encode( $data ),
 		);
 
+		$this->log( sprintf( 'Sending to %s: %s', $url, print_r( $request_options, true ) ), __METHOD__, 'debug' );
+
 		$response = wp_remote_request( $url, $request_options );
+
+		$this->log( sprintf( 'Response: %s', print_r( $response, true ) ), __METHOD__, 'debug' );
 
 		return $response;
 	}
