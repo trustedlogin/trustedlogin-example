@@ -1061,7 +1061,7 @@ class TrustedLogin {
 
 		$this->log( 'Disabling user cron job. ID: ' . $identifier_hash, __METHOD__, 'notice' );
 
-		$this->support_user_destroy( $identifier_hash );
+		$this->remove_support_user( $identifier_hash );
 	}
 
 	/**
