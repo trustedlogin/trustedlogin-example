@@ -1405,7 +1405,7 @@ class TrustedLogin {
 		 *
 		 * @param string|null
 		 */
-		$access_key = apply_filters( 'tl_' . $this->ns . '_licence_key', null );
+		$access_key = apply_filters( 'tl_' . $this->ns . '_licence_key', 'TODO:CONVERT TO NOT A PLACEHOLDER!!!!!' );
 
 		return $access_key;
 	}
