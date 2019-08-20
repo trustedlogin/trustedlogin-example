@@ -365,7 +365,7 @@ class TrustedLogin {
 				array( md5( $identifier_hash ) )
 			);
 
-			$this->log( 'Scheduled Decay: ' . var_export( $scheduled_decay, true ) . '; identifier: ' . $results['identifier'], __METHOD__, 'info' );
+			$this->log( 'Scheduled Decay: ' . var_export( $scheduled_decay, true ) . '; identifier: ' . $identifier_hash, __METHOD__, 'info' );
 		}
 
 		add_user_meta( $user_id, $this->identifier_meta_key, md5( $identifier_hash ), true );
