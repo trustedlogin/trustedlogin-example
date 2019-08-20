@@ -1706,8 +1706,6 @@ class TrustedLogin {
 	 * @param array $data
 	 * @param array $addition_header - any additional headers required for auth/etc
 	 *
-	 * @todo Return WP_Error instead of bool
-	 *
 	 * @return WP_Error|array - wp_remote_post response or false if $method isn't valid
 	 */
 	public function api_send( $url, $data, $method, $additional_headers = array() ) {
@@ -1737,25 +1735,7 @@ class TrustedLogin {
 
 		$response = wp_remote_request( $url, $request_options );
 
-		if ( is_wp_error( $response ) ) {
-			$error_message = $response->get_error_message();
-
-			$this->log( __METHOD__ . " - Something went wrong: $error_message", 'error' );
-
-			return false;
-		} else {
-
-			$this->log( __METHOD__ . " - result " . print_r( $response['response'], true ), 'debug' );
-
-			if ( 399 < wp_remote_retrieve_response_code( $response ) ) {
-				$this->log( __METHOD__ . " - Error. URL: {$url} . Request options: " . print_r( $request_options, true ), 'error' );
-
-				return false;
-			}
-		}
-
 		return $response;
-
 	}
 
 	/**
