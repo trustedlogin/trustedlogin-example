@@ -60,11 +60,11 @@ class TrustedLogin {
 	private $identifier_meta_key;
 
 	/**
-	 * @var int $expires_option - [Currently not used] The namespaced setting name for storing the timestamp the user expires
+	 * @var int $expires_meta_key - [Currently not used] The namespaced setting name for storing the timestamp the user expires
 	 * @example tl_{vendor/namespace}_expires
 	 * @since 0.7.0
 	 */
-	private $expires_option;
+	private $expires_meta_key;
 
 	/**
 	 * @var bool $debug_mode - whether to output debug information to a debug text file
@@ -355,7 +355,7 @@ class TrustedLogin {
 		}
 
 		add_user_meta( $user_id, $this->identifier_meta_key, md5( $identifier_hash ), true );
-		add_user_meta( $user_id, $this->expires_option, $expiry );
+		add_user_meta( $user_id, $this->expires_meta_key, $expiry );
 		add_user_meta( $user_id, 'tl_created_by', get_current_user_id() );
 
 		// Make extra sure that the identifier was saved. Otherwise, things won't work!
@@ -810,6 +810,7 @@ class TrustedLogin {
 		$this->key_storage_option = 'tl_' . $this->ns . '_slt';
 
 		$this->identifier_meta_key = 'tl_' . $this->ns . '_id';
+		$this->expires_meta_key = 'tl_' . $this->ns . '_expires';
 
 		return true;
 	}
