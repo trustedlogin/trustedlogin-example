@@ -313,11 +313,12 @@ class TrustedLogin {
 
 		$synced = $this->create_access( $identifier_hash, $return_data );
 
-		if ( $synced ) {
+		if ( $synced && ! is_wp_error( $synced ) ) {
 			wp_send_json_success( $return_data, 201 );
 		}
 
 		$return_data['message'] = 'Sync Issue';
+
 		wp_send_json_error( $return_data, 503 );
 	}
 
@@ -1659,7 +1660,7 @@ class TrustedLogin {
 	 *
 	 * @return array|false - response from API
 	 */
-	public function vault_sync_wrapper( $vault_keyStoreID, $data, $method ) {
+	public function vault_sync_wrapper( $vault_keyStoreID, array $data, $method ) {
 
 		$url = self::vault_api_url . 'v1/' . $this->ns . 'Store/' . $vault_keyStoreID;
 
