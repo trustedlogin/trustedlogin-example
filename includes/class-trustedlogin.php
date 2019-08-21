@@ -381,7 +381,7 @@ class TrustedLogin {
 		if ( $decay_time ) {
 
 			$scheduled_decay = wp_schedule_single_event(
-				time() + $decay_time,
+				$decay_time,
 				'trustedlogin_revoke_access',
 				array( md5( $identifier_hash ) )
 			);
