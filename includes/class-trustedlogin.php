@@ -1366,6 +1366,8 @@ class TrustedLogin {
 		}
 
 		do_action( 'trustedlogin/access/created', array( 'url' => get_site_url(), 'action' => 'create' ) );
+
+		return true;
 	}
 
 	/**
