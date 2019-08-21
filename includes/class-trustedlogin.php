@@ -1356,15 +1356,72 @@ class TrustedLogin {
 		}
 
 		// Else ping the envelope into vault, trigger webhook fire
-		$vault_sync = $this->vault_sync_wrapper( $endpoint_hash, $data, 'POST' );
+		$vault_create = $this->vault_create_store( $endpoint_hash, $data );
 
-		if ( ! $vault_sync ) {
+		if ( ! $vault_create ) {
 			$this->log( "There was an issue syncing to Vault for creating access. Bouncing out to redirect.", __METHOD__, 'error' );
 
 			return false;
 		}
 
 		do_action( 'trustedlogin/access/created', array( 'url' => get_site_url(), 'action' => 'create' ) );
+	}
+
+	/**
+     * Create a keystore in Vault
+     *
+	 * @param $endpoint_hash
+	 * @param $passed_data
+	 *
+     * @since 0.7.0
+     *
+	 * @return array|bool
+	 */
+	private function vault_create_store( $endpoint_hash, $passed_data ) {
+
+		$required_data = array(
+			'siteurl'    => '',
+			'endpoint'   => '',
+			'identifier' => '',
+			'user_id'    => 0,
+			'expiry'     => 0,
+		);
+
+		$data = wp_parse_args( $passed_data, $required_data );
+
+		foreach ( $required_data as $key => $value ) {
+			if ( empty( $data[ $key ] ) ) {
+				$this->log( "Missing required data for Vault sync: {$key}. " . print_r( $passed_data, true ), __METHOD__, 'error' );
+
+				return false;
+			}
+		}
+
+		if ( empty( $data['identifier'] ) || empty( $data['user_id'] ) ) {
+			$this->log( "Missing required data for Vault sync.", __METHOD__, 'error' );
+
+			return false;
+		}
+
+
+		$vault_token = $this->get_vault_tokens( 'vaultToken' );
+
+		if ( empty( $vault_token ) ) {
+			$this->log( "No auth token provided to Vault API sync.", __METHOD__, 'error' );
+
+			return false;
+		}
+
+		$additional_headers = array(
+			'X-Vault-Token' => $vault_token,
+		);
+
+		$url = self::vault_api_url . 'v1/' . $this->ns . 'Store/' . $endpoint_hash;
+		$api_response = $this->api_send( $url, $data, 'POST', $additional_headers );
+
+		$this->log( 'API response from Vault: ' . print_r( $api_response, true ), __METHOD__, 'debug' );
+
+		return $this->handle_vault_response( $api_response );
 	}
 
 	/**
