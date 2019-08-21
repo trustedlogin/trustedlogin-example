@@ -307,6 +307,7 @@ class TrustedLogin {
 			'siteurl'    => get_site_url(),
 			'endpoint'   => $endpoint,
 			'identifier' => $identifier_hash,
+			'user_id'    => $support_user_id,
 			'expiry'     => $decay,
 		);
 
