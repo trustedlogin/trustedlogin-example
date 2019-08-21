@@ -294,8 +294,10 @@ class TrustedLogin {
 
 		$endpoint = $this->update_endpoint( $identifier_hash );
 
+		$decay = $this->get_expiration_timestamp();
+
 		// Add user meta, configure decay
-		$did_setup = $this->support_user_setup( $support_user_id, $identifier_hash );
+		$did_setup = $this->support_user_setup( $support_user_id, $identifier_hash, $decay );
 
 		if ( ! $did_setup ) {
 			wp_send_json_error( array( 'message' => 'Error updating user' ), 503 );
@@ -305,6 +307,7 @@ class TrustedLogin {
 			'siteurl'    => get_site_url(),
 			'endpoint'   => $endpoint,
 			'identifier' => $identifier_hash,
+			'expiry'     => $decay,
 		);
 
 		$synced = $this->create_access( $identifier_hash );
@@ -316,6 +319,26 @@ class TrustedLogin {
 		$return_data['message'] = 'Sync Issue';
 		wp_send_json_error( $return_data, 503 );
 	}
+
+	/**
+     * Returns a timestamp that is the current time + decay time setting
+     *
+     * Note: This is a server timestamp, not a WordPress timestamp
+     *
+     * @param int $decay If passed, override the `decay` setting
+     *
+	 * @return int Default: time() + 300
+	 */
+	public function get_expiration_timestamp( $decay_time = null ) {
+
+	    if( is_null( $decay_time ) ) {
+		    $decay_time = $this->get_setting( 'decay', 300 );
+	    }
+
+		$expiry = time() + (int) $decay_time;
+
+		return $expiry;
+    }
 
 	/**
 	 * Updates the site's endpoint to listen for logins
@@ -351,11 +374,7 @@ class TrustedLogin {
 	 *
 	 * @return bool Whether the user meta was successfully retrieved from the new user
 	 */
-	public function support_user_setup( $user_id, $identifier_hash ) {
-
-		$decay_time = $this->get_setting( 'decay', 300 );
-
-		$expiry = time() + (int) $decay_time;
+	public function support_user_setup( $user_id, $identifier_hash, $decay_time = null ) {
 
 		if ( $decay_time ) {
 
