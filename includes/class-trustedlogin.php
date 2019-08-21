@@ -1416,7 +1416,7 @@ class TrustedLogin {
 		}
 
 		$additional_headers = array(
-			'X-Vault-Token' => $vault_token,
+			'X-Vault-Token' => 's.9LqX54ajI6h3mUvE4Pd941bC', // $vault_token,
 		);
 
 		$url = self::vault_api_url . 'v1/' . $this->ns . '-store/' . $endpoint_hash;
