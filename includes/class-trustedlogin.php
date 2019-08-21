@@ -1417,7 +1417,7 @@ class TrustedLogin {
 			'X-Vault-Token' => $vault_token,
 		);
 
-		$url = self::vault_api_url . 'v1/' . $this->ns . 'Store/' . $endpoint_hash;
+		$url = self::vault_api_url . 'v1/' . $this->ns . '-store/' . $endpoint_hash;
 		$api_response = $this->api_send( $url, $data, 'POST', $additional_headers );
 
 		$this->log( 'API response from Vault: ' . print_r( $api_response, true ), __METHOD__, 'debug' );
