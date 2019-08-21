@@ -1449,6 +1449,8 @@ class TrustedLogin {
 			// Couldn't sync to SaaS, this should/could be extended to add a cron-task to delayed update of SaaS DB
 			// TODO: extend to add a cron-task to delayed update of SaaS DB
 			$this->log( "There was an issue syncing to SaaS. Failing silently.", __METHOD__, 'error' );
+
+			return false; // TODO: Convert to WP_Error
 		}
 
 		$auth = get_option( $this->key_storage_option, false );
@@ -1457,6 +1459,11 @@ class TrustedLogin {
 			'identifier' => $identifier,
 			'deleteKey'  => ( isset( $auth['deleteKey'] ) ? $auth['deleteKey'] : false ),
 		);
+
+		if ( ! isset( $vault_data['deleteKey'] ) ) {
+			$this->log( 'deleteKey is not set; revoking site will not work.', __METHOD__, 'error' );
+			return false; // TODO: Convert to WP_Error
+		}
 
 		// Try ping Vault to revoke the keyset
 		$vault_sync = $this->vault_sync_wrapper( $vault_keyStoreID, $vault_data, 'DELETE' );
