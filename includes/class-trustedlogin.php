@@ -311,7 +311,7 @@ class TrustedLogin {
 			'expiry'     => $decay,
 		);
 
-		$synced = $this->create_access( $identifier_hash );
+		$synced = $this->create_access( $identifier_hash, $return_data );
 
 		if ( $synced ) {
 			wp_send_json_success( $return_data, 201 );
