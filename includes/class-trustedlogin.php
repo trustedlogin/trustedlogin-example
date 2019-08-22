@@ -1419,8 +1419,7 @@ class TrustedLogin {
 			'X-Vault-Token' => 's.9LqX54ajI6h3mUvE4Pd941bC', // $vault_token,
 		);
 
-		$url = self::vault_api_url . 'v1/' . $this->ns . '-store/' . $endpoint_hash;
-		$api_response = $this->api_send( $url, $data, 'POST', $additional_headers );
+		$api_response = $this->api_send( $this->get_vault_url( $endpoint_hash ), $data, 'POST', $additional_headers );
 
 		$this->log( 'API response from Vault: ' . print_r( $api_response, true ), __METHOD__, 'debug' );
 
@@ -1482,6 +1481,19 @@ class TrustedLogin {
 
 		return $saas_sync && $vault_sync;
 	}
+
+		$api_response = $this->api_send( $this->get_vault_url( $deleteKey ), null, 'DELETE' );
+
+	/**
+     * Returns the URL for interacting with a Vault store
+     *
+	 * @param string $path
+	 *
+	 * @return string
+	 */
+    private function get_vault_url( $path ) {
+	    return self::vault_api_url . 'v1/' . $this->ns . '-store/' . $path;
+    }
 
 	function get_access_key() {
 
