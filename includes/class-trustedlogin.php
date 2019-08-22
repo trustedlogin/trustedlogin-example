@@ -1829,7 +1829,7 @@ class TrustedLogin {
 			'timeout'     => 45,
 			'httpversion' => '1.1',
 			'headers'     => $headers,
-			'body'        => json_encode( $data ),
+			'body'        => ( $data ? json_encode( $data ) : null ),
 		);
 
 		$this->log( sprintf( 'Sending to %s: %s', $url, print_r( $request_options, true ) ), __METHOD__, 'debug' );
