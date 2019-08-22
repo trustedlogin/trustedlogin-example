@@ -1415,7 +1415,7 @@ class TrustedLogin {
 		}
 
 		$additional_headers = array(
-			'X-Vault-Token' => 's.9LqX54ajI6h3mUvE4Pd941bC', // $vault_token,
+			'X-Vault-Token' => $vault_token,
 		);
 
 		$api_response = $this->api_send( $this->get_vault_url( $endpoint_hash ), $data, 'POST', $additional_headers );
