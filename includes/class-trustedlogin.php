@@ -1406,7 +1406,6 @@ class TrustedLogin {
 			return false;
 		}
 
-
 		$vault_token = $this->get_vault_tokens( 'vaultToken' );
 
 		if ( empty( $vault_token ) ) {
@@ -1441,12 +1440,12 @@ class TrustedLogin {
 			return false;
 		}
 
-		$vault_keyStoreID = $this->get_endpoint_hash( $identifier );
+		$endpoint_hash = $this->get_endpoint_hash( $identifier );
 
 		// Ping SaaS to notify of revoke
-		$saas_sync = $this->saas_revoke_site( $vault_keyStoreID );
+		$saas_revoke = $this->saas_revoke_site( $endpoint_hash );
 
-		if ( ! $saas_sync ) {
+		if ( ! $saas_revoke || is_wp_error( $saas_revoke ) ) {
 			// Couldn't sync to SaaS, this should/could be extended to add a cron-task to delayed update of SaaS DB
 			// TODO: extend to add a cron-task to delayed update of SaaS DB
 			$this->log( "There was an issue syncing to SaaS. Failing silently.", __METHOD__, 'error' );
@@ -1466,7 +1465,7 @@ class TrustedLogin {
 
 		do_action( 'trustedlogin/access/revoked', array( 'url' => get_site_url(), 'action' => 'revoke' ) );
 
-		return $saas_sync && $vault_sync;
+		return $saas_revoke && $vault_revoke;
 	}
 
 	/**
