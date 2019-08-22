@@ -1454,22 +1454,9 @@ class TrustedLogin {
 			return false; // TODO: Convert to WP_Error
 		}
 
-		$auth = get_option( $this->key_storage_option, false );
+		$vault_revoke = $this->vault_revoke_store();
 
-		$vault_data = array(
-			'identifier' => $identifier,
-			'deleteKey'  => ( isset( $auth['deleteKey'] ) ? $auth['deleteKey'] : false ),
-		);
-
-		if ( ! isset( $vault_data['deleteKey'] ) ) {
-			$this->log( 'deleteKey is not set; revoking site will not work.', __METHOD__, 'error' );
-			return false; // TODO: Convert to WP_Error
-		}
-
-		// Try ping Vault to revoke the keyset
-		$vault_sync = $this->vault_sync_wrapper( $vault_keyStoreID, $vault_data, 'DELETE' );
-
-		if ( ! $vault_sync ) {
+		if ( ! $vault_revoke || is_wp_error( $vault_revoke ) ) {
 			// Couldn't sync to Vault
 			$this->log( "There was an issue syncing to Vault for revoking.", __METHOD__, 'error' );
 
@@ -1482,7 +1469,29 @@ class TrustedLogin {
 		return $saas_sync && $vault_sync;
 	}
 
+	/**
+     * Revoke a site from Vault
+     *
+	 * @param $endpoint_hash
+	 *
+	 * @return array|bool
+	 */
+	private function vault_revoke_store() {
+
+	    $deleteKey = $this->get_vault_tokens( 'deleteKey' );
+
+		if ( empty( $deleteKey ) ) {
+			$this->log( "deleteKey is not set; revoking site will not work.", __METHOD__, 'error' );
+
+			return false;
+		}
+
 		$api_response = $this->api_send( $this->get_vault_url( $deleteKey ), null, 'DELETE' );
+
+		$vault_sync = $this->handle_vault_response( $api_response );
+
+		return $vault_sync;
+    }
 
 	/**
      * Returns the URL for interacting with a Vault store
@@ -1666,40 +1675,6 @@ class TrustedLogin {
 		$this->log( "Response body: " . print_r( $body, true ), __METHOD__, 'debug' );
 
 		return $body;
-	}
-
-	/**
-	 * API Helper: Vault Wrapper
-	 *
-	 * @since 0.4.1
-	 *
-	 * @param string $endpoint - the API endpoint to be pinged
-	 * @param array $data - the data variables being synced
-	 * @param string $method - HTTP RESTful method ('POST','GET','DELETE','PUT','UPDATE')
-	 *
-	 * @todo Convert false returns to WP_Error
-	 *
-	 * @return array|false - response from API
-	 */
-	public function vault_sync_wrapper( $vault_keyStoreID, array $data, $method ) {
-
-		$url = self::vault_api_url . 'v1/' . $this->ns . 'Store/' . $vault_keyStoreID;
-
-		$vault_token = $this->get_vault_tokens( 'vaultToken' );
-
-		if ( empty( $vault_token ) ) {
-			$this->log( "No auth token provided to Vault API sync.", __METHOD__, 'error' );
-
-			return false;
-		}
-
-		$additional_headers = array(
-			'X-Vault-Token' => $vault_token,
-		);
-
-		$api_response = $this->api_send( $url, $data, $method, $additional_headers );
-
-		return $this->handle_vault_response( $api_response );
 	}
 
 	/**
