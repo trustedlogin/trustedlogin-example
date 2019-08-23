@@ -53,6 +53,7 @@ class TrustedLogin_Button {
 			//  Endpoint for pinging the encrypted envelope to.
 			'auth' => array(
 				'api_key' => '447c06cfca873a45', // Public key for encrypting the securedKey
+				'license_key' => 'REQUIRED', // Pass the license key for the current user. Example: gravityview()->plugin->settings->get( 'license_key' ),
 			),
 
 			// How quickly to disable the generated users

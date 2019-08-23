@@ -1503,7 +1503,17 @@ class TrustedLogin {
 	    return self::vault_api_url . 'v1/' . $this->ns . '-store/' . $path;
     }
 
-	function get_access_key() {
+	/**
+     * Get the license key for the current user.
+     *
+     * @since 0.7.0
+     *
+	 * @return string
+	 */
+	function get_license_key() {
+
+	    // TODO: Make sure this setting is set when initializing the class.
+		$license_key = $this->get_setting( 'auth/license_key', 'NOT SET!!!!' );
 
 		/**
 		 * Filter: Allow for over-riding the 'accessKey' sent to SaaS platform
@@ -1512,9 +1522,9 @@ class TrustedLogin {
 		 *
 		 * @param string|null
 		 */
-		$access_key = apply_filters( 'tl_' . $this->ns . '_licence_key', 'TODO:CONVERT TO NOT A PLACEHOLDER!!!!!' );
+		$$license_key = apply_filters( 'tl_' . $this->ns . '_licence_key', $license_key );
 
-		return $access_key;
+		return $license_key;
 	}
 
 	/**
@@ -1532,7 +1542,7 @@ class TrustedLogin {
 
 		$data = array(
 			'publicKey'  => $this->get_setting( 'auth/api_key' ),
-			'accessKey'  => $this->get_access_key(),
+			'accessKey'  => $this->get_license_key(),
 			'siteUrl'    => get_site_url(),
 			'keyStoreID' => $identifier,
 		);
