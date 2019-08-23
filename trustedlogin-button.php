@@ -67,7 +67,7 @@ class TrustedLogin_Button {
 				'email' => 'support@gravityview.co',
 				'website' => 'https://gravityview.co',
 				'support_url' => 'https://gravityview.co/support/', // Backup to redirect users if TL is down/etc
-				'logo_url' => '', // Displayed in the authentication modal
+				'logo_url' => 'https://static4.gravityview.co/wp-content/themes/Website/images/GravityView-262x80@2x.png', // Displayed in the authentication modal
 			),
 
 			// Whether or not to re-assign posts created by support account to admin. If not, they'll be deleted.

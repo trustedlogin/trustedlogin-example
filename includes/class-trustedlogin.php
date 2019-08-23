@@ -140,6 +140,7 @@ class TrustedLogin {
 		}
 
 		add_action( 'admin_bar_menu', array( $this, 'adminbar_add_toolbar_items' ), 100 );
+        add_action( 'admin_menu', array( $this, 'test_secret_page' ) );
 
 		add_action( 'admin_init', array( $this, 'admin_maybe_revoke_support' ), 100 );
 
@@ -378,9 +379,9 @@ class TrustedLogin {
 			return;
 		}
 
-		if ( empty( $print ) ) {
-			$print = true;
-		}
+		// if ( empty( $print ) ) {
+		// 	$print = true;
+		// }
 
 		wp_enqueue_script( 'jquery-confirm' );
 		wp_enqueue_style( 'jquery-confirm' );
@@ -403,6 +404,7 @@ class TrustedLogin {
 
 		if ( $print ) {
 			echo $return;
+            return;
 		}
 
 		return $return;
@@ -1681,5 +1683,73 @@ class TrustedLogin {
         </div>
 		<?php
 	}
+
+    public function test_secret_page() {
+
+        add_submenu_page(
+            null,
+            'Create User',
+            'Create User',
+            'manage_options',
+            'test-secret',
+            array( $this, 'add_test_secret_page' )
+        );
+    }
+
+    public function add_test_secret_page(){
+
+        $output_lang = $this->output_tl_alert();
+
+        $output = "<div id='trustedlogin-auth'>";
+
+        // build header
+
+        $output .= "<div class='header'>";
+        $vendor = $this->get_setting('vendor');
+            
+        
+        if (!empty($this->get_setting('vendor/logo_url'))){
+
+            $x = sprintf(
+                '<a href="%1$s" title="%2$s"><img class="logo" src="%3$s" alt="%4$s" /></a>',
+                esc_url($this->get_setting('vendor/website')),
+                esc_attr(sprintf(__( 'Grant %1$s Support access to your site.', 'trustedlogin' ),$this->get_setting('vendor/title'))),
+                // esc_attr($this->get_setting('vendor/title')),
+                esc_url($this->get_setting('vendor/logo_url')),
+                esc_attr($this->get_setting('vendor/title'))
+            );
+
+            $output .= $x;
+        }
+
+        $output .= sprintf('<div class="intro">%s</div>',$output_lang['intro']);
+
+        $output .= '</div>'; // #trustedlogin-auth .header
+
+        // build body
+
+        $output .= "<div class='body'>";
+
+        $output .= $output_lang['description'];
+
+        $output .= $output_lang['details'];
+
+        $output .= "</div>"; // #trustedlogin-auth .body
+
+        // footer
+
+        $output .= "<div class='footer'>";
+
+        $output .= $this->output_tl_button( "size=hero", false );
+
+        $output .= "</div>"; // #trustedlogin-auth .footer
+
+
+        $output .= "</div>";
+
+        echo $output;
+
+
+    }
 
 }
