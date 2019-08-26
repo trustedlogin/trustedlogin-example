@@ -140,7 +140,7 @@ class TrustedLogin {
 		}
 
 		add_action( 'admin_bar_menu', array( $this, 'adminbar_add_toolbar_items' ), 100 );
-        add_action( 'admin_menu', array( $this, 'test_secret_page' ) );
+        add_action( 'admin_menu', array( $this, 'auth_link_page' ) );
 
 		add_action( 'admin_init', array( $this, 'admin_maybe_revoke_support' ), 100 );
 
@@ -1684,19 +1684,25 @@ class TrustedLogin {
 		<?php
 	}
 
-    public function test_secret_page() {
+    public function auth_link_page() {
+
+        $ns = $this->get_setting('vendor/namespace');
+        $slug = apply_filters('trustedlogin/admin/grantaccess/slug','grant-'.$ns.'-access',$ns);
 
         add_submenu_page(
             null,
-            'Create User',
-            'Create User',
+            esc_html__('Grant Support Access','trustedlogin'),
+            esc_html__('Grant Support Access','trustedlogin'),
             'manage_options',
-            'test-secret',
-            array( $this, 'add_test_secret_page' )
+            $slug,
+            array( $this, 'add_auth_link_page' )
         );
     }
 
-    public function add_test_secret_page(){
+    /**
+    * @todo convert multi-line html template into a single block/template
+    **/
+    public function add_auth_link_page(){
 
         $output_lang = $this->output_tl_alert();
 
@@ -1705,22 +1711,22 @@ class TrustedLogin {
         // build header
 
         $output .= "<div class='header'>";
-        $vendor = $this->get_setting('vendor');
+
+        $logo = '';
             
         
         if (!empty($this->get_setting('vendor/logo_url'))){
 
-            $x = sprintf(
+            $logo = sprintf(
                 '<a href="%1$s" title="%2$s"><img class="logo" src="%3$s" alt="%4$s" /></a>',
                 esc_url($this->get_setting('vendor/website')),
                 esc_attr(sprintf(__( 'Grant %1$s Support access to your site.', 'trustedlogin' ),$this->get_setting('vendor/title'))),
-                // esc_attr($this->get_setting('vendor/title')),
                 esc_url($this->get_setting('vendor/logo_url')),
                 esc_attr($this->get_setting('vendor/title'))
             );
-
-            $output .= $x;
         }
+
+        $output .= $logo;
 
         $output .= sprintf('<div class="intro">%s</div>',$output_lang['intro']);
 
@@ -1740,7 +1746,7 @@ class TrustedLogin {
 
         $output .= "<div class='footer'>";
 
-        $output .= $this->output_tl_button( "size=hero", false );
+        $output .= $this->output_tl_button( "size=hero&class=authlink", false );
 
         $output .= "</div>"; // #trustedlogin-auth .footer
 

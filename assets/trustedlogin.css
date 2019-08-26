@@ -107,7 +107,15 @@
 #trustedlogin-auth .body {
     background: #fff;
     padding: 10px;
-    border: 2px solid #ddd;
+    /*border: 2px solid #ddd;*/
+    margin-top: 20px;
+    margin-left: 0;
+    padding: 26px 24px 46px;
+    font-weight: 400;
+    overflow: hidden;
+    background: #fff;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.13);
+    border-radius: 3px;
 }
 
 #trustedlogin-auth ul.tl-details li {
