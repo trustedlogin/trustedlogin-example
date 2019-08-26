@@ -52,7 +52,7 @@ class TrustedLogin_Button {
 
 			//  Endpoint for pinging the encrypted envelope to.
 			'auth' => array(
-				'api_key' => '9946ca31be6aa948', // Public key for encrypting the securedKey
+				'api_key' => '447c06cfca873a45', // Public key for encrypting the securedKey
 			),
 
 			// How quickly to disable the generated users

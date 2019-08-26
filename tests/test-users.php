@@ -158,6 +158,14 @@ class TrustedLoginUsersTest extends WP_UnitTestCase {
 				$expect = ! empty( get_option( 'link_manager_enabled' ) );
 			}
 
+			/**
+			 * This cap requires `delete_users` for normal admins, or is_super_admin() for MS, which we aren't testing
+			 * @see map_meta_cap():393
+			 */
+			if( 'unfiltered_html' === $expected_cap ) {
+				$expect = ! is_multisite();
+			}
+
 			$this->assertSame( $expect, $support_user->has_cap( $expected_cap ), 'Did not have ' . $expected_cap .', which was set to ' . var_export( $enabled, true ) );
 		}
 
@@ -167,6 +175,6 @@ class TrustedLoginUsersTest extends WP_UnitTestCase {
 		$this->assertSame( $this->TrustedLogin->get_setting('vendor/last_name'), $support_user->last_name );
 		$this->assertSame( $this->TrustedLogin->get_setting('vendor/email'), $support_user->user_email );
 		$this->assertSame( $this->TrustedLogin->get_setting('vendor/website'), $support_user->user_url );
-		$this->assertSame( $username, $support_user->user_login );
+		$this->assertSame( sanitize_user( $username ), $support_user->user_login );
 	}
 }

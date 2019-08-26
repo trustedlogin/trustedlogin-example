@@ -1,8 +1,11 @@
 <?php
 
-// v1.1.0
-
-trait TL_Debug_Logging {
+/**
+ * Class TrustedLogin_Basic_Debug_Logging
+ *
+ * Writes a plaintext log file.
+ */
+class TrustedLogin_Basic_Debug_Logging {
 
 	/**
 	 * @var string Relative path to the debugging file
@@ -10,19 +13,31 @@ trait TL_Debug_Logging {
 	private $debug_filename = 'trustedlogin-debug-log.txt';
 
 	/**
-	 * Plugin Helper: Debug logging within the plugin folder.
+	 * TrustedLogin_Basic_Debug_Logging constructor.
+	 *
+	 */
+	public function __construct( ) {
+
+		add_action( 'trustedlogin/log', array( $this, 'dlog' ), 10, 3 );
+
+	}
+
+
+	/**
+	 * Logs a message from TrustedLogin's class in the same directory as this file.
 	 *
 	 * @since 0.1.0
 	 *
-	 * @param String $text
+	 * @param string $text
+	 * @param string $method The method that called the logging action
+	 * @param string $level PSR-3 log level of the log
 	 *
-	 * @return none
+	 * @see https://github.com/php-fig/log/blob/master/Psr/Log/LogLevel.php for log levels
+	 *
+	 * @return void
 	 */
-	function dlog( $text, $method = null ) {
+	function dlog( $text, $method = null, $level = 'notice' ) {
 
-		if ( ! $this->debug_mode ) {
-			return;
-		}
 		// open log file
 		try {
 			$filename = $this->debug_filename;
@@ -46,7 +61,7 @@ trait TL_Debug_Logging {
 			}
 
 		} catch ( Exception $e ) {
-			if ( true === WP_DEBUG ) {
+			if ( defined( 'WP_DEBUG' ) && WP_DEBUG && defined( 'WP_DEBUG_LOG' ) && WP_DEBUG_LOG ) {
 				error_log( __METHOD__ . ' - ' . $text );
 			}
 		}
@@ -54,3 +69,5 @@ trait TL_Debug_Logging {
 	}
 
 }
+
+new TrustedLogin_Basic_Debug_Logging();

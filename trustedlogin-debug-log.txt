@@ -1625,3 +1625,5 @@
 17-08-2019, 23:14 - TrustedLogin::vault_sync_wrapper => No auth token provided to Vault API sync.
 17-08-2019, 23:14 - TrustedLogin::revoke_access => There was an issue syncing to Vault for revoking.
 17-08-2019, 23:14 - TrustedLogin::get_support_user => Id length: 3
+19-08-2019, 23:35 - TrustedLogin::add_support_endpoint => Endpoint 52ce38e1c81631248647c813dbdb403e added.
+19-08-2019, 23:35 - TrustedLogin::helper_get_user_revoke_url => revoke_url: https://gravityview-core.dev/wp-admin/users.php?revoke-tl=si&tlid=ad64fe9fdc0f96725ee80a7bf7db2b2c
