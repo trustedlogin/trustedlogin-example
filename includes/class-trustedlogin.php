@@ -269,9 +269,17 @@ class TrustedLogin {
 	 */
 	public function ajax_gen_support() {
 
-		$nonce = $_POST['_nonce'];
+		if ( empty( $_POST['vendor'] ) ) {
+			wp_send_json_error( array( 'message' => 'Vendor not defined' ) );
+		}
 
-		if ( empty( $_POST ) ) {
+		// There are multiple TrustedLogin instances, and this is not the one being called.
+        // TODO: Needs more testing!
+		if( $this->get_setting( 'vendor/namespace' ) !== $_POST['vendor'] ) {
+			return;
+		}
+
+		if ( empty( $_POST['_nonce'] ) ) {
 			wp_send_json_error( array( 'message' => 'Auth Issue' ) );
 		}
 

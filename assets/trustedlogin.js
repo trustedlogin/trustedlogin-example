@@ -84,6 +84,7 @@
                     	action: function () {
 	                        var data = {
 	                            'action': 'tl_gen_support',
+		                        'vendor': tl_obj.vendor.namespace,
 	                            '_nonce': tl_obj._nonce,
 	                        };
 
