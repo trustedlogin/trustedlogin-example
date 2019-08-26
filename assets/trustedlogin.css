@@ -123,7 +123,7 @@
     padding: 10px;
 }
 
-#trustedlogin-auth .footer {
+#trustedlogin-auth .footer, #trustedlogin-auth .actions {
     text-align: center;
     padding: 10px;
 }
