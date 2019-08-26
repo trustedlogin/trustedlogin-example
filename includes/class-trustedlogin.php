@@ -287,7 +287,7 @@ class TrustedLogin {
 			wp_send_json_error( array( 'message' => 'Verification Issue' ) );
 		}
 
-		if ( ! current_user_can( 'manage_options' ) ) {
+		if ( ! current_user_can( 'create_users' ) ) {
 			wp_send_json_error( array( 'message' => 'Permissions Issue' ) );
 		}
 
@@ -459,7 +459,7 @@ class TrustedLogin {
 	 */
 	public function output_tl_button( $atts = array(), $print = true ) {
 
-		if ( ! current_user_can( 'manage_options' ) ) {
+		if ( ! current_user_can( 'create_users' ) ) {
 			return;
 		}
 
@@ -569,7 +569,7 @@ class TrustedLogin {
 	 */
 	public function output_support_users( $print = true ) {
 
-		if ( ! is_admin() || ! current_user_can( 'manage_options' ) ) {
+		if ( ! is_admin() || ! current_user_can( 'create_users' ) ) {
 			return;
 		}
 
@@ -1232,7 +1232,7 @@ class TrustedLogin {
 	 */
 	public function user_row_action_revoke( $actions, $user_object ) {
 
-		if ( ! current_user_can( $this->support_role ) && ! current_user_can( 'manage_options' ) ) {
+		if ( ! current_user_can( $this->support_role ) && ! current_user_can( 'delete_users' ) ) {
 			return $actions;
 		}
 
@@ -1311,7 +1311,7 @@ class TrustedLogin {
 
 		$this->remove_support_user( $identifier );
 
-		if ( ! is_user_logged_in() || ! current_user_can( 'manage_options' ) ) {
+		if ( ! is_user_logged_in() || ! current_user_can( 'delete_users' ) ) {
 			wp_redirect( home_url() );
 			exit;
 		}
