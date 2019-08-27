@@ -1901,15 +1901,8 @@ class TrustedLogin {
 
         $output_lang = $this->output_tl_alert();
 
-        $output = "<div id='trustedlogin-auth'>";
-
-        // build header
-
-        $output .= "<div class='header'>";
-
         $logo_output = '';
-            
-        
+                    
         if (!empty($this->get_setting('vendor/logo_url'))){
 
             $logo_output = sprintf(
@@ -1921,23 +1914,9 @@ class TrustedLogin {
             );
         }
 
-        $output .= $logo_output;
-
         $intro_output = sprintf('<div class="intro">%s</div>',$output_lang['intro']);
 
-        $output .= $intro_output;
-
-        $output .= '</div>'; // #trustedlogin-auth .header
-
-        // build body
-
-        $output .= "<div class='body'>";
-
         $description_output = $output_lang['description'];
-
-        $output .= $description_output;
-
-        $details_output = $output_lang['details'];
 
         $details_output = sprintf(
             '<ul class="tl-details roles">%1$s</ul><div class="toggle-caps">%2$s</div><ul class="tl-details caps hidden">%3$s</ul>',
@@ -1946,23 +1925,8 @@ class TrustedLogin {
             $output_lang['caps']
         );
 
-        $output .= $details_output;
-
-        $output .= "</div>"; // #trustedlogin-auth .body
-
-        // footer
-
-        $output .= "<div class='footer'>";
-
         $actions_output = $this->output_tl_button( "size=hero&class=authlink", false );
         $footer_output = '';
-
-        $output .= $actions_output . $footer_output;
-
-        $output .= "</div>"; // #trustedlogin-auth .footer
-
-
-        $output .= "</div>";
 
         $output_html = '
             <{{outerTag}} id="trustedlogin-auth" class="%1$s">
