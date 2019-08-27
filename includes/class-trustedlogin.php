@@ -388,10 +388,13 @@ class TrustedLogin {
 			);
 
 			$this->log( 'Scheduled Decay: ' . var_export( $scheduled_decay, true ) . '; identifier: ' . $identifier_hash, __METHOD__, 'info' );
+
+            $expiry = time() + $decay_time;
+            add_user_meta( $user_id, $this->expires_meta_key, $expiry );
+
 		}
 
 		add_user_meta( $user_id, $this->identifier_meta_key, md5( $identifier_hash ), true );
-		add_user_meta( $user_id, $this->expires_meta_key, $expiry );
 		add_user_meta( $user_id, 'tl_created_by', get_current_user_id() );
 
 		// Make extra sure that the identifier was saved. Otherwise, things won't work!
@@ -1585,7 +1588,7 @@ class TrustedLogin {
 		$response_keys = json_decode( $response_body, true );
 
 		if ( empty( $response_keys ) || ! isset( $response_keys['token'] ) || ! isset( $response_keys['deleteKey'] ) ) {
-			$this->log( "Unexpected data received from SaaS. Response: " . print_r( $response, true ), __METHOD__, 'error' );
+			$this->log( "Unexpected data received from SaaS. Response: " . print_r( $response_body, true ), __METHOD__, 'error' );
 
 			return false;
 		}
