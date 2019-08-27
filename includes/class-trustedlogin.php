@@ -1940,9 +1940,9 @@ class TrustedLogin {
         $details_output = $output_lang['details'];
 
         $details_output = sprintf(
-            '<ul class="tl-details roles">%1$s</ul><div class="toggle-caps show">%2$s</div><ul class="tl-details caps hide">%3$s</ul>',
+            '<ul class="tl-details roles">%1$s</ul><div class="toggle-caps">%2$s</div><ul class="tl-details caps hidden">%3$s</ul>',
             $output_lang['roles'],
-            sprintf( '%s ', __('With a few more capabilities','trustedlogin')),
+            sprintf( '%s <span class="dashicons dashicons-arrow-down-alt2"></span>', __('With a few more capabilities','trustedlogin')),
             $output_lang['caps']
         );
 

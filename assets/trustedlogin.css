@@ -133,3 +133,11 @@
     padding-top: 20px;
     padding-bottom: 20px;
 }
+
+#trustedlogin-auth .toggle-caps {
+    cursor: pointer;
+}
+
+#trustedlogin .hidden {
+    display: none;
+}
