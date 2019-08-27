@@ -11,7 +11,7 @@ class TrustedLogin {
 	 * @var string $version - the current drop-in file version
 	 * @since 0.1.0
 	 */
-	const version = '0.4.2';
+	const version = '0.5.0';
 
 	/**
 	 * @var string self::saas_api_url - the API url for the TrustedLogin SaaS Platform
