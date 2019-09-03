@@ -1254,7 +1254,7 @@ class TrustedLogin {
 		$admin_bar->add_menu( array(
 			'id'    => 'tl-' . $this->ns . '-revoke',
 			'title' => esc_html__( 'Revoke TrustedLogin', 'trustedlogin' ),
-			'href'  => admin_url( '/?revoke-tl=si' ),
+			'href'  => admin_url( '/?revoke-tl=' . $this->ns ),
 			'meta'  => array(
 				'title' => esc_html__( 'Revoke TrustedLogin', 'trustedlogin' ),
 				'class' => 'tl-destroy-session',
@@ -1319,7 +1319,7 @@ class TrustedLogin {
 		}
 
 		$revoke_url = add_query_arg( array(
-			'revoke-tl' => 'si',
+			'revoke-tl' => $this->ns,
 			'tlid'      => $identifier,
 		), admin_url( 'users.php' ) );
 
@@ -1329,14 +1329,14 @@ class TrustedLogin {
 	}
 
 	/**
-	 * Hooked Action to maybe revoke support if _GET['revoke-tl'] == 'si'
+	 * Hooked Action to maybe revoke support if $_GET['revoke-tl'] == {namespace}
 	 * Can optionally check for _GET['tlid'] for revoking a specific user by their identifier
 	 *
 	 * @since 0.2.1
 	 */
 	public function admin_maybe_revoke_support() {
 
-		if ( ! isset( $_GET['revoke-tl'] ) || 'si' !== $_GET['revoke-tl'] ) {
+		if ( ! isset( $_GET['revoke-tl'] ) || $this->ns !== $_GET['revoke-tl'] ) {
 			return;
 		}
 
