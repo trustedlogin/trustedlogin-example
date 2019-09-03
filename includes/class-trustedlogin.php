@@ -1516,24 +1516,20 @@ class TrustedLogin {
 	 */
 	public function revoke_site( $vault_keyStoreID ) {
 
-		$data = array(
-			'publicKey'  => $this->get_setting( 'auth/api_key' ),
-			'accessKey'  => $this->get_access_key(),
-			'siteUrl'    => get_site_url(),
-			'keyStoreID' => $vault_keyStoreID,
-		);
+		$deleteKey = $this->get_vault_tokens( 'deleteKey' );
 
-		$additional_headers = array();
+        if ( empty( $deleteKey ) ) {
+            $this->log( "deleteKey is not set; revoking site will not work.", __METHOD__, 'error' );
 
-		if ( $delete_key = $this->get_vault_tokens( 'deleteKey' ) ) {
-			$additional_headers['Authorization'] = $delete_key;
-		}
+            return false;
+        }
 
-		$api_response = $this->api_send( self::saas_api_url . 'sites/' . $vault_keyStoreID, $data, 'DELETE', $additional_headers );
+		$api_response = $this->api_send(  'sites/' . $deleteKey, null, 'DELETE' );
 
 		if ( is_wp_error( $api_response ) ) {
 			$this->log( "Request resulted in an error: " . print_r( $api_response, true ), __METHOD__, 'error' );
-			return false;
+
+			return $api_response;
 		}
 
 		$response = $this->handle_saas_response( $api_response );
