@@ -176,5 +176,64 @@ class TrustedLoginUsersTest extends WP_UnitTestCase {
 		$this->assertSame( $this->TrustedLogin->get_setting('vendor/email'), $support_user->user_email );
 		$this->assertSame( $this->TrustedLogin->get_setting('vendor/website'), $support_user->user_url );
 		$this->assertSame( sanitize_user( $username ), $support_user->user_login );
+
+		###
+		###
+		### Test error messages
+		###
+		###
+
+		$this->_reset_roles();
+
+		$duplicate_user = $this->TrustedLogin->create_support_user();
+		$this->assertWPError( $duplicate_user );
+		$this->assertSame( 'username_exists', $duplicate_user->get_error_code() );
+
+		$this->_reset_roles();
+
+		$config_with_new_title = $this->config;
+		$config_with_new_title['vendor']['title'] = microtime();
+		$TL_with_new_title = new TrustedLogin( $config_with_new_title );
+
+		$should_be_dupe_email = $TL_with_new_title->create_support_user();
+		$this->assertWPError( $should_be_dupe_email );
+		$this->assertSame( 'user_email_exists', $should_be_dupe_email->get_error_code() );
+
+		$this->_reset_roles();
+
+		$config_with_bad_role = $this->config;
+		$config_with_bad_role['vendor']['title'] = microtime();
+		$config_with_bad_role['vendor']['namespace'] = microtime();
+		$config_with_bad_role['vendor']['email'] = microtime() . '@example.com';
+		$config_with_bad_role['role'] = array( 'madeuprole' => 'We do not need this; it is made-up!');
+		$TL_config_with_bad_role = new TrustedLogin( $config_with_bad_role );
+
+		$should_be_missing_role = $TL_config_with_bad_role->create_support_user();
+		$this->assertWPError( $should_be_missing_role );
+		$this->assertSame( 'role_not_created', $should_be_missing_role->get_error_code() );
+
+
+		$valid_config = $this->config;
+		$valid_config['vendor']['title'] = microtime();
+		$valid_config['vendor']['namespace'] = microtime();
+		$valid_config['vendor']['email'] = microtime() . '@example.com';
+		$TL_valid_config = new TrustedLogin( $valid_config );
+
+		// Check to see what happens when an error is returned during wp_insert_user()
+		add_filter( 'pre_user_login', '__return_empty_string' );
+
+		$should_be_empty_login = $TL_valid_config->create_support_user();
+		$this->assertWPError( $should_be_empty_login );
+		$this->assertSame( 'empty_user_login', $should_be_empty_login->get_error_code() );
+
+		remove_filter( 'pre_user_login', '__return_empty_string' );
+	}
+
+	private function _reset_roles() {
+		global $wp_roles;
+
+		unset( $wp_roles );
+
+		wp_roles();
 	}
 }

@@ -20,9 +20,6 @@ class TrustedLoginAPITest extends WP_UnitTestCase {
 	 */
 	private $TrustedLoginReflection;
 
-	/**
-	 * SampleTest constructor.
-	 */
 	public function __construct() {
 
 		$config = array(

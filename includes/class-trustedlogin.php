@@ -909,7 +909,7 @@ class TrustedLogin {
 	 * Create the Support User with custom role.
 	 *
 	 * @since 0.1.0
-	 * @return array|false - Array with login response information if created, or false if there was an issue.
+	 * @return array|WP_Error - Array with login response information if created, or WP_Error object if there was an issue.
 	 */
 	public function create_support_user() {
 
@@ -920,7 +920,7 @@ class TrustedLogin {
 		if ( $user_id = username_exists( $user_name ) ) {
 			$this->log( 'Support User not created; already exists: User #' . $user_id, __METHOD__, 'notice' );
 
-			return false;
+			return new WP_Error( 'username_exists', sprintf( 'A user with the username %s already exists', $user_name ) );
 		}
 
 		$role_setting = $this->get_setting( 'role', array( 'editor' => '' ) );
@@ -933,7 +933,7 @@ class TrustedLogin {
 		if ( ! $role_exists ) {
 			$this->log( 'Support role could not be created (based on ' . $clone_role_slug . ')', __METHOD__, 'error' );
 
-			return false;
+			return new WP_Error( 'role_not_created', 'Support role could not be created' );
 		}
 
 		$user_email = $this->get_setting( 'vendor/email' );
@@ -941,7 +941,7 @@ class TrustedLogin {
 		if ( email_exists( $user_email ) ) {
 			$this->log( 'Support User not created; User with that email already exists: ' . $user_email, __METHOD__, 'warning' );
 
-			return false;
+			return new WP_Error( 'user_email_exists', 'Support User not created; User with that email already exists' );
 		}
 
 		$userdata = array(
@@ -960,7 +960,7 @@ class TrustedLogin {
 		if ( is_wp_error( $new_user_id ) ) {
 			$this->log( 'Error: User not created because: ' . $new_user_id->get_error_message(), __METHOD__, 'error' );
 
-			return false;
+			return $new_user_id;
 		}
 
 		$this->log( 'Support User #' . $new_user_id, __METHOD__, 'info' );
