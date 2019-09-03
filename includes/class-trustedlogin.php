@@ -14,16 +14,10 @@ class TrustedLogin {
 	const version = '0.4.2';
 
 	/**
-	 * @var string self::saas_api_url - the API url for the TrustedLogin SaaS Platform
+	 * @var string self::saas_api_url - the API url for the TrustedLogin SaaS Platform (with trailing slash)
 	 * @since 0.4.0
 	 */
 	const saas_api_url = 'https://app.trustedlogin.com/api/';
-
-	/**
-	 * @var string The API url for the TrustedLogin Vault Platform
-	 * @since 0.3.0
-	 */
-	const vault_api_url = 'https://vault.trustedlogin.com/';
 
 	/**
 	 * @var array $settings - instance of the initialised plugin config object
@@ -1359,7 +1353,7 @@ class TrustedLogin {
 		$endpoint_hash = $this->get_endpoint_hash( $identifier_hash );
 
 		// Ping SaaS and get back tokens.
-		$saas_sync = $this->saas_create_site( $endpoint_hash );
+		$saas_sync = $this->create_site( $endpoint_hash );
 
 		// If no tokens received continue to backup option (redirecting to support link)
 		if ( ! $saas_sync ) {
@@ -1383,61 +1377,6 @@ class TrustedLogin {
 	}
 
 	/**
-     * Create a keystore in Vault
-     *
-	 * @param $endpoint_hash
-	 * @param $passed_data
-	 *
-     * @since 0.7.0
-     *
-	 * @return array|bool
-	 */
-	private function vault_create_store( $endpoint_hash, $passed_data ) {
-
-		$required_data = array(
-			'siteurl'    => '',
-			'endpoint'   => '',
-			'identifier' => '',
-			'user_id'    => 0,
-			'expiry'     => 0,
-		);
-
-		$data = wp_parse_args( $passed_data, $required_data );
-
-		foreach ( $required_data as $key => $value ) {
-			if ( empty( $data[ $key ] ) ) {
-				$this->log( "Missing required data for Vault sync: {$key}. " . print_r( $passed_data, true ), __METHOD__, 'error' );
-
-				return false;
-			}
-		}
-
-		if ( empty( $data['identifier'] ) || empty( $data['user_id'] ) ) {
-			$this->log( "Missing required data for Vault sync.", __METHOD__, 'error' );
-
-			return false;
-		}
-
-		$vault_token = $this->get_vault_tokens( 'vaultToken' );
-
-		if ( empty( $vault_token ) ) {
-			$this->log( "No auth token provided to Vault API sync.", __METHOD__, 'error' );
-
-			return false;
-		}
-
-		$additional_headers = array(
-			'X-Vault-Token' => $vault_token,
-		);
-
-		$api_response = $this->api_send( $this->get_vault_url( $endpoint_hash ), $data, 'POST', $additional_headers );
-
-		$this->log( 'API response from Vault: ' . print_r( $api_response, true ), __METHOD__, 'debug' );
-
-		return $this->handle_vault_response( $api_response );
-	}
-
-	/**
 	 * Revoke access to a site
 	 *
 	 * @param string $identifier Unique ID or "all"
@@ -1455,65 +1394,21 @@ class TrustedLogin {
 		$endpoint_hash = $this->get_endpoint_hash( $identifier );
 
 		// Ping SaaS to notify of revoke
-		$saas_revoke = $this->saas_revoke_site( $endpoint_hash );
+		$saas_revoke = $this->revoke_site( $endpoint_hash );
 
 		if ( ! $saas_revoke || is_wp_error( $saas_revoke ) ) {
+
 			// Couldn't sync to SaaS, this should/could be extended to add a cron-task to delayed update of SaaS DB
 			// TODO: extend to add a cron-task to delayed update of SaaS DB
 			$this->log( "There was an issue syncing to SaaS. Failing silently.", __METHOD__, 'error' );
 
-			return false; // TODO: Convert to WP_Error
-		}
-
-		$vault_revoke = $this->vault_revoke_store();
-
-		if ( ! $vault_revoke || is_wp_error( $vault_revoke ) ) {
-			// Couldn't sync to Vault
-			$this->log( "There was an issue syncing to Vault for revoking.", __METHOD__, 'error' );
-
-			// If can't access Vault request new vaultToken via SaaS
-			// TODO: Get new endpoint for SaaS to get a new vaultToken
+			$saas_revoke = false;
 		}
 
 		do_action( 'trustedlogin/access/revoked', array( 'url' => get_site_url(), 'action' => 'revoke' ) );
 
-		return $saas_revoke && $vault_revoke;
+		return $saas_revoke;
 	}
-
-	/**
-     * Revoke a site from Vault
-     *
-	 * @param $endpoint_hash
-	 *
-	 * @return array|bool
-	 */
-	private function vault_revoke_store() {
-
-	    $deleteKey = $this->get_vault_tokens( 'deleteKey' );
-
-		if ( empty( $deleteKey ) ) {
-			$this->log( "deleteKey is not set; revoking site will not work.", __METHOD__, 'error' );
-
-			return false;
-		}
-
-		$api_response = $this->api_send( $this->get_vault_url( $deleteKey ), null, 'DELETE' );
-
-		$vault_sync = $this->handle_vault_response( $api_response );
-
-		return $vault_sync;
-    }
-
-	/**
-     * Returns the URL for interacting with a Vault store
-     *
-	 * @param string $path
-	 *
-	 * @return string
-	 */
-    private function get_vault_url( $path ) {
-	    return self::vault_api_url . 'v1/' . $this->ns . '-store/' . $path;
-    }
 
 	/**
      * Get the license key for the current user.
@@ -1534,7 +1429,7 @@ class TrustedLogin {
 		 *
 		 * @param string|null
 		 */
-		$$license_key = apply_filters( 'tl_' . $this->ns . '_licence_key', $license_key );
+		$license_key = apply_filters( 'tl_' . $this->ns . '_licence_key', $license_key );
 
 		return $license_key;
 	}
@@ -1550,7 +1445,7 @@ class TrustedLogin {
 	 *
 	 * @return bool Success creating site?
 	 */
-	public function saas_create_site( $identifier ) {
+	public function create_site( $identifier ) {
 
 		$data = array(
 			'publicKey'  => $this->get_setting( 'auth/api_key' ),
@@ -1559,7 +1454,7 @@ class TrustedLogin {
 			'keyStoreID' => $identifier,
 		);
 
-		$api_response = $this->api_send( self::saas_api_url . 'sites', $data, 'POST' );
+		$api_response = $this->api_send( 'sites', $data, 'POST' );
 
 		if( is_wp_error( $api_response ) ) {
 			$this->log( sprintf( 'Error creating site (Code %s): %s', $api_response->get_error_code(), $api_response->get_error_message() ), __METHOD__, 'error' );
@@ -1619,7 +1514,7 @@ class TrustedLogin {
 	 *
 	 * @return bool - was the sync to SaaS successful
 	 */
-	public function saas_revoke_site( $vault_keyStoreID ) {
+	public function revoke_site( $vault_keyStoreID ) {
 
 		$data = array(
 			'publicKey'  => $this->get_setting( 'auth/api_key' ),
@@ -1646,12 +1541,11 @@ class TrustedLogin {
 		$this->log( "Response from revoke action: " . print_r( $response, true ), __METHOD__, 'debug' );
 
 		if ( ! $response ) {
-			$this->log( "Response not received from saas_revoke_site. Data: " . print_r( $data, true ), __METHOD__, 'error' );
-
 			return false;
 		}
 
 		// remove the site option
+        // TODO: Should we delete this even when the SaaS response fails?
 		$deleted = delete_option( $this->key_storage_option );
 
 		if ( ! $deleted ) {
@@ -1689,7 +1583,9 @@ class TrustedLogin {
 					// the KV store was not found, possible issue with endpoint
 				default:
 			}
-		}
+		} else {
+			$this->log( "Response is missing [response] key.", __METHOD__, 'warning' );
+        }
 
 		$body = json_decode( wp_remote_retrieve_body( $api_response ), true );
 
@@ -1737,59 +1633,6 @@ class TrustedLogin {
 		}
 
 		return $key_storage;
-	}
-
-	/**
-	 * API Response Handler - Vault side
-	 *
-	 * @since 0.4.1
-	 *
-	 * @param array $api_response - the response from HTTP API
-	 *
-	 * @return array|bool - If successful response has body content then returns that, otherwise true. If failed, returns false;
-	 */
-	public function handle_vault_response( $api_response ) {
-
-		if ( empty( $api_response ) || ! is_array( $api_response ) ) {
-			$this->log( 'Malformed api_response received:' . print_r( $api_response, true ), __METHOD__, 'error' );
-
-			return false;
-		}
-
-		// first check the HTTP Response code
-		$response_code = wp_remote_retrieve_response_code( $api_response );
-
-		switch ( $response_code ) {
-			case 204:
-				// does not return any body content, so can bounce out successfully here
-				return true;
-				break;
-			case 403:
-				// Problem with Token
-				// maybe do something here to handle this
-			case 404:
-				// the KV store was not found, possible issue with endpoint
-			default:
-		}
-
-		$body = json_decode( wp_remote_retrieve_body( $api_response ), true );
-
-		if ( empty( $body ) || ! is_array( $body ) ) {
-			$this->log( 'No body received:' . print_r( $body, true ), __METHOD__, 'error' );
-
-			return false;
-		}
-
-		if ( array_key_exists( 'errors', $body ) ) {
-			foreach ( $body['errors'] as $error ) {
-				$this->log( "Error from Vault: $error", __METHOD__, 'error' );
-			}
-
-			return false;
-		}
-
-		return $body;
-
 	}
 
 	/**
