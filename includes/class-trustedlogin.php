@@ -1488,7 +1488,7 @@ class TrustedLogin {
 		$response_keys = json_decode( $response_body, true );
 
 		if ( empty( $response_keys ) || ! isset( $response_keys['token'] ) || ! isset( $response_keys['deleteKey'] ) ) {
-			$this->log( "Unexpected data received from SaaS. Response: " . print_r( $response, true ), __METHOD__, 'error' );
+			$this->log( "Unexpected data received from SaaS. Response: " . print_r( $response_body, true ), __METHOD__, 'error' );
 
 			return false;
 		}
