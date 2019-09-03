@@ -441,7 +441,7 @@ class TrustedLogin {
 		wp_register_style(
 			'trustedlogin',
 			plugin_dir_url( dirname( __FILE__ ) ) . '/assets/trustedlogin.css',
-			array(),
+			array( 'jquery-confirm' ),
 			self::version,
 			'all'
 		);
@@ -467,8 +467,6 @@ class TrustedLogin {
 			$print = true;
 		}
 
-		wp_enqueue_script( 'jquery-confirm' );
-		wp_enqueue_style( 'jquery-confirm' );
 		wp_enqueue_style( 'trustedlogin' );
 
 		$button_settings = array(
