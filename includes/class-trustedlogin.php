@@ -463,8 +463,12 @@ class TrustedLogin {
 			return;
 		}
 
-		if ( empty( $print ) ) {
-			$print = true;
+		if ( ! wp_script_is( 'trustedlogin' ) ) {
+		    $this->log( 'JavaScript is not registered. Make sure `trustedlogin` handle is added to "no-conflict" plugin settings.', __METHOD__, 'error' );
+		}
+
+		if ( ! wp_style_is( 'trustedlogin' ) ) {
+			$this->log( 'Style is not registered. Make sure `trustedlogin` handle is added to "no-conflict" plugin settings.', __METHOD__, 'error' );
 		}
 
 		wp_enqueue_style( 'trustedlogin' );
