@@ -626,7 +626,7 @@ class TrustedLogin {
 			$return .= '</th>';
 
 			$return .= '<td>' . trim( '<code>' . implode( '</code>,<code>', $support_user->roles ) . '</code>', ',' ) . '</td>';
-			$return .= '<td>' . sprintf( esc_html__( '%s ago' ), human_time_diff( strtotime( $support_user->user_registered ) ) ) . '</td>';
+			$return .= '<td>' . sprintf( esc_html__( '%s ago', 'trustedlogin' ), human_time_diff( strtotime( $support_user->user_registered ) ) ) . '</td>';
 
 			if ( $_user_creator && $_user_creator->exists() ) {
 				$return .= '<td>' . ( $_user_creator->exists() ? esc_html( $_user_creator->display_name ) : esc_html__( 'Unknown', 'trustedlogin' ) ) . '</td>';

@@ -9,7 +9,7 @@ module.exports = function( grunt ) {
 
 		addtextdomain: {
 			options: {
-				textdomain: 'trustedlogin-button',
+				textdomain: 'trustedlogin',
 			},
 			update_all_domains: {
 				options: {
