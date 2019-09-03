@@ -1774,8 +1774,19 @@ class TrustedLogin {
             $output_lang['caps']
         );
 
-        $actions_output = $this->output_tl_button( "size=hero&class=authlink", false );
-        $footer_output = '';
+        $actions_output = $this->output_tl_button( "size=hero&class=authlink button-primary", false );
+
+	    // TODO: make this filterable
+	    $footer_links = array(
+		    'Learn about TrustedLogin' => 'https://www.trustedlogin.com/about/easy-and-safe/',
+            sprintf( 'Visit %s Support', $this->get_setting('vendor/title') ) => $this->get_setting( 'vendor/support_url' ),
+        );
+
+        $footer_output = '<ul>';
+	    foreach ( $footer_links as $text => $link ) {
+            $footer_output .= '<li><a href="' . esc_url( $link ) . '">' . $text . '</a></li>';
+        }
+	    $footer_output .= '</ul>';
 
         $output_html = '
             <{{outerTag}} id="trustedlogin-auth" class="%1$s">

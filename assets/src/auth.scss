@@ -43,14 +43,26 @@
 		padding: 10px;
 	}
 
-	.tl-auth-actions {
-		margin-top: 1rem;
-	}
+	.tl-auth-footer {
 
-	.tl-auth-intro {
-		font-size: x-large;
-		padding-top: 20px;
-		padding-bottom: 20px;
+		ul {
+			list-style: none;
+		}
+
+		li {
+			display: inline-block;
+
+			&:after {
+				color: lighten( #555d66, 20% ); // #wp-footer color
+				content: '•';
+				padding: 0 .75rem;
+			}
+
+			&:last-child:after {
+				content: '';
+				padding: 0;
+			}
+		}
 	}
 
 	.tl-toggle-caps {
