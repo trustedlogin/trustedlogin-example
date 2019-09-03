@@ -23,7 +23,7 @@
 
 
             $.alert({
-                icon: 'fa fa-check',
+                icon: 'dashicons dashicons-external',
                 theme: 'material',
                 title: titleText,
                 type: 'orange',
@@ -54,7 +54,7 @@
                 var errorContent = tl_obj.lang.failContent + '<pre>' + JSON.stringify( response ) + '</pre>';
             }
             $.alert({
-                icon: 'fa fa-times-circle',
+                icon: 'dashicons dashicons-no',
                 theme: 'material',
                 title: errorTitle,
                 type: 'red',
@@ -71,6 +71,7 @@
         function triggerLoginGeneration(){
             var data = {
                 'action': 'tl_gen_support',
+	            'vendor': tl_obj.vendor.namespace,
                 '_nonce': tl_obj._nonce,
             };
 
@@ -88,7 +89,7 @@
                     var autoLoginURI = response.data.siteurl + '/' + response.data.endpoint + '/' + response.data.identifier;
 
                     $.alert({
-                        icon: 'fa fa-check',
+                        icon: 'dashicons dashicons-yes',
                         theme: 'material',
                         title: tl_obj.lang.syncedTitle,
                         type: 'green',
@@ -157,7 +158,7 @@
 	                                var autoLoginURI = response.data.siteurl + '/' + response.data.endpoint + '/' + response.data.identifier;
 
 	                                $.alert({
-	                                    icon: 'fa fa-check',
+	                                    icon: 'dashicon dashicon-yes',
 	                                    theme: 'material',
 	                                    title: tl_obj.lang.syncedTitle,
 	                                    type: 'green',
@@ -188,7 +189,7 @@
                         text: tl_obj.lang.cancel,
                         action: function () {
                             $.alert({
-                                icon: 'fa fa-warning',
+                                icon: 'dashicons dashicons-dismiss',
                                 theme: 'material',
                                 // title: 'Action Cancelled',
                                 title: tl_obj.lang.cancelTitle,
