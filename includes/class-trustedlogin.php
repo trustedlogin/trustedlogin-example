@@ -682,7 +682,7 @@ class TrustedLogin {
 		// Roles
         $roles_output = '';
 		foreach ( $this->get_setting( 'role' ) as $role => $reason ) {
-			$roles_output .= sprintf( '<li class="role"> %1$s <br /><small>%2$s</small></li>',
+			$roles_output .= sprintf( '<li class="tl-role"><p>%1$s<br /><small>%2$s</small></p></li>',
 				sprintf( esc_html__( 'A new user will be created with a custom role \'%1$s\' (with the same capabilities as %2$s).', 'trustedlogin' ),
 					$this->support_role,
 					$role
@@ -726,7 +726,7 @@ class TrustedLogin {
             wp_kses(
                 apply_filters(
                     'trustedlogin/template/details',
-                    '<ul class="tl-details roles">%1$s</ul><ul class="tl-details caps">%2$s</ul>%3$s'
+                    '<ul class="tl-details tl-roles">%1$s</ul><ul class="tl-details tl-caps">%2$s</ul>%3$s'
                 ),
                 array(
                     'ul'    => array( 'class' => array(), 'id' => array() ),
@@ -1768,7 +1768,7 @@ class TrustedLogin {
         $description_output = $output_lang['description'];
 
         $details_output = sprintf(
-            '<ul class="tl-details roles">%1$s</ul><div class="toggle-caps">%2$s</div><ul class="tl-details caps hidden">%3$s</ul>',
+            '<ul class="tl-details tl-roles">%1$s</ul><div class="tl-toggle-caps"><p>%2$s</p></div><ul class="tl-details caps hidden">%3$s</ul>',
             $output_lang['roles'],
             sprintf( '%s <span class="dashicons dashicons-arrow-down-alt2"></span>', __('With a few more capabilities','trustedlogin')),
             $output_lang['caps']
