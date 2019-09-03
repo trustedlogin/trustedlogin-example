@@ -392,7 +392,8 @@ class TrustedLogin {
 
 			$this->log( 'Scheduled Decay: ' . var_export( $scheduled_decay, true ) . '; identifier: ' . $identifier_hash, __METHOD__, 'info' );
 
-            $expiry = time() + $decay_time;
+            $expiry = $this->get_expiration_timestamp($decay_time);
+
             add_user_meta( $user_id, $this->expires_meta_key, $expiry );
 
 		}
