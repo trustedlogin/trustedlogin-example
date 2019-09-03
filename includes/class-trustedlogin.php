@@ -166,9 +166,10 @@ class TrustedLogin {
 
 		add_action( 'trustedlogin_revoke_access', array( $this, 'support_user_decay' ), 10, 2 );
 
+        add_action( 'admin_enqueue_scripts', array( $this, 'register_assets' ) );
+
 		if ( is_admin() ) {
 			add_action( 'wp_ajax_tl_gen_support', array( $this, 'ajax_gen_support' ) );
-			add_action( 'admin_enqueue_scripts', array( $this, 'enqueue_admin' ) );
 
 			add_action( 'trustedlogin_button', array( $this, 'output_tl_button' ), 10, 2 );
 
