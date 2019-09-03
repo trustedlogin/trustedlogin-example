@@ -1841,21 +1841,31 @@ class TrustedLogin {
             </{{outerTag}}>
         ';
 
-        $ns = $this->get_setting('vendor/namespace');
-
+        /**
+        * Filters trustedlogin/template/grantlink/outer-tag and /trustedlogin/template/grantlink/inner-tag
+        *
+        * Used to change the innerTags and outerTags of the grandlink template
+        * 
+        * @since 0.5.0
+        *
+        * @param string the html tag to use for each tag, default: div
+       	* @param string $ns - the namespace of the plugin. initializing TrustedLogin
+        **/
         $output_html = str_replace('{{outerTag}}', apply_filters( 'trustedlogin/template/grantlink/outer-tag', 'div', $ns ), $output_html);
         $output_html = str_replace('{{innerTag}}', apply_filters( 'trustedlogin/template/grantlink/inner-tag', 'div', $ns ), $output_html);
 
         $output_template = sprintf(
             wp_kses(
                 /**
-                * Filter trustedlogin/template/grantlink
+                * Filter trustedlogin/template/grantlink and trustedlogin/template/grantlink/*
                 *
                 * Manipulate the output template used to display instructions and details to WP admins
                 * when they've clicked on a direct link to grant TrustedLogin access.
                 *
+                * @since 0.5.0
+                *
                 * @param string $output_html
-                * @param string $namespace
+                * @param string $ns - the namespace of the plugin. initializing TrustedLogin
                 **/
                 apply_filters( 'trustedlogin/template/grantlink', $output_html, $ns ),
                 array(
