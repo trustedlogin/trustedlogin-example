@@ -819,7 +819,7 @@ class TrustedLogin {
 		 * @todo Move the array documentation here
 		 * }
 		 */
-		$this->settings = apply_filters( 'trustedlogin_init_settings', $config );
+		$this->settings = apply_filters( 'trustedlogin/init_settings', $config );
 
 		$this->ns = $this->get_setting( 'vendor/namespace' );
 
