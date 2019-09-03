@@ -1760,6 +1760,7 @@ class TrustedLogin {
     public function add_auth_link_page(){
 
         $output_lang = $this->output_tl_alert();
+        $ns = $this->get_setting('vendor/namespace');
 
         $logo_output = '';
 
@@ -1787,17 +1788,39 @@ class TrustedLogin {
 
         $actions_output = $this->output_tl_button( "size=hero&class=authlink button-primary", false );
 
-	    // TODO: make this filterable
-	    $footer_links = array(
-		    'Learn about TrustedLogin' => 'https://www.trustedlogin.com/about/easy-and-safe/',
-            sprintf( 'Visit %s Support', $this->get_setting('vendor/title') ) => $this->get_setting( 'vendor/support_url' ),
-        );
+        /**
+        * Filter trustedlogin/template/grantlink/footer-links
+        *
+        * Used to add/remove Footer Links on grantlink page
+        * 
+        * @since 0.5.0
+        *
+        * @param array - Title (string) => Url (string) pairs for building links
+        * @param string $ns - the namespace of the plugin initializing TrustedLogin
+        **/
+	    $footer_links = apply_filters(
+	    	'trustedlogin/template/grantlink/footer-links', 
+		    array(
+			    __('Learn about TrustedLogin','trustedlogin') => 'https://www.trustedlogin.com/about/easy-and-safe/',
+	            sprintf( 'Visit %s Support', $this->get_setting('vendor/title') ) => $this->get_setting( 'vendor/support_url' ),
+	        ),
+	        $ns
+	    );
 
-        $footer_output = '<ul>';
+        
+        $footer_links_output = '';
 	    foreach ( $footer_links as $text => $link ) {
-            $footer_output .= '<li><a href="' . esc_url( $link ) . '">' . $text . '</a></li>';
+	    	$footer_links_output .= sprintf( '<li class="tl-footer-link"><a href="%1$s">%2$s</a></li>',
+				esc_url($link),
+				esc_html($text)
+			);
         }
-	    $footer_output .= '</ul>';
+
+        if (!empty($footer_links_output)){
+        	$footer_output = sprintf('<ul>%1$s</ul>', $footer_links_output );
+        } else {
+        	$footer_output = '';
+        }
 
         $output_html = '
             <{{outerTag}} id="trustedlogin-auth" class="%1$s">
