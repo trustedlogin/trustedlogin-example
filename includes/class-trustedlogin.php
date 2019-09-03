@@ -1728,6 +1728,13 @@ class TrustedLogin {
 		<?php
 	}
 
+	/**
+	* Generate the Auth Link Page
+	* This simulates the addition of an admin submenu item with null as the menu location
+	* @uses add_auth_link_page()
+	*
+	* @since 0.5.0
+	***/
     public function auth_link_page() {
 
         $ns = $this->get_setting('vendor/namespace');
@@ -1744,7 +1751,10 @@ class TrustedLogin {
     }
 
     /**
-    * @todo convert multi-line html template into a single block/template
+    * Output the contents of the Auth Link Page in wp-admin
+    * @uses output_tl_alert()
+    * 
+    * @since 0.5.0
     **/
     public function add_auth_link_page(){
 
