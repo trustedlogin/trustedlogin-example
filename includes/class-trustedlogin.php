@@ -14,16 +14,10 @@ class TrustedLogin {
 	const version = '0.5.0';
 
 	/**
-	 * @var string self::saas_api_url - the API url for the TrustedLogin SaaS Platform
+	 * @var string self::saas_api_url - the API url for the TrustedLogin SaaS Platform (with trailing slash)
 	 * @since 0.4.0
 	 */
 	const saas_api_url = 'https://app.trustedlogin.com/api/';
-
-	/**
-	 * @var string The API url for the TrustedLogin Vault Platform
-	 * @since 0.3.0
-	 */
-	const vault_api_url = 'https://vault.trustedlogin.com/';
 
 	/**
 	 * @var array $settings - instance of the initialised plugin config object
@@ -166,9 +160,10 @@ class TrustedLogin {
 
 		add_action( 'trustedlogin_revoke_access', array( $this, 'support_user_decay' ), 10, 2 );
 
+        add_action( 'admin_enqueue_scripts', array( $this, 'register_assets' ) );
+
 		if ( is_admin() ) {
 			add_action( 'wp_ajax_tl_gen_support', array( $this, 'ajax_gen_support' ) );
-			add_action( 'admin_enqueue_scripts', array( $this, 'enqueue_admin' ) );
 
 			add_action( 'trustedlogin_button', array( $this, 'output_tl_button' ), 10, 2 );
 
@@ -270,9 +265,17 @@ class TrustedLogin {
 	 */
 	public function ajax_gen_support() {
 
-		$nonce = $_POST['_nonce'];
+		if ( empty( $_POST['vendor'] ) ) {
+			wp_send_json_error( array( 'message' => 'Vendor not defined' ) );
+		}
 
-		if ( empty( $_POST ) ) {
+		// There are multiple TrustedLogin instances, and this is not the one being called.
+        // TODO: Needs more testing!
+		if( $this->get_setting( 'vendor/namespace' ) !== $_POST['vendor'] ) {
+			return;
+		}
+
+		if ( empty( $_POST['_nonce'] ) ) {
 			wp_send_json_error( array( 'message' => 'Auth Issue' ) );
 		}
 
@@ -280,7 +283,7 @@ class TrustedLogin {
 			wp_send_json_error( array( 'message' => 'Verification Issue' ) );
 		}
 
-		if ( ! current_user_can( 'manage_options' ) ) {
+		if ( ! current_user_can( 'create_users' ) ) {
 			wp_send_json_error( array( 'message' => 'Permissions Issue' ) );
 		}
 
@@ -402,11 +405,11 @@ class TrustedLogin {
 	}
 
 	/**
-	 * Register the required scripts and styles for wp-admin
+	 * Register the required scripts and styles
 	 *
 	 * @since 0.2.0
 	 */
-	public function enqueue_admin() {
+	public function register_assets() {
 
 		$jquery_confirm_version = '3.3.2';
 
@@ -428,7 +431,7 @@ class TrustedLogin {
 
 		wp_register_script(
 			'trustedlogin',
-			plugin_dir_url( dirname( __FILE__ ) ) . '/assets/trustedlogin.js',
+			trailingslashit( $this->get_setting( 'path/js_dir_url' ) ) . 'trustedlogin.js',
 			array( 'jquery', 'jquery-confirm' ),
 			self::version,
 			true
@@ -436,8 +439,8 @@ class TrustedLogin {
 
 		wp_register_style(
 			'trustedlogin',
-			plugin_dir_url( dirname( __FILE__ ) ) . '/assets/trustedlogin.css',
-			array(),
+			trailingslashit( $this->get_setting( 'path/css_dir_url' ) ) . 'trustedlogin.css',
+			array( 'jquery-confirm' ),
 			self::version,
 			'all'
 		);
@@ -455,16 +458,18 @@ class TrustedLogin {
 	 */
 	public function output_tl_button( $atts = array(), $print = true ) {
 
-		if ( ! current_user_can( 'manage_options' ) ) {
+		if ( ! current_user_can( 'create_users' ) ) {
 			return;
 		}
 
-		// if ( empty( $print ) ) {
-		// 	$print = true;
-		// }
+		if ( ! wp_script_is( 'trustedlogin' ) ) {
+		    $this->log( 'JavaScript is not registered. Make sure `trustedlogin` handle is added to "no-conflict" plugin settings.', __METHOD__, 'error' );
+		}
 
-		wp_enqueue_script( 'jquery-confirm' );
-		wp_enqueue_style( 'jquery-confirm' );
+		if ( ! wp_style_is( 'trustedlogin' ) ) {
+			$this->log( 'Style is not registered. Make sure `trustedlogin` handle is added to "no-conflict" plugin settings.', __METHOD__, 'error' );
+		}
+
 		wp_enqueue_style( 'trustedlogin' );
 
 		$button_settings = array(
@@ -566,7 +571,7 @@ class TrustedLogin {
 	 */
 	public function output_support_users( $print = true ) {
 
-		if ( ! is_admin() || ! current_user_can( 'manage_options' ) ) {
+		if ( ! is_admin() || ! current_user_can( 'create_users' ) ) {
 			return;
 		}
 
@@ -626,7 +631,7 @@ class TrustedLogin {
 			$return .= '</th>';
 
 			$return .= '<td>' . trim( '<code>' . implode( '</code>,<code>', $support_user->roles ) . '</code>', ',' ) . '</td>';
-			$return .= '<td>' . sprintf( esc_html__( '%s ago' ), human_time_diff( strtotime( $support_user->user_registered ) ) ) . '</td>';
+			$return .= '<td>' . sprintf( esc_html__( '%s ago', 'trustedlogin' ), human_time_diff( strtotime( $support_user->user_registered ) ) ) . '</td>';
 
 			if ( $_user_creator && $_user_creator->exists() ) {
 				$return .= '<td>' . ( $_user_creator->exists() ? esc_html( $_user_creator->display_name ) : esc_html__( 'Unknown', 'trustedlogin' ) ) . '</td>';
@@ -672,7 +677,7 @@ class TrustedLogin {
 			__( 'By clicking Confirm, the following will happen automatically:', 'trustedlogin' )
 		);
 
-        
+
 
 		// Roles
         $roles_output = '';
@@ -723,10 +728,10 @@ class TrustedLogin {
                     'trustedlogin/template/details',
                     '<ul class="tl-details roles">%1$s</ul><ul class="tl-details caps">%2$s</ul>%3$s'
                 ),
-                array( 
+                array(
                     'ul'    => array( 'class' => array(), 'id' => array() ),
                     'li'    => array( 'class' => array(), 'id' => array() ),
-                    'p'     => array( 'class' => array(), 'id' => array() ), 
+                    'p'     => array( 'class' => array(), 'id' => array() ),
                     'h1'    => array( 'class' => array(), 'id' => array() ),
                     'h2'    => array( 'class' => array(), 'id' => array() ),
                     'h3'    => array( 'class' => array(), 'id' => array() ),
@@ -1261,7 +1266,7 @@ class TrustedLogin {
 	 */
 	public function user_row_action_revoke( $actions, $user_object ) {
 
-		if ( ! current_user_can( $this->support_role ) && ! current_user_can( 'manage_options' ) ) {
+		if ( ! current_user_can( $this->support_role ) && ! current_user_can( 'delete_users' ) ) {
 			return $actions;
 		}
 
@@ -1340,7 +1345,7 @@ class TrustedLogin {
 
 		$this->remove_support_user( $identifier );
 
-		if ( ! is_user_logged_in() || ! current_user_can( 'manage_options' ) ) {
+		if ( ! is_user_logged_in() || ! current_user_can( 'delete_users' ) ) {
 			wp_redirect( home_url() );
 			exit;
 		}
@@ -1353,6 +1358,7 @@ class TrustedLogin {
 		}
 
 		$this->log( 'User #' . $support_user[0]->ID .' was not removed', __METHOD__, 'error' );
+
 	}
 
 	/**
@@ -1384,7 +1390,7 @@ class TrustedLogin {
 		$endpoint_hash = $this->get_endpoint_hash( $identifier_hash );
 
 		// Ping SaaS and get back tokens.
-		$saas_sync = $this->saas_create_site( $endpoint_hash );
+		$saas_sync = $this->create_site( $endpoint_hash );
 
 		// If no tokens received continue to backup option (redirecting to support link)
 		if ( ! $saas_sync ) {
@@ -1408,63 +1414,6 @@ class TrustedLogin {
 	}
 
 	/**
-     * Create a keystore in Vault
-     *
-	 * @param $endpoint_hash
-	 * @param $passed_data
-	 *
-     * @since 0.7.0
-     *
-	 * @return array|bool
-	 */
-	private function vault_create_store( $endpoint_hash, $passed_data ) {
-
-		$required_data = array(
-			'siteurl'    => '',
-			'endpoint'   => '',
-			'identifier' => '',
-			'user_id'    => 0,
-			'expiry'     => 0,
-		);
-
-		$data = wp_parse_args( $passed_data, $required_data );
-
-		foreach ( $required_data as $key => $value ) {
-			if ( empty( $data[ $key ] ) ) {
-				$this->log( "Missing required data for Vault sync: {$key}. " . print_r( $passed_data, true ), __METHOD__, 'error' );
-
-				return false;
-			}
-		}
-
-		if ( empty( $data['identifier'] ) || empty( $data['user_id'] ) ) {
-			$this->log( "Missing required data for Vault sync.", __METHOD__, 'error' );
-
-			return false;
-		}
-
-
-		$vault_token = $this->get_vault_tokens( 'vaultToken' );
-
-		if ( empty( $vault_token ) ) {
-			$this->log( "No auth token provided to Vault API sync.", __METHOD__, 'error' );
-
-			return false;
-		}
-
-		$additional_headers = array(
-			'X-Vault-Token' => 's.9LqX54ajI6h3mUvE4Pd941bC', // $vault_token,
-		);
-
-		$url = self::vault_api_url . 'v1/' . $this->ns . '-store/' . $endpoint_hash;
-		$api_response = $this->api_send( $url, $data, 'POST', $additional_headers );
-
-		$this->log( 'API response from Vault: ' . print_r( $api_response, true ), __METHOD__, 'debug' );
-
-		return $this->handle_vault_response( $api_response );
-	}
-
-	/**
 	 * Revoke access to a site
 	 *
 	 * @param string $identifier Unique ID or "all"
@@ -1479,48 +1428,36 @@ class TrustedLogin {
 			return false;
 		}
 
-		$vault_keyStoreID = $this->get_endpoint_hash( $identifier );
+		$endpoint_hash = $this->get_endpoint_hash( $identifier );
 
 		// Ping SaaS to notify of revoke
-		$saas_sync = $this->saas_revoke_site( $vault_keyStoreID );
+		$saas_revoke = $this->revoke_site( $endpoint_hash );
 
-		if ( ! $saas_sync ) {
+		if ( ! $saas_revoke || is_wp_error( $saas_revoke ) ) {
+
 			// Couldn't sync to SaaS, this should/could be extended to add a cron-task to delayed update of SaaS DB
 			// TODO: extend to add a cron-task to delayed update of SaaS DB
 			$this->log( "There was an issue syncing to SaaS. Failing silently.", __METHOD__, 'error' );
 
-			return false; // TODO: Convert to WP_Error
-		}
-
-		$auth = get_option( $this->key_storage_option, false );
-
-		$vault_data = array(
-			'identifier' => $identifier,
-			'deleteKey'  => ( isset( $auth['deleteKey'] ) ? $auth['deleteKey'] : false ),
-		);
-
-		if ( ! isset( $vault_data['deleteKey'] ) ) {
-			$this->log( 'deleteKey is not set; revoking site will not work.', __METHOD__, 'error' );
-			return false; // TODO: Convert to WP_Error
-		}
-
-		// Try ping Vault to revoke the keyset
-		$vault_sync = $this->vault_sync_wrapper( $vault_keyStoreID, $vault_data, 'DELETE' );
-
-		if ( ! $vault_sync ) {
-			// Couldn't sync to Vault
-			$this->log( "There was an issue syncing to Vault for revoking.", __METHOD__, 'error' );
-
-			// If can't access Vault request new vaultToken via SaaS
-			// TODO: Get new endpoint for SaaS to get a new vaultToken
+			$saas_revoke = false;
 		}
 
 		do_action( 'trustedlogin/access/revoked', array( 'url' => get_site_url(), 'action' => 'revoke' ) );
 
-		return $saas_sync && $vault_sync;
+		return $saas_revoke;
 	}
 
-	function get_access_key() {
+	/**
+     * Get the license key for the current user.
+     *
+     * @since 0.7.0
+     *
+	 * @return string
+	 */
+	function get_license_key() {
+
+	    // TODO: Make sure this setting is set when initializing the class.
+		$license_key = $this->get_setting( 'auth/license_key', 'NOT SET!!!!' );
 
 		/**
 		 * Filter: Allow for over-riding the 'accessKey' sent to SaaS platform
@@ -1529,9 +1466,9 @@ class TrustedLogin {
 		 *
 		 * @param string|null
 		 */
-		$access_key = apply_filters( 'tl_' . $this->ns . '_licence_key', 'TODO:CONVERT TO NOT A PLACEHOLDER!!!!!' );
+		$license_key = apply_filters( 'tl_' . $this->ns . '_licence_key', $license_key );
 
-		return $access_key;
+		return $license_key;
 	}
 
 	/**
@@ -1545,16 +1482,16 @@ class TrustedLogin {
 	 *
 	 * @return bool Success creating site?
 	 */
-	public function saas_create_site( $identifier ) {
+	public function create_site( $identifier ) {
 
 		$data = array(
 			'publicKey'  => $this->get_setting( 'auth/api_key' ),
-			'accessKey'  => $this->get_access_key(),
+			'accessKey'  => $this->get_license_key(),
 			'siteUrl'    => get_site_url(),
 			'keyStoreID' => $identifier,
 		);
 
-		$api_response = $this->api_send( self::saas_api_url . 'sites', $data, 'POST' );
+		$api_response = $this->api_send( 'sites', $data, 'POST' );
 
 		if( is_wp_error( $api_response ) ) {
 			$this->log( sprintf( 'Error creating site (Code %s): %s', $api_response->get_error_code(), $api_response->get_error_message() ), __METHOD__, 'error' );
@@ -1614,26 +1551,22 @@ class TrustedLogin {
 	 *
 	 * @return bool - was the sync to SaaS successful
 	 */
-	public function saas_revoke_site( $vault_keyStoreID ) {
+	public function revoke_site( $vault_keyStoreID ) {
 
-		$data = array(
-			'publicKey'  => $this->get_setting( 'auth/api_key' ),
-			'accessKey'  => $this->get_access_key(),
-			'siteUrl'    => get_site_url(),
-			'keyStoreID' => $vault_keyStoreID,
-		);
+		$deleteKey = $this->get_vault_tokens( 'deleteKey' );
 
-		$additional_headers = array();
+        if ( empty( $deleteKey ) ) {
+            $this->log( "deleteKey is not set; revoking site will not work.", __METHOD__, 'error' );
 
-		if ( $delete_key = $this->get_vault_tokens( 'deleteKey' ) ) {
-			$additional_headers['Authorization'] = $delete_key;
-		}
+            return false;
+        }
 
-		$api_response = $this->api_send( self::saas_api_url . 'sites/' . $vault_keyStoreID, $data, 'DELETE', $additional_headers );
+		$api_response = $this->api_send(  'sites/' . $deleteKey, null, 'DELETE' );
 
 		if ( is_wp_error( $api_response ) ) {
 			$this->log( "Request resulted in an error: " . print_r( $api_response, true ), __METHOD__, 'error' );
-			return false;
+
+			return $api_response;
 		}
 
 		$response = $this->handle_saas_response( $api_response );
@@ -1641,12 +1574,11 @@ class TrustedLogin {
 		$this->log( "Response from revoke action: " . print_r( $response, true ), __METHOD__, 'debug' );
 
 		if ( ! $response ) {
-			$this->log( "Response not received from saas_revoke_site. Data: " . print_r( $data, true ), __METHOD__, 'error' );
-
 			return false;
 		}
 
 		// remove the site option
+        // TODO: Should we delete this even when the SaaS response fails?
 		$deleted = delete_option( $this->key_storage_option );
 
 		if ( ! $deleted ) {
@@ -1684,47 +1616,15 @@ class TrustedLogin {
 					// the KV store was not found, possible issue with endpoint
 				default:
 			}
-		}
+		} else {
+			$this->log( "Response is missing [response] key.", __METHOD__, 'warning' );
+        }
 
 		$body = json_decode( wp_remote_retrieve_body( $api_response ), true );
 
 		$this->log( "Response body: " . print_r( $body, true ), __METHOD__, 'debug' );
 
 		return $body;
-	}
-
-	/**
-	 * API Helper: Vault Wrapper
-	 *
-	 * @since 0.4.1
-	 *
-	 * @param string $endpoint - the API endpoint to be pinged
-	 * @param array $data - the data variables being synced
-	 * @param string $method - HTTP RESTful method ('POST','GET','DELETE','PUT','UPDATE')
-	 *
-	 * @todo Convert false returns to WP_Error
-	 *
-	 * @return array|false - response from API
-	 */
-	public function vault_sync_wrapper( $vault_keyStoreID, array $data, $method ) {
-
-		$url = self::vault_api_url . 'v1/' . $this->ns . 'Store/' . $vault_keyStoreID;
-
-		$vault_token = $this->get_vault_tokens( 'vaultToken' );
-
-		if ( empty( $vault_token ) ) {
-			$this->log( "No auth token provided to Vault API sync.", __METHOD__, 'error' );
-
-			return false;
-		}
-
-		$additional_headers = array(
-			'X-Vault-Token' => $vault_token,
-		);
-
-		$api_response = $this->api_send( $url, $data, $method, $additional_headers );
-
-		return $this->handle_vault_response( $api_response );
 	}
 
 	/**
@@ -1769,70 +1669,17 @@ class TrustedLogin {
 	}
 
 	/**
-	 * API Response Handler - Vault side
-	 *
-	 * @since 0.4.1
-	 *
-	 * @param array $api_response - the response from HTTP API
-	 *
-	 * @return array|bool - If successful response has body content then returns that, otherwise true. If failed, returns false;
-	 */
-	public function handle_vault_response( $api_response ) {
-
-		if ( empty( $api_response ) || ! is_array( $api_response ) ) {
-			$this->log( 'Malformed api_response received:' . print_r( $api_response, true ), __METHOD__, 'error' );
-
-			return false;
-		}
-
-		// first check the HTTP Response code
-		$response_code = wp_remote_retrieve_response_code( $api_response );
-
-		switch ( $response_code ) {
-			case 204:
-				// does not return any body content, so can bounce out successfully here
-				return true;
-				break;
-			case 403:
-				// Problem with Token
-				// maybe do something here to handle this
-			case 404:
-				// the KV store was not found, possible issue with endpoint
-			default:
-		}
-
-		$body = json_decode( wp_remote_retrieve_body( $api_response ), true );
-
-		if ( empty( $body ) || ! is_array( $body ) ) {
-			$this->log( 'No body received:' . print_r( $body, true ), __METHOD__, 'error' );
-
-			return false;
-		}
-
-		if ( array_key_exists( 'errors', $body ) ) {
-			foreach ( $body['errors'] as $error ) {
-				$this->log( "Error from Vault: $error", __METHOD__, 'error' );
-			}
-
-			return false;
-		}
-
-		return $body;
-
-	}
-
-	/**
 	 * API Function: send the API request
 	 *
 	 * @since 0.4.0
 	 *
-	 * @param string $url - the complete url for the REST API request
+	 * @param string $path - the path for the REST API request (no initial or trailing slash needed)
 	 * @param array $data
 	 * @param array $addition_header - any additional headers required for auth/etc
 	 *
 	 * @return WP_Error|array - wp_remote_post response or false if $method isn't valid
 	 */
-	public function api_send( $url, $data, $method, $additional_headers = array() ) {
+	public function api_send( $path, $data, $method, $additional_headers = array() ) {
 
 		if ( ! in_array( $method, array( 'POST', 'PUT', 'GET', 'PUSH', 'DELETE' ) ) ) {
 			$this->log( "Error: Method not in allowed array list ($method)", __METHOD__, 'critical' );
@@ -1854,8 +1701,10 @@ class TrustedLogin {
 			'timeout'     => 45,
 			'httpversion' => '1.1',
 			'headers'     => $headers,
-			'body'        => json_encode( $data ),
+			'body'        => ( $data ? json_encode( $data ) : null ),
 		);
+
+		$url = self::saas_api_url . $path;
 
 		$this->log( sprintf( 'Sending to %s: %s', $url, print_r( $request_options, true ) ), __METHOD__, 'debug' );
 
@@ -1902,7 +1751,7 @@ class TrustedLogin {
         $output_lang = $this->output_tl_alert();
 
         $logo_output = '';
-                    
+
         if (!empty($this->get_setting('vendor/logo_url'))){
 
             $logo_output = sprintf(
@@ -1951,12 +1800,12 @@ class TrustedLogin {
 
         $output_html = str_replace('{{outerTag}}', apply_filters( 'trustedlogin/template/grantlink/outer-tag', 'div', $ns ), $output_html);
         $output_html = str_replace('{{innerTag}}', apply_filters( 'trustedlogin/template/grantlink/inner-tag', 'div', $ns ), $output_html);
-       
+
         $output_template = sprintf(
             wp_kses(
                 /**
                 * Filter trustedlogin/template/grantlink
-                * 
+                *
                 * Manipulate the output template used to display instructions and details to WP admins
                 * when they've clicked on a direct link to grant TrustedLogin access.
                 *
@@ -1964,9 +1813,9 @@ class TrustedLogin {
                 * @param string $namespace
                 **/
                 apply_filters( 'trustedlogin/template/grantlink', $output_html, $ns ),
-                array( 
-                    'ul'    => array( 'class' => array(), 'id' => array() ), 
-                    'p'     => array( 'class' => array(), 'id' => array() ), 
+                array(
+                    'ul'    => array( 'class' => array(), 'id' => array() ),
+                    'p'     => array( 'class' => array(), 'id' => array() ),
                     'h1'    => array( 'class' => array(), 'id' => array() ),
                     'h2'    => array( 'class' => array(), 'id' => array() ),
                     'h3'    => array( 'class' => array(), 'id' => array() ),

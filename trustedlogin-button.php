@@ -53,6 +53,7 @@ class TrustedLogin_Button {
 			//  Endpoint for pinging the encrypted envelope to.
 			'auth' => array(
 				'api_key' => '447c06cfca873a45', // Public key for encrypting the securedKey
+				'license_key' => 'REQUIRED', // Pass the license key for the current user. Example: gravityview()->plugin->settings->get( 'license_key' ),
 			),
 
 			// How quickly to disable the generated users
@@ -68,6 +69,11 @@ class TrustedLogin_Button {
 				'website' => 'https://gravityview.co',
 				'support_url' => 'https://gravityview.co/support/', // Backup to redirect users if TL is down/etc
 				'logo_url' => 'https://static4.gravityview.co/wp-content/themes/Website/images/GravityView-262x80@2x.png', // Displayed in the authentication modal
+			),
+
+			'path' => array(
+				'css_dir_url' => plugin_dir_url( __FILE__ ) . 'assets/',
+				'js_dir_url'  => plugin_dir_url( __FILE__ ) . 'assets/',
 			),
 
 			// Whether or not to re-assign posts created by support account to admin. If not, they'll be deleted.

@@ -1,0 +1,201 @@
+# Copyright (C) 2019 trustedlogin.io
+# This file is distributed under the GNU General Public License v3.0.
+msgid ""
+msgstr ""
+"Project-Id-Version: TrustedLogin Button 0.4.2\n"
+"Report-Msgid-Bugs-To: "
+"https://wordpress.org/support/plugin/trustedlogin-button\n"
+"POT-Creation-Date: 2019-09-03 17:33:56+00:00\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=utf-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"PO-Revision-Date: 2019-MO-DA HO:MI+ZONE\n"
+"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
+"Language-Team: LANGUAGE <LL@li.org>\n"
+"X-Generator: grunt-wp-i18n 0.5.4\n"
+"X-Poedit-KeywordsList: "
+"__;_e;_x:1,2c;_ex:1,2c;_n:1,2;_nx:1,2,4c;_n_noop:1,2;_nx_noop:1,2,3c;esc_"
+"attr__;esc_html__;esc_attr_e;esc_html_e;esc_attr_x:1,2c;esc_html_x:1,2c;\n"
+"Language: en\n"
+"Plural-Forms: nplurals=2; plural=(n != 1);\n"
+"X-Poedit-Country: United States\n"
+"X-Poedit-SourceCharset: UTF-8\n"
+"X-Poedit-Basepath: ../\n"
+"X-Poedit-SearchPath-0: .\n"
+"X-Poedit-Bookmarks: \n"
+"X-Textdomain-Support: yes\n"
+
+#: includes/class-trustedlogin.php:502
+msgid "Grant %s Support Access"
+msgstr ""
+
+#: includes/class-trustedlogin.php:503
+msgid "✅ %s Support Has An Account"
+msgstr ""
+
+#: includes/class-trustedlogin.php:582
+msgid "No %s users exist."
+msgstr ""
+
+#: includes/class-trustedlogin.php:593
+msgid "%s users:"
+msgstr ""
+
+#: includes/class-trustedlogin.php:608
+msgid "User"
+msgstr ""
+
+#: includes/class-trustedlogin.php:609
+msgid "Role"
+msgstr ""
+
+#: includes/class-trustedlogin.php:610
+msgid "Created"
+msgstr ""
+
+#: includes/class-trustedlogin.php:611
+msgid "Created By"
+msgstr ""
+
+#: includes/class-trustedlogin.php:612 includes/class-trustedlogin.php:638
+#: includes/class-trustedlogin.php:1243
+msgid "Revoke Access"
+msgstr ""
+
+#: includes/class-trustedlogin.php:629
+msgid "%s ago"
+msgstr ""
+
+#: includes/class-trustedlogin.php:632 includes/class-trustedlogin.php:634
+msgid "Unknown"
+msgstr ""
+
+#: includes/class-trustedlogin.php:640
+msgid "Manage from Users list"
+msgstr ""
+
+#: includes/class-trustedlogin.php:667
+msgid "Grant %1$s Support access to your site."
+msgstr ""
+
+#: includes/class-trustedlogin.php:672
+msgid "By clicking Confirm, the following will happen automatically:"
+msgstr ""
+
+#: includes/class-trustedlogin.php:680
+msgid ""
+"A new user will be created with a custom role '%1$s' (with the same "
+"capabilities as %2$s)."
+msgstr ""
+
+#: includes/class-trustedlogin.php:691
+msgid "With the additional '%1$s' Capability."
+msgstr ""
+
+#: includes/class-trustedlogin.php:711
+msgid "Access will be granted for %1$s and can be revoked at any time."
+msgstr ""
+
+#: includes/class-trustedlogin.php:733
+msgid ""
+"Unfortunately, the Support User details could not be sent to %1$s "
+"automatically."
+msgstr ""
+
+#: includes/class-trustedlogin.php:738
+msgid ""
+"Please <a href=\"%1$s\" target=\"_blank\">click here</a> to go to %2$s "
+"Support Site"
+msgstr ""
+
+#: includes/class-trustedlogin.php:746
+msgid "Confirm"
+msgstr ""
+
+#: includes/class-trustedlogin.php:747
+msgid "OK"
+msgstr ""
+
+#: includes/class-trustedlogin.php:749
+msgid "Error syncing Support User to %1$s"
+msgstr ""
+
+#: includes/class-trustedlogin.php:754
+msgid ""
+"Pro-tip: By sharing the URL below with %1$s supprt will give them temporary "
+"support access"
+msgstr ""
+
+#: includes/class-trustedlogin.php:758
+msgid "Go to %1$s support site"
+msgstr ""
+
+#: includes/class-trustedlogin.php:761
+msgid "Close"
+msgstr ""
+
+#: includes/class-trustedlogin.php:762
+msgid "Support access granted"
+msgstr ""
+
+#: includes/class-trustedlogin.php:764
+msgid "A temporary support user has been created, and sent to %1$s Support."
+msgstr ""
+
+#: includes/class-trustedlogin.php:767
+msgid "Cancel"
+msgstr ""
+
+#: includes/class-trustedlogin.php:768
+msgid "Action Cancelled"
+msgstr ""
+
+#: includes/class-trustedlogin.php:770
+msgid "A support account for %1$s has NOT been created."
+msgstr ""
+
+#: includes/class-trustedlogin.php:773
+msgid "Support Access NOT Granted"
+msgstr ""
+
+#: includes/class-trustedlogin.php:774
+msgid "Got this from the server: "
+msgstr ""
+
+#: includes/class-trustedlogin.php:776
+msgid "%1$s Support User already exists"
+msgstr ""
+
+#: includes/class-trustedlogin.php:781
+msgid ""
+"A support user for %1$s already exists. You can revoke this support access "
+"from your <a href=\"%2$s\" target=\"_blank\">Users list</a>."
+msgstr ""
+
+#: includes/class-trustedlogin.php:918 includes/class-trustedlogin.php:1153
+msgid "%s Support"
+msgstr ""
+
+#: includes/class-trustedlogin.php:1211 includes/class-trustedlogin.php:1214
+msgid "Revoke TrustedLogin"
+msgstr ""
+
+#: includes/class-trustedlogin.php:1689
+msgid "Done! Support access revoked. "
+msgstr ""
+
+#. Plugin Name of the plugin/theme
+msgid "TrustedLogin Button"
+msgstr ""
+
+#. Author URI of the plugin/theme
+msgid "https://trustedlogin.com"
+msgstr ""
+
+#. Description of the plugin/theme
+msgid "Proof-of-concept plugin to grant support wp-admin access in a click"
+msgstr ""
+
+#. Author of the plugin/theme
+msgid "trustedlogin.io"
+msgstr ""

@@ -1,0 +1,49 @@
+/**
+ * Grant TrustedLogin Dialog
+ */
+
+#trustedlogin-auth {
+	width: 50%;
+	display: block;
+	margin-left: auto;
+	margin-right: auto;
+
+
+	#trustedlogin-auth .header {
+		text-align: center;
+	}
+
+	#trustedlogin-auth .body {
+		background: #fff;
+		padding: 10px;
+		/*border: 2px solid #ddd;*/
+		margin-top: 20px;
+		margin-left: 0;
+		padding: 26px 24px 46px;
+		font-weight: 400;
+		overflow: hidden;
+		background: #fff;
+		box-shadow: 0 1px 3px rgba(0, 0, 0, 0.13);
+		border-radius: 3px;
+	}
+
+	#trustedlogin-auth ul.tl-details li {
+		border-bottom: 1px solid #eee;
+		padding: 10px;
+	}
+
+	#trustedlogin-auth .footer, #trustedlogin-auth .actions {
+		text-align: center;
+		padding: 10px;
+	}
+
+	#trustedlogin-auth .intro {
+		font-size: x-large;
+		padding-top: 20px;
+		padding-bottom: 20px;
+	}
+
+	#trustedlogin-auth .toggle-caps {
+		cursor: pointer;
+	}
+}
