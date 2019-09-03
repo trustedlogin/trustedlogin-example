@@ -1755,7 +1755,7 @@ class TrustedLogin {
         if (!empty($this->get_setting('vendor/logo_url'))){
 
             $logo_output = sprintf(
-                '<a href="%1$s" title="%2$s"><img class="logo" src="%3$s" alt="%4$s" /></a>',
+                '<a href="%1$s" title="%2$s" target="_blank" rel="noreferrer noopener"><img class="tl-auth-logo" src="%3$s" alt="%4$s" /></a>',
                 esc_url($this->get_setting('vendor/website')),
                 esc_attr(sprintf(__( 'Grant %1$s Support access to your site.', 'trustedlogin' ),$this->get_setting('vendor/title'))),
                 esc_url($this->get_setting('vendor/logo_url')),
@@ -1779,18 +1779,18 @@ class TrustedLogin {
 
         $output_html = '
             <{{outerTag}} id="trustedlogin-auth" class="%1$s">
-                <{{innerTag}} class="header">
+                <{{innerTag}} class="tl-auth-header">
                     %2$s
-                    %3$s
+                    <{{innerTag}} class="tl-auth-intro">%3$s</{{innerTag}}>
                 </{{innerTag}}>
-                <{{innerTag}} class="body">
+                <{{innerTag}} class="tl-auth-body">
                     %4$s
                     %5$s
                 </{{innerTag}}>
-                <{{innerTag}} class="actions">
+                <{{innerTag}} class="tl-auth-actions">
                     %6$s
                 </{{innerTag}}>
-                <{{innerTag}} class="footer">
+                <{{innerTag}} class="tl-auth-footer">
                     %7$s
                 </{{innerTag}}>
             </{{outerTag}}>

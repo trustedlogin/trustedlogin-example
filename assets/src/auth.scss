@@ -9,11 +9,16 @@
 	margin-right: auto;
 
 
-	#trustedlogin-auth .header {
+	.tl-auth-header {
 		text-align: center;
 	}
 
-	#trustedlogin-auth .body {
+	.tl-auth-logo {
+		max-width: 400px;
+		max-height: 400px;
+	}
+
+	.tl-auth-body {
 		background: #fff;
 		padding: 10px;
 		/*border: 2px solid #ddd;*/
@@ -27,23 +32,28 @@
 		border-radius: 3px;
 	}
 
-	#trustedlogin-auth ul.tl-details li {
+	ul.tl-details li {
 		border-bottom: 1px solid #eee;
 		padding: 10px;
 	}
 
-	#trustedlogin-auth .footer, #trustedlogin-auth .actions {
+	.tl-auth-footer,
+	.tl-auth-actions {
 		text-align: center;
 		padding: 10px;
 	}
 
-	#trustedlogin-auth .intro {
+	.tl-auth-actions {
+		margin-top: 1rem;
+	}
+
+	.tl-auth-intro {
 		font-size: x-large;
 		padding-top: 20px;
 		padding-bottom: 20px;
 	}
 
-	#trustedlogin-auth .toggle-caps {
+	.toggle-caps {
 		cursor: pointer;
 	}
 }
