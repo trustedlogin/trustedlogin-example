@@ -71,6 +71,11 @@ class TrustedLogin_Button {
 				'logo_url' => '', // Displayed in the authentication modal
 			),
 
+			'path' => array(
+				'css_dir_url' => plugin_dir_url( __FILE__ ) . 'assets/',
+				'js_dir_url'  => plugin_dir_url( __FILE__ ) . 'assets/',
+			),
+
 			// Whether or not to re-assign posts created by support account to admin. If not, they'll be deleted.
 			'reassign_posts' => true,
 		);

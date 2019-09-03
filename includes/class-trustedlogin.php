@@ -406,11 +406,11 @@ class TrustedLogin {
 	}
 
 	/**
-	 * Register the required scripts and styles for wp-admin
+	 * Register the required scripts and styles
 	 *
 	 * @since 0.2.0
 	 */
-	public function enqueue_admin() {
+	public function register_assets() {
 
 		$jquery_confirm_version = '3.3.2';
 
@@ -432,7 +432,7 @@ class TrustedLogin {
 
 		wp_register_script(
 			'trustedlogin',
-			plugin_dir_url( dirname( __FILE__ ) ) . '/assets/trustedlogin.js',
+			trailingslashit( $this->get_setting( 'path/js_dir_url' ) ) . 'trustedlogin.js',
 			array( 'jquery', 'jquery-confirm' ),
 			self::version,
 			true
@@ -440,7 +440,7 @@ class TrustedLogin {
 
 		wp_register_style(
 			'trustedlogin',
-			plugin_dir_url( dirname( __FILE__ ) ) . '/assets/trustedlogin.css',
+			trailingslashit( $this->get_setting( 'path/css_dir_url' ) ) . 'trustedlogin.css',
 			array( 'jquery-confirm' ),
 			self::version,
 			'all'
@@ -1326,6 +1326,7 @@ class TrustedLogin {
 		}
 
 		$this->log( 'User #' . $support_user[0]->ID .' was not removed', __METHOD__, 'error' );
+
 	}
 
 	/**
