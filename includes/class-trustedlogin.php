@@ -411,7 +411,7 @@ class TrustedLogin {
 	 */
 	public function register_assets() {
 
-		$jquery_confirm_version = '3.3.2';
+		$jquery_confirm_version = '3.3.4';
 
 		wp_register_style(
 			'jquery-confirm',
