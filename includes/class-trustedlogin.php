@@ -160,7 +160,7 @@ class TrustedLogin {
 
 		add_action( 'trustedlogin_revoke_access', array( $this, 'support_user_decay' ), 10, 2 );
 
-        add_action( 'admin_enqueue_scripts', array( $this, 'register_assets' ) );
+		add_action( 'admin_enqueue_scripts', array( $this, 'register_assets' ) );
 
 		if ( is_admin() ) {
 			add_action( 'wp_ajax_tl_gen_support', array( $this, 'ajax_gen_support' ) );
@@ -172,8 +172,8 @@ class TrustedLogin {
 			add_action( 'trustedlogin_users_table', array( $this, 'output_support_users' ), 20 );
 		}
 
-		add_action( 'admin_bar_menu', array( $this, 'adminbar_add_toolbar_items' ), 100 );
-        add_action( 'admin_menu', array( $this, 'auth_link_page' ) );
+		add_action( 'admin_bar_menu', array( $this, 'admin_bar_add_toolbar_items' ), 100 );
+		add_action( 'admin_menu', array( $this, 'admin_menu_auth_link_page' ) );
 
 		add_action( 'admin_init', array( $this, 'admin_maybe_revoke_support' ), 100 );
 
@@ -1238,7 +1238,14 @@ class TrustedLogin {
 		return get_users( $args );
 	}
 
-	public function adminbar_add_toolbar_items( $admin_bar ) {
+	/**
+     * Adds a "Revoke TrustedLogin" menu item to the admin toolbar
+     *
+	 * @param WP_Admin_Bar $admin_bar
+     *
+     * @return void
+	 */
+	public function admin_bar_add_toolbar_items( $admin_bar ) {
 
 		if ( ! current_user_can( $this->support_role ) ) {
 			return;
@@ -1730,7 +1737,6 @@ class TrustedLogin {
 	}
 
 	/**
-    public function auth_link_page() {
 	 * Generates the auth link page
 	 *
 	 * This simulates the addition of an admin submenu item with null as the menu location
@@ -1739,18 +1745,20 @@ class TrustedLogin {
 	 *
 	 * @return void
 	 */
+    public function admin_menu_auth_link_page() {
 
-        $ns = $this->get_setting('vendor/namespace');
-        $slug = apply_filters('trustedlogin/admin/grantaccess/slug','grant-'.$ns.'-access',$ns);
+	    $ns = $this->get_setting( 'vendor/namespace' );
 
-        add_submenu_page(
-            null,
-            esc_html__('Grant Support Access','trustedlogin'),
-            esc_html__('Grant Support Access','trustedlogin'),
-            'manage_options',
-            $slug,
-            array( $this, 'add_auth_link_page' )
-        );
+	    $slug = apply_filters( 'trustedlogin/admin/grantaccess/slug', 'grant-' . $ns . '-access', $ns );
+
+	    add_submenu_page(
+		    null,
+		    esc_html__( 'Grant Support Access', 'trustedlogin' ),
+		    esc_html__( 'Grant Support Access', 'trustedlogin' ),
+		    'manage_options',
+		    $slug,
+		    array( $this, 'add_auth_link_page' )
+	    );
     }
 
 	/**
