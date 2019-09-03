@@ -210,7 +210,7 @@
         });
 
 
-        $('#trustedlogin-auth').on( 'click' , '.toggle-caps' , function(){
+        $('#trustedlogin-auth').on( 'click' , '.tl-toggle-caps' , function(){
             $(this).find('span').toggleClass('dashicons-arrow-down-alt2').toggleClass('dashicons-arrow-up-alt2');
             $(this).next('.tl-details.caps').toggleClass('hidden');
         });
