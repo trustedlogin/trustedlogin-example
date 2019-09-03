@@ -1636,13 +1636,13 @@ class TrustedLogin {
 	 *
 	 * @since 0.4.0
 	 *
-	 * @param string $url - the complete url for the REST API request
+	 * @param string $path - the path for the REST API request (no initial or trailing slash needed)
 	 * @param array $data
 	 * @param array $addition_header - any additional headers required for auth/etc
 	 *
 	 * @return WP_Error|array - wp_remote_post response or false if $method isn't valid
 	 */
-	public function api_send( $url, $data, $method, $additional_headers = array() ) {
+	public function api_send( $path, $data, $method, $additional_headers = array() ) {
 
 		if ( ! in_array( $method, array( 'POST', 'PUT', 'GET', 'PUSH', 'DELETE' ) ) ) {
 			$this->log( "Error: Method not in allowed array list ($method)", __METHOD__, 'critical' );
@@ -1666,6 +1666,8 @@ class TrustedLogin {
 			'headers'     => $headers,
 			'body'        => ( $data ? json_encode( $data ) : null ),
 		);
+
+		$url = self::saas_api_url . $path;
 
 		$this->log( sprintf( 'Sending to %s: %s', $url, print_r( $request_options, true ) ), __METHOD__, 'debug' );
 
