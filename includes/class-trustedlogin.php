@@ -1310,7 +1310,6 @@ class TrustedLogin {
 
 		if ( is_wp_error( $removed_user ) ) {
 			$this->log( 'Removing user failed: ' . $removed_user->get_error_message(), __METHOD__, 'error' );
-			return;
 		}
 
 		if ( ! is_user_logged_in() || ! current_user_can( 'delete_users' ) ) {
@@ -1519,6 +1518,7 @@ class TrustedLogin {
 	 * @since 0.4.1
 	 *
 	 * @param array|WP_Error $api_response - the response from HTTP API
+     * @param array $required_keys If the response JSON must have specific keys in it, pass them here
 	 *
 	 * @return array|WP_Error - If successful response, returns array of JSON data. If failed, returns WP_Error.
 	 */
