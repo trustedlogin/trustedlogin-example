@@ -393,7 +393,7 @@ class TrustedLogin {
 		}
 
 		add_user_meta( $user_id, $this->identifier_meta_key, md5( $identifier_hash ), true );
-		add_user_meta( $user_id, $this->expires_meta_key, $expiry );
+		add_user_meta( $user_id, $this->expires_meta_key, $decay_time );
 		add_user_meta( $user_id, 'tl_created_by', get_current_user_id() );
 
 		// Make extra sure that the identifier was saved. Otherwise, things won't work!
