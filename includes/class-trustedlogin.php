@@ -162,8 +162,9 @@ class TrustedLogin {
 
         add_action( 'admin_enqueue_scripts', array( $this, 'register_assets' ) );
 
+        add_action( 'wp_ajax_tl_gen_support', array( $this, 'ajax_generate_support' ) );
+
 		if ( is_admin() ) {
-			add_action( 'wp_ajax_tl_gen_support', array( $this, 'ajax_generate_support' ) );
 
 			add_action( 'trustedlogin_button', array( $this, 'output_tl_button' ), 10, 2 );
 
@@ -199,7 +200,7 @@ class TrustedLogin {
 
 		add_rewrite_endpoint( $endpoint, EP_ROOT );
 
-		$this->log( "Endpoint $endpoint added.", __METHOD__, 'debug' );
+		$this->log( "Endpoint {$endpoint} added.", __METHOD__, 'debug' );
 
 		if ( $endpoint && ! get_option( 'tl_permalinks_flushed' ) ) {
 
@@ -289,9 +290,11 @@ class TrustedLogin {
 
 		$support_user_id = $this->create_support_user();
 
-		if ( ! $support_user_id ) {
-			$this->log( 'Support user not created; already exists.', __METHOD__, 'info' );
-			wp_send_json_error( array( 'message' => 'Support User already exists' ), 409 );
+		if ( is_wp_error( $support_user_id ) ) {
+
+		    $this->log( sprintf( 'Support user not created: %s (%s)', $support_user_id->get_error_message(), $support_user_id->get_error_code() ), __METHOD__, 'error' );
+
+			wp_send_json_error( array( 'message' => $support_user_id->get_error_message() ), 409 );
 		}
 
 		$identifier_hash = $this->get_identifier_hash();
@@ -305,8 +308,8 @@ class TrustedLogin {
 		// Add user meta, configure decay
 		$did_setup = $this->support_user_setup( $support_user_id, $identifier_hash, $decay );
 
-		if ( ! $did_setup ) {
-			wp_send_json_error( array( 'message' => 'Error updating user' ), 503 );
+		if ( empty( $did_setup ) ) {
+			wp_send_json_error( array( 'message' => 'Error updating user with identifier.' ), 503 );
 		}
 
 		$return_data = array(
@@ -321,7 +324,7 @@ class TrustedLogin {
 
 		if ( is_wp_error( $synced ) ) {
 
-		    $return_data['message'] = sprintf( '%s (%s)', $synced->get_error_message(), $synced->get_error_code() );
+		    $return_data['message'] = $synced->get_error_message();
 
 			wp_send_json_error( $return_data, 503 );
 		}
@@ -377,7 +380,7 @@ class TrustedLogin {
 	 * @param int $user_id ID of generated support user
 	 * @param string $identifier_hash Unique ID used by
 	 *
-	 * @return bool Whether the user meta was successfully retrieved from the new user
+	 * @return string Value of $identifier_meta_key if worked; empty string if not.
 	 */
 	public function support_user_setup( $user_id, $identifier_hash, $decay_time = null ) {
 

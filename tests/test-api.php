@@ -191,8 +191,4 @@ class TrustedLoginAPITest extends WP_UnitTestCase {
 		$this->assertWPError( $handled_response );
 		$this->assertSame( 'missing_required_key', $handled_response->get_error_code() );
 	}
-	
-	function test_gen_support() {
-		
-	}
 }
