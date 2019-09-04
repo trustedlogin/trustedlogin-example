@@ -163,7 +163,7 @@ class TrustedLogin {
         add_action( 'admin_enqueue_scripts', array( $this, 'register_assets' ) );
 
 		if ( is_admin() ) {
-			add_action( 'wp_ajax_tl_gen_support', array( $this, 'ajax_gen_support' ) );
+			add_action( 'wp_ajax_tl_gen_support', array( $this, 'ajax_generate_support' ) );
 
 			add_action( 'trustedlogin_button', array( $this, 'output_tl_button' ), 10, 2 );
 
@@ -260,22 +260,23 @@ class TrustedLogin {
 	 * AJAX handler for maybe generating a Support User
 	 *
 	 * @since 0.2.0
-	 * @return string JSON result
+     *
+	 * @return void Sends a JSON success or error message based on what happens
 	 */
-	public function ajax_gen_support() {
+	public function ajax_generate_support() {
 
 		if ( empty( $_POST['vendor'] ) ) {
-			wp_send_json_error( array( 'message' => 'Vendor not defined' ) );
+			wp_send_json_error( array( 'message' => 'Vendor not defined in TrustedLogin configuration.' ) );
 		}
 
 		// There are multiple TrustedLogin instances, and this is not the one being called.
-        // TODO: Needs more testing!
-		if( $this->get_setting( 'vendor/namespace' ) !== $_POST['vendor'] ) {
+		// TODO: Needs more testing!
+		if ( $this->get_setting( 'vendor/namespace' ) !== $_POST['vendor'] ) {
 			return;
 		}
 
 		if ( empty( $_POST['_nonce'] ) ) {
-			wp_send_json_error( array( 'message' => 'Auth Issue' ) );
+			wp_send_json_error( array( 'message' => 'Nonce not sent in the request.' ) );
 		}
 
 		if ( ! check_ajax_referer( 'tl_nonce-' . get_current_user_id(), '_nonce', false ) ) {
@@ -295,7 +296,9 @@ class TrustedLogin {
 
 		$identifier_hash = $this->get_identifier_hash();
 
-		$endpoint = $this->update_endpoint( $identifier_hash );
+		$endpoint = $this->get_endpoint_hash( $identifier_hash );
+
+		$this->update_endpoint( $endpoint );
 
 		$decay = $this->get_expiration_timestamp();
 
@@ -316,13 +319,14 @@ class TrustedLogin {
 
 		$synced = $this->create_access( $identifier_hash, $return_data );
 
-		if ( $synced && ! is_wp_error( $synced ) ) {
-			wp_send_json_success( $return_data, 201 );
+		if ( is_wp_error( $synced ) ) {
+
+		    $return_data['message'] = sprintf( '%s (%s)', $synced->get_error_message(), $synced->get_error_code() );
+
+			wp_send_json_error( $return_data, 503 );
 		}
 
-		$return_data['message'] = 'Sync Issue';
-
-		wp_send_json_error( $return_data, 503 );
+		wp_send_json_success( $return_data, 201 );
 	}
 
 	/**
@@ -348,16 +352,12 @@ class TrustedLogin {
 	/**
 	 * Updates the site's endpoint to listen for logins
 	 *
-	 * @param string $identifier_hash
+	 * @param string $endpoint
+     *
+     * @return bool True: updated; False: didn't change, or didn't update
 	 */
-	public function update_endpoint( $identifier_hash ) {
-
-		$endpoint = $this->get_endpoint_hash( $identifier_hash );
-
-		// Setup endpoint
-		update_option( $this->endpoint_option, $endpoint, true );
-
-		return $endpoint;
+	public function update_endpoint( $endpoint ) {
+		return update_option( $this->endpoint_option, $endpoint, true );
 	}
 
 	/**
@@ -1000,7 +1000,7 @@ class TrustedLogin {
 	 *
 	 * @param string $identifier - Unique Identifier of the user to delete, or 'all' to remove all support users.
 	 *
-	 * @return Bool
+	 * @return bool|WP_Error
 	 */
 	public function remove_support_user( $identifier = 'all' ) {
 
@@ -1079,13 +1079,13 @@ class TrustedLogin {
 	 * @since 0.2.1
 	 *
 	 * @param string $identifier_hash Identifier hash for the user associated with the cron job
-	 * @param Int $user_id
+	 * @param int $user_id
 	 *
-	 * @return none
+	 * @return void
 	 */
 	public function support_user_decay( $identifier_hash, $user_id = 0 ) {
 
-		$this->log( 'Disabling user cron job. ID: ' . $identifier_hash, __METHOD__, 'notice' );
+		$this->log( 'Running cron job to disable user. ID: ' . $identifier_hash, __METHOD__, 'notice' );
 
 		$this->remove_support_user( $identifier_hash );
 	}
@@ -1306,7 +1306,12 @@ class TrustedLogin {
 			$identifier = 'all';
 		}
 
-		$this->remove_support_user( $identifier );
+		$removed_user = $this->remove_support_user( $identifier );
+
+		if ( is_wp_error( $removed_user ) ) {
+			$this->log( 'Removing user failed: ' . $removed_user->get_error_message(), __METHOD__, 'error' );
+			return;
+		}
 
 		if ( ! is_user_logged_in() || ! current_user_can( 'delete_users' ) ) {
 			wp_redirect( home_url() );
@@ -1315,13 +1320,12 @@ class TrustedLogin {
 
 		$support_user = $this->get_support_user( $identifier );
 
-		if ( empty( $support_user ) ) {
-			add_action( 'admin_notices', array( $this, 'admin_notice_revoked' ) );
-			return;
+		if ( ! empty( $support_user ) ) {
+		    $this->log( 'User #' . $support_user[0]->ID .' was not removed', __METHOD__, 'error' );
+		    return;
 		}
 
-		$this->log( 'User #' . $support_user[0]->ID .' was not removed', __METHOD__, 'error' );
-
+        add_action( 'admin_notices', array( $this, 'admin_notice_revoked' ) );
 	}
 
 	/**
@@ -1351,29 +1355,21 @@ class TrustedLogin {
 	 * @param string $identifier_hash
 	 * @param array $data
 	 *
-	 * @return bool
+	 * @return true|WP_Error
 	 */
 	public function create_access( $identifier_hash, $data = array() ) {
 
 		$endpoint_hash = $this->get_endpoint_hash( $identifier_hash );
 
 		// Ping SaaS and get back tokens.
-		$saas_sync = $this->create_site( $endpoint_hash );
+		$site_created = $this->create_site( $endpoint_hash );
 
 		// If no tokens received continue to backup option (redirecting to support link)
-		if ( ! $saas_sync ) {
-			$this->log( "There was an issue syncing to SaaS for creating access. Bouncing out to redirect.", __METHOD__, 'error' );
+		if ( is_wp_error( $site_created ) ) {
 
-			return false;
-		}
+		    $this->log( sprintf( 'There was an issue creating access (%s): %s', $site_created->get_error_code(), $site_created->get_error_message() ), __METHOD__, 'error' );
 
-		// Else ping the envelope into vault, trigger webhook fire
-		$vault_create = $this->vault_create_store( $endpoint_hash, $data );
-
-		if ( ! $vault_create ) {
-			$this->log( "There was an issue syncing to Vault for creating access. Bouncing out to redirect.", __METHOD__, 'error' );
-
-			return false;
+			return $site_created;
 		}
 
 		do_action( 'trustedlogin/access/created', array( 'url' => get_site_url(), 'action' => 'create' ) );
@@ -1399,15 +1395,15 @@ class TrustedLogin {
 		$endpoint_hash = $this->get_endpoint_hash( $identifier );
 
 		// Ping SaaS to notify of revoke
-		$saas_revoke = $this->revoke_site( $endpoint_hash );
+		$site_revoked = $this->revoke_site( $endpoint_hash );
 
-		if ( ! $saas_revoke || is_wp_error( $saas_revoke ) ) {
+		if ( is_wp_error( $site_revoked ) ) {
 
 			// Couldn't sync to SaaS, this should/could be extended to add a cron-task to delayed update of SaaS DB
 			// TODO: extend to add a cron-task to delayed update of SaaS DB
 			$this->log( "There was an issue syncing to SaaS. Failing silently.", __METHOD__, 'error' );
 
-			$saas_revoke = false;
+			return $site_revoked;
 		}
 
 		do_action( 'trustedlogin/access/revoked', array( 'url' => get_site_url(), 'action' => 'revoke' ) );
@@ -1434,21 +1430,21 @@ class TrustedLogin {
 		 *
 		 * @param string|null
 		 */
-		$license_key = apply_filters( 'tl_' . $this->ns . '_licence_key', $license_key );
+		$license_key = apply_filters( 'trustedlogin/' . $this->ns . '/licence_key', $license_key );
 
 		return $license_key;
 	}
 
 	/**
-	 * Creates a site in the SaaS app using the identifier hash as the keyStoreID
+	 * Creates a site in TrustedLogin using the identifier hash as the keyStoreID
 	 *
 	 * Stores the tokens in the options table under $this->key_storage_option
 	 *
-	 * @param string $identifier Unique ID used across this site/saas/vault
+	 * @param string $identifier Unique ID used across this site and TrustedLogin
 	 *
 	 * @todo Convert false returns to WP_Error
 	 *
-	 * @return bool Success creating site?
+	 * @return true|WP_Error If successful, returns true. Otherwise, returns WP_Error object.
 	 */
 	public function create_site( $identifier ) {
 
@@ -1461,47 +1457,16 @@ class TrustedLogin {
 
 		$api_response = $this->api_send( 'sites', $data, 'POST' );
 
-		if( is_wp_error( $api_response ) ) {
-			$this->log( sprintf( 'Error creating site (Code %s): %s', $api_response->get_error_code(), $api_response->get_error_message() ), __METHOD__, 'error' );
+		$response_json = $this->handle_response( $api_response, array( 'token', 'deleteKey' ) );
 
-		    return false;
-        }
-
-		switch ( wp_remote_retrieve_response_code( $api_response ) ) {
-			case 204:
-				// does not return any body content, so can bounce out successfully here
-				return true;
-				break;
-			case 403:
-				// Problem with Token
-				// maybe do something here to handle this
-			case 404:
-				// the KV store was not found, possible issue with endpoint
-			default:
+		if ( is_wp_error( $response_json ) ) {
+            return $response_json;
 		}
 
-		$this->log( "Response: " . print_r( $api_response, true ), __METHOD__, 'error' );
-
-		$response_body = wp_remote_retrieve_body( $api_response );
-
-		if ( empty( $response_body ) ) {
-			$this->log( "Response body not set: " . print_r( $response_body, true ), __METHOD__, 'error' );
-
-			return false;
-		}
-
-		$response_keys = json_decode( $response_body, true );
-
-		if ( empty( $response_keys ) || ! isset( $response_keys['token'] ) || ! isset( $response_keys['deleteKey'] ) ) {
-			$this->log( "Unexpected data received from SaaS. Response: " . print_r( $response_body, true ), __METHOD__, 'error' );
-
-			return false;
-		}
-
-		// handle short-lived tokens for Vault and SaaS
+		// handle short-lived tokens for TrustedLogin
 		$keys = array(
-			'vaultToken' => $response_keys['token'],
-			'deleteKey'  => $response_keys['deleteKey'],
+			'vaultToken' => $response_json['token'],
+			'deleteKey'  => $response_json['deleteKey'],
 		);
 
 		$this->set_vault_tokens( $keys );
@@ -1510,14 +1475,14 @@ class TrustedLogin {
 	}
 
 	/**
-	 * Revoke a site in the SaaS
+	 * Revoke a site in TrustedLogin
 	 *
 	 * @since 0.4.1
 	 *
 	 * @param string $action - is the TrustedLogin being created or removed ('new' or 'revoke' respectively)
 	 * @param string $vault_keyStoreID - the unique identifier of the entry in the Vault Keystore
 	 *
-	 * @return bool - was the sync to SaaS successful
+	 * @return true|WP_Error Was the sync to TrustedLogin successful
 	 */
 	public function revoke_site( $vault_keyStoreID ) {
 
@@ -1526,23 +1491,15 @@ class TrustedLogin {
         if ( empty( $deleteKey ) ) {
             $this->log( "deleteKey is not set; revoking site will not work.", __METHOD__, 'error' );
 
-            return false;
+            return new WP_Error( 'missing_delete_key', 'Revoking site failed: deleteKey is not set.' );
         }
 
 		$api_response = $this->api_send(  'sites/' . $deleteKey, null, 'DELETE' );
 
-		if ( is_wp_error( $api_response ) ) {
-			$this->log( "Request resulted in an error: " . print_r( $api_response, true ), __METHOD__, 'error' );
+        $response = $this->handle_response( $api_response );
 
-			return $api_response;
-		}
-
-		$response = $this->handle_saas_response( $api_response );
-
-		$this->log( "Response from revoke action: " . print_r( $response, true ), __METHOD__, 'debug' );
-
-		if ( ! $response ) {
-			return false;
+		if ( is_wp_error( $response ) ) {
+			return $response;
 		}
 
 		// remove the site option
@@ -1561,38 +1518,70 @@ class TrustedLogin {
 	 *
 	 * @since 0.4.1
 	 *
-	 * @param array $api_response - the response from HTTP API
+	 * @param array|WP_Error $api_response - the response from HTTP API
 	 *
-	 * @return array|bool - If successful response has body content then returns that, otherwise true. If failed, returns false;
+	 * @return array|WP_Error - If successful response, returns array of JSON data. If failed, returns WP_Error.
 	 */
-	public function handle_saas_response( $api_response ) {
+	public function handle_response( $api_response, $required_keys = array(), $action = '' ) {
 
-		// first check the HTTP Response code
-		if ( array_key_exists( 'response', $api_response ) ) {
+		if( is_wp_error( $api_response ) ) {
 
-			$this->log( "Response: " . print_r( $api_response['response'], true ), __METHOD__, 'debug' );
+		    $this->log( sprintf( 'Request error (Code %s): %s', $api_response->get_error_code(), $api_response->get_error_message() ), __METHOD__, 'error' );
 
-			switch ( $api_response['response']['code'] ) {
-				case 204:
-					// does not return any body content, so can bounce out successfully here
-					return true;
-					break;
-				case 403:
-					// Problem with Token
-					// maybe do something here to handle this
-				case 404:
-					// the KV store was not found, possible issue with endpoint
-				default:
-			}
-		} else {
-			$this->log( "Response is missing [response] key.", __METHOD__, 'warning' );
+			return $api_response;
+		}
+
+		$this->log( "Response: " . print_r( $api_response, true ), __METHOD__, 'error' );
+
+		$response_body = wp_remote_retrieve_body( $api_response );
+
+		if ( empty( $response_body ) ) {
+			$this->log( "Response body not set: " . print_r( $response_body, true ), __METHOD__, 'error' );
+
+			return new WP_Error( 'missing_response_body', 'The response was invalid.', $api_response );
+		}
+
+		$response_json = json_decode( $response_body, true );
+
+		switch ( wp_remote_retrieve_response_code( $api_response ) ) {
+
+			// Unauthenticated
+			case 401:
+				return new WP_Error( 'unauthenticated', 'Authentication failed.', $response_body );
+				break;
+
+			// Problem with Token
+			case 403:
+				return new WP_Error( 'invalid_token', 'Invalid tokens.', $response_body );
+				break;
+
+			// the KV store was not found, possible issue with endpoint
+			case 404:
+				return new WP_Error( 'not_found', 'The TrustedLogin site is not currently available.', $response_body );
+				break;
+
+            // Server issue
+			case 500:
+				return new WP_Error( 'unavailable', 'The TrustedLogin site is not currently available.', $response_body );
+				break;
+
+            // wp_remote_retrieve_response_code() couldn't parse the $api_response
+            case '':
+	            return new WP_Error( 'invalid_response', 'Invalid response.', $response_body );
+	            break;
+		}
+
+		if ( empty( $response_json ) ) {
+			return new WP_Error( 'invalid_response', 'Invalid response.', $response_body );
+		}
+
+        foreach ( (array) $required_keys as $required_key ) {
+            if( ! isset( $response_json[ $required_key ] ) ) {
+                return new WP_Error( 'missing_required_key', 'Invalid response. Missing key: ' . $required_key, $response_body );
+            }
         }
 
-		$body = json_decode( wp_remote_retrieve_body( $api_response ), true );
-
-		$this->log( "Response body: " . print_r( $body, true ), __METHOD__, 'debug' );
-
-		return $body;
+		return $response_json;
 	}
 
 	/**
@@ -1645,7 +1634,7 @@ class TrustedLogin {
 	 * @param array $data
 	 * @param array $addition_header - any additional headers required for auth/etc
 	 *
-	 * @return WP_Error|array - wp_remote_post response or false if $method isn't valid
+	 * @return array|WP_Error|false wp_remote_post() response, or false if `$method` isn't valid
 	 */
 	public function api_send( $path, $data, $method, $additional_headers = array() ) {
 
