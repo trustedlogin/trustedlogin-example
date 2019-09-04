@@ -177,9 +177,9 @@ class TrustedLoginAJAXTest extends WP_Ajax_UnitTestCase {
 
 		foreach ( $users as $user ) {
 			if ( is_multisite() && function_exists('wpmu_delete_user') ) {
-				$this->assertTrue( wp_delete_user( $user->ID ) );
-			} else {
 				$this->assertTrue( wpmu_delete_user( $user->ID ) );
+			} else {
+				$this->assertTrue( wp_delete_user( $user->ID ) );
 			}
 		}
 	}
