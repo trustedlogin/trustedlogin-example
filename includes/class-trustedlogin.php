@@ -912,7 +912,7 @@ class TrustedLogin {
 	 * Create the Support User with custom role.
 	 *
 	 * @since 0.1.0
-	 * @return array|WP_Error - Array with login response information if created, or WP_Error object if there was an issue.
+	 * @return int|WP_Error - Array with login response information if created, or WP_Error object if there was an issue.
 	 */
 	public function create_support_user() {
 

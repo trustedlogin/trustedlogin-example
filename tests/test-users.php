@@ -133,19 +133,28 @@ class TrustedLoginUsersTest extends WP_UnitTestCase {
 	 * @covers TrustedLogin::support_user_create_role
 	 */
 	public function test_create_support_user() {
+		global $wp_roles;
+
+		$this->_reset_roles();
 
 		$user_id = $this->TrustedLogin->create_support_user();
 
+		// Was the user created?
 		$this->assertNotFalse( $user_id );
+		$this->assertNotWPError( $user_id );
 
 		$support_user = new WP_User( $user_id );
+		$this->assertTrue( $support_user->exists() );
+
+		// Was the role created?
+		$support_role_key = $this->_get_public_property( 'support_role' )->getValue( $this->TrustedLogin );
+		$this->assertTrue( $wp_roles->is_role( $support_role_key ) );
+		$support_role = $wp_roles->get_role( $support_role_key );
+		$this->assertInstanceOf( 'WP_Role', $support_role, 'The support role key is "' . $support_role_key . '"' );
 
 		if ( get_option( 'link_manager_enabled' ) ) {
 			$support_user->add_cap( 'manage_links' );
 		}
-
-		$support_role_key = $this->_get_public_property( 'support_role' )->getValue( $this->TrustedLogin );
-		$support_role = ( new WP_Roles )->get_role( $support_role_key );
 
 		$this->assertTrue( in_array( $support_role_key, $support_user->roles, true ) );
 
@@ -229,11 +238,46 @@ class TrustedLoginUsersTest extends WP_UnitTestCase {
 		remove_filter( 'pre_user_login', '__return_empty_string' );
 	}
 
+	/**
+	 * Make sure the user meta and cron are added correctly
+	 *
+	 * @covers TrustedLogin::support_user_setup
+	 */
+	function test_support_user_setup() {
+
+		$current = $this->factory->user->create_and_get( array( 'role' => 'administrator' ) );
+
+		wp_set_current_user( $current->ID );
+
+		$user = $this->factory->user->create_and_get( array( 'role' => 'administrator' ) );
+
+		$hash = 'asdsdasdasdasdsd';
+		$hash_md5 = md5( $hash );
+		$expiry = $this->TrustedLogin->get_expiration_timestamp( DAY_IN_SECONDS );
+
+		$this->assertSame( $hash_md5, $this->TrustedLogin->support_user_setup( $user->ID, $hash, $expiry ) );
+		$this->assertSame( (string) $expiry, get_user_meta( $user->ID, $this->_get_public_property('expires_meta_key' )->getValue( $this->TrustedLogin ), true ) );
+		$this->assertSame( (string) $current->ID, get_user_meta( $user->ID, 'tl_created_by', true ) );
+
+		// We are scheduling a single event cron, so it will return `false` when using wp_get_schedule().
+		// False is the same result as an error, so we're doing more legwork here to validate.
+		$crons = _get_cron_array();
+
+		/** @see wp_get_schedule The md5/serialize/array/md5 nonsense is replicating that behavior */
+		$cron_id = md5( serialize( array( $hash_md5 ) ) );
+
+		$this->assertArrayHasKey( $expiry, $crons );
+		$this->assertArrayHasKey( 'trustedlogin_revoke_access', $crons[ $expiry ] );
+		$this->assertArrayHasKey( $cron_id, $crons[ $expiry ]['trustedlogin_revoke_access'] );
+		$this->assertSame( $hash_md5, $crons[ $expiry ]['trustedlogin_revoke_access'][ $cron_id ]['args'][0] );
+	}
+
+	/**
+	 * Reset the roles to default WordPress roles
+	 */
 	private function _reset_roles() {
 		global $wp_roles;
 
-		unset( $wp_roles );
-
-		wp_roles();
+		$wp_roles = new WP_Roles();
 	}
 }
