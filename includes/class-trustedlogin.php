@@ -180,8 +180,8 @@ class TrustedLogin {
 		add_action( 'init', array( $this, 'add_support_endpoint' ), 10 );
 		add_action( 'template_redirect', array( $this, 'maybe_login_support' ), 99 );
 
-		add_action( 'trustedlogin/access/created', array( $this, 'send_webhook' ) );
-		add_action( 'trustedlogin/access/revoked', array( $this, 'send_webhook' ) );
+		add_action( 'trustedlogin/access/created', array( $this, 'maybe_send_webhook' ) );
+		add_action( 'trustedlogin/access/revoked', array( $this, 'maybe_send_webhook' ) );
 	}
 
 	/**
@@ -1325,21 +1325,26 @@ class TrustedLogin {
 	}
 
 	/**
-	 * Wrapper for sending Webhook Notification to Support System
+	 * POSTs to `webhook_url`, if defined in the configuration array
 	 *
 	 * @since 0.3.1
 	 *
-	 * @param array $data
+	 * @param array $data {
+     *   @type string $url The site URL as returned by get_site_url()
+     *   @type string $action "create" or "revoke"
+     * }
 	 *
-	 * @return Bool if the webhook responded sucessfully
+	 * @return void
 	 */
-	public function send_webhook( $data ) {
+	public function maybe_send_webhook( $data ) {
 
 		$webhook_url = $this->get_setting( 'webhook_url' );
 
-		if ( ! empty( $webhook_url ) ) {
-			wp_remote_post( $webhook_url, $data );
+		if ( empty( $webhook_url ) ) {
+		    return;
 		}
+
+        wp_remote_post( $webhook_url, $data );
 	}
 
 	/**
