@@ -119,6 +119,8 @@ class TrustedLoginAJAXTest extends WP_Ajax_UnitTestCase {
 		$existing_user = $this->factory->user->create_and_get( array( 'user_login' => $user_name ) );
 		$this->assertTrue( is_a( $existing_user, 'WP_User' ) );
 		$this->_setRole('administrator' );
+		$current_user = wp_get_current_user();
+		$current_user->add_cap( 'create_users' );
 		$this->_set_nonce();
 		$this->_catchHandleAjax();
 		$this->assertContains( 'already exists', $this->_last_response, 'User should not have permission to create users.' );
