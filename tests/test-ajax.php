@@ -131,7 +131,7 @@ class TrustedLoginAJAXTest extends WP_Ajax_UnitTestCase {
 		$this->_catchHandleAjax();
 		$this->assertContains( 'already exists', $this->_last_response, 'User should not have permission to create users.' );
 		$this->_last_response = '';
-		wp_delete_user( $existing_user->ID ); // Cleanup
+		$this->assertTrue( wp_delete_user( $existing_user->ID ) ); // Cleanup
 		$this->_delete_all_support_users();
 
 
@@ -176,7 +176,7 @@ class TrustedLoginAJAXTest extends WP_Ajax_UnitTestCase {
 		$users = $this->TrustedLogin->get_support_users();
 
 		foreach ( $users as $user ) {
-			wp_delete_user( $user->ID );
+			$this->assertTrue( wpmu_delete_user( $user->ID ) );
 		}
 	}
 

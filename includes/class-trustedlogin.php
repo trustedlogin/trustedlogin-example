@@ -1035,7 +1035,7 @@ class TrustedLogin {
 			// Remove auto-cleanup hook
 			wp_clear_scheduled_hook( 'trustedlogin_revoke_access', array( $tlid ) );
 
-			if ( wp_delete_user( $_u->ID, $reassign_id ) ) {
+			if ( wpmu_delete_user( $_u->ID, $reassign_id ) ) {
 				$this->log( "User: " . $_u->ID . " deleted.", __METHOD__, 'info' );
 			} else {
 				$this->log( "User: " . $_u->ID . " NOT deleted.", __METHOD__, 'error' );
