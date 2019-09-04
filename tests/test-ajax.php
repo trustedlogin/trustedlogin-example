@@ -79,6 +79,10 @@ class TrustedLoginAJAXTest extends WP_Ajax_UnitTestCase {
 	function test_ajax_generate_support() {
 
 		$this->_setRole('administrator' );
+		$current_user = wp_get_current_user();
+		if ( function_exists( 'grant_super_admin' ) ) {
+			grant_super_admin( $current_user->ID );
+		}
 
 		unset( $_POST['vendor'] );
 		$this->_catchHandleAjax();
@@ -118,9 +122,11 @@ class TrustedLoginAJAXTest extends WP_Ajax_UnitTestCase {
 		$user_name = sprintf( esc_html__( '%s Support', 'trustedlogin' ), $this->TrustedLogin->get_setting( 'vendor/title' ) );
 		$existing_user = $this->factory->user->create_and_get( array( 'user_login' => $user_name ) );
 		$this->assertTrue( is_a( $existing_user, 'WP_User' ) );
-		$this->_setRole('administrator' );
+		$this->_setRole( 'administrator' );
 		$current_user = wp_get_current_user();
-		$current_user->add_cap( 'create_users' );
+		if ( function_exists( 'grant_super_admin' ) ) {
+			grant_super_admin( $current_user->ID );
+		}
 		$this->_set_nonce();
 		$this->_catchHandleAjax();
 		$this->assertContains( 'already exists', $this->_last_response, 'User should not have permission to create users.' );
