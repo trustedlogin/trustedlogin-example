@@ -176,11 +176,13 @@ class TrustedLoginAJAXTest extends WP_Ajax_UnitTestCase {
 		$users = $this->TrustedLogin->get_support_users();
 
 		foreach ( $users as $user ) {
-			if ( is_multisite() && function_exists('wpmu_delete_user') ) {
-				$this->assertTrue( wpmu_delete_user( $user->ID ) );
-			} else {
-				$this->assertTrue( wp_delete_user( $user->ID ) );
-			}
+			wp_delete_user( $user->ID );
+		}
+
+		$user = get_user_by( 'email', $this->TrustedLogin->get_setting( 'vendor/email' ) );
+
+		if( $user ) {
+			wp_delete_user( $user->ID );
 		}
 	}
 
