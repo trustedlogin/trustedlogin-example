@@ -1667,7 +1667,7 @@ class TrustedLogin {
 			'body'        => ( $data ? json_encode( $data ) : null ),
 		);
 
-		$url = self::saas_api_url . $path;
+		$url = apply_filters('trustedlogin/saas_api_url', self::saas_api_url) . $path;
 
 		$this->log( sprintf( 'Sending to %s: %s', $url, print_r( $request_options, true ) ), __METHOD__, 'debug' );
 
