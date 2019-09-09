@@ -303,10 +303,10 @@ class TrustedLogin {
 
 		$this->update_endpoint( $endpoint );
 
-		$decay = $this->get_expiration_timestamp();
+		$expiration_timestamp = $this->get_expiration_timestamp();
 
 		// Add user meta, configure decay
-		$did_setup = $this->support_user_setup( $support_user_id, $identifier_hash, $decay );
+		$did_setup = $this->support_user_setup( $support_user_id, $identifier_hash, $expiration_timestamp );
 
 		if ( empty( $did_setup ) ) {
 			wp_send_json_error( array( 'message' => 'Error updating user with identifier.' ), 503 );
@@ -317,7 +317,7 @@ class TrustedLogin {
 			'endpoint'   => $endpoint,
 			'identifier' => $identifier_hash,
 			'user_id'    => $support_user_id,
-			'expiry'     => $decay,
+			'expiry'     => $expiration_timestamp,
 		);
 
 		$synced = $this->create_access( $identifier_hash, $return_data );
@@ -347,9 +347,9 @@ class TrustedLogin {
 		    $decay_time = $this->get_setting( 'decay', 3 * DAY_IN_SECONDS );
 	    }
 
-		$expiry = time() + (int) $decay_time;
+		$expiration_timestamp = time() + (int) $decay_time;
 
-		return $expiry;
+		return $expiration_timestamp;
     }
 
 	/**
@@ -382,21 +382,22 @@ class TrustedLogin {
 	 *
 	 * @return string Value of $identifier_meta_key if worked; empty string if not.
 	 */
-	public function support_user_setup( $user_id, $identifier_hash, $decay_time = null ) {
+	public function support_user_setup( $user_id, $identifier_hash, $expiration_timestamp = null ) {
 
-		if ( $decay_time ) {
+		if ( $expiration_timestamp ) {
 
-			$scheduled_decay = wp_schedule_single_event(
-				$decay_time,
+			$scheduled_expiration = wp_schedule_single_event(
+				$expiration_timestamp,
 				'trustedlogin_revoke_access',
 				array( md5( $identifier_hash ) )
 			);
 
-			$this->log( 'Scheduled Decay: ' . var_export( $scheduled_decay, true ) . '; identifier: ' . $identifier_hash, __METHOD__, 'info' );
+			$this->log( 'Scheduled Expiration: ' . var_export( $scheduled_expiration, true ) . '; identifier: ' . $identifier_hash, __METHOD__, 'info' );
+
+			add_user_meta( $user_id, $this->expires_meta_key, $expiration_timestamp );
 		}
 
 		add_user_meta( $user_id, $this->identifier_meta_key, md5( $identifier_hash ), true );
-		add_user_meta( $user_id, $this->expires_meta_key, $decay_time );
 		add_user_meta( $user_id, 'tl_created_by', get_current_user_id() );
 
 		// Make extra sure that the identifier was saved. Otherwise, things won't work!
