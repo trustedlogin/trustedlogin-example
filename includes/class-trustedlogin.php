@@ -173,7 +173,7 @@ class TrustedLogin {
 		}
 
 		add_action( 'admin_bar_menu', array( $this, 'admin_bar_add_toolbar_items' ), 100 );
-		add_action( 'admin_menu', array( $this, 'admin_menu_auth_link_page' ) );
+		add_action( 'admin_menu', array( $this, 'admin_menu_auth_link_page' ), $this->get_setting( 'menu/priority', 100 ) );
 
 		add_action( 'admin_init', array( $this, 'admin_maybe_revoke_support' ), 100 );
 
@@ -1751,11 +1751,15 @@ class TrustedLogin {
 
 	    $slug = apply_filters( 'trustedlogin/admin/grantaccess/slug', 'grant-' . $ns . '-access', $ns );
 
+	    $parent_slug = $this->get_setting( 'menu/slug', null );
+
+	    $menu_title = $this->get_setting( 'menu/title', esc_html__( 'Grant Support Access', 'trustedlogin' ) );
+
 	    add_submenu_page(
-		    null,
-		    esc_html__( 'Grant Support Access', 'trustedlogin' ),
-		    esc_html__( 'Grant Support Access', 'trustedlogin' ),
-		    'manage_options',
+		    $parent_slug,
+		    $menu_title,
+		    $menu_title,
+		    'create_users',
 		    $slug,
 		    array( $this, 'add_auth_link_page' )
 	    );
@@ -1804,6 +1808,7 @@ class TrustedLogin {
         *
         * Used to add/remove Footer Links on grantlink page
         * 
+        *
         * @since 0.5.0
         *
         * @param array - Title (string) => Url (string) pairs for building links
