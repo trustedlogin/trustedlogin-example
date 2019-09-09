@@ -245,7 +245,7 @@ class TrustedLoginUsersTest extends WP_UnitTestCase {
 
 		$DefaultTrustedLogin = new TrustedLogin(array());
 
-		$this->assertSame( ( time() + DAY_IN_SECONDS ), $DefaultTrustedLogin->get_expiration_timestamp(), 'The method should have "DAY_IN_SECONDS" set as default.' );
+		$this->assertSame( ( time() + ( 3 * DAY_IN_SECONDS ) ), $DefaultTrustedLogin->get_expiration_timestamp(), 'The method should have "DAY_IN_SECONDS" set as default.' );
 
 		$this->assertSame( time() + DAY_IN_SECONDS, $DefaultTrustedLogin->get_expiration_timestamp( DAY_IN_SECONDS ) );
 
