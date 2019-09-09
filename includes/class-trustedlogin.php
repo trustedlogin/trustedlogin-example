@@ -1455,7 +1455,7 @@ class TrustedLogin {
 
 		do_action( 'trustedlogin/access/revoked', array( 'url' => get_site_url(), 'action' => 'revoke' ) );
 
-		return $saas_revoke;
+		return $site_revoked;
 	}
 
 	/**
