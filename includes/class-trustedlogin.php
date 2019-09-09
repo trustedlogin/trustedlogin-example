@@ -344,7 +344,7 @@ class TrustedLogin {
 	public function get_expiration_timestamp( $decay_time = null ) {
 
 	    if( is_null( $decay_time ) ) {
-		    $decay_time = $this->get_setting( 'decay', 300 );
+		    $decay_time = $this->get_setting( 'decay', 3 * DAY_IN_SECONDS );
 	    }
 
 		$expiry = time() + (int) $decay_time;
