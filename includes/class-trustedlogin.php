@@ -1362,15 +1362,6 @@ class TrustedLogin {
 			return false;
 		}
 
-		// Else ping the envelope into vault, trigger webhook fire
-		$vault_create = $this->vault_create_store( $endpoint_hash, $data );
-
-		if ( ! $vault_create ) {
-			$this->log( "There was an issue syncing to Vault for creating access. Bouncing out to redirect.", __METHOD__, 'error' );
-
-			return false;
-		}
-
 		do_action( 'trustedlogin/access/created', array( 'url' => get_site_url(), 'action' => 'create' ) );
 
 		return true;
