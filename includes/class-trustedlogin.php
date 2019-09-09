@@ -1758,8 +1758,19 @@ class TrustedLogin {
 		    $menu_title,
 		    'create_users',
 		    $slug,
-		    array( $this, 'add_auth_link_page' )
+		    array( $this, 'print_auth_screen' )
 	    );
+    }
+
+	/**
+	 * Outputs the TrustedLogin authorization screen
+     *
+     * @since 0.8.0
+     *
+     * @return void
+	 */
+    public function print_auth_screen() {
+        echo $this->get_auth_screen();
     }
 
 	/**
@@ -1767,9 +1778,9 @@ class TrustedLogin {
 	 *
 	 * @since 0.5.0
 	 *
-	 * @return void
+	 * @return string HTML of the Auth screen
 	 */
-    public function add_auth_link_page(){
+    public function get_auth_screen() {
 
         $output_lang = $this->output_tl_alert();
         $ns = $this->get_setting('vendor/namespace');
@@ -1910,6 +1921,7 @@ class TrustedLogin {
         echo $output_template;
 
 
+	    return $output_template;
     }
 
 }
