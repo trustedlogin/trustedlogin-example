@@ -165,8 +165,7 @@ class TrustedLogin {
         add_action( 'wp_ajax_tl_gen_support', array( $this, 'ajax_generate_support' ) );
 
 		if ( is_admin() ) {
-
-			add_action( 'trustedlogin_button', array( $this, 'output_tl_button' ), 10, 2 );
+			add_action( 'trustedlogin_button', array( $this, 'generate_button' ), 10, 2 );
 
 			add_filter( 'user_row_actions', array( $this, 'user_row_action_revoke' ), 10, 2 );
 
@@ -461,7 +460,7 @@ class TrustedLogin {
 	 *
 	 * @return string the HTML output
 	 */
-	public function output_tl_button( $atts = array(), $print = true ) {
+	public function generate_button( $atts = array(), $print = true ) {
 
 		if ( ! current_user_can( 'create_users' ) ) {
 			return;
@@ -1799,7 +1798,7 @@ class TrustedLogin {
             $output_lang['caps']
         );
 
-        $actions_output = $this->output_tl_button( "size=hero&class=authlink button-primary", false );
+        $actions_output = $this->generate_button( "size=hero&class=authlink button-primary", false );
 
         /**
         * Filter trustedlogin/template/grantlink/footer-links
