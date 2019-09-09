@@ -52,7 +52,7 @@ class TrustedLogin_Button {
 
 			//  Endpoint for pinging the encrypted envelope to.
 			'auth' => array(
-				'api_key' => '447c06cfca873a45', // Public key for encrypting the securedKey
+				'api_key' => '2f15bb270ab176a3', // Public key for encrypting the securedKey
 				'license_key' => 'REQUIRED', // Pass the license key for the current user. Example: gravityview()->plugin->settings->get( 'license_key' ),
 			),
 
@@ -67,7 +67,7 @@ class TrustedLogin_Button {
 
 			// Details about your support setup
 			'vendor' => array(
-				'namespace' => 'gravityview',
+				'namespace' => 'gravityview-support',
 				'title' => 'GravityView',
 				'first_name' => 'Floaty',
 				'last_name' => 'the Astronaut',

@@ -102,7 +102,7 @@ class TrustedLoginAJAXTest extends WP_Ajax_UnitTestCase {
 		$_POST['vendor'] = $this->config['vendor']['namespace'];
 		$this->_set_nonce( 0 );
 		$this->_catchHandleAjax();
-		$this->assertContains( 'Verification Issue', $this->_last_response, 'Nonce set to 0; should not validate.' );
+		$this->assertContains( 'Verification issue', $this->_last_response, 'Nonce set to 0; should not validate.' );
 		$this->_set_nonce();
 		$this->_last_response = '';
 		$this->_delete_all_support_users();
@@ -110,7 +110,7 @@ class TrustedLoginAJAXTest extends WP_Ajax_UnitTestCase {
 		$this->_setRole('subscriber' );
 		$this->_set_nonce();
 		$this->_catchHandleAjax();
-		$this->assertContains( 'Permissions Issue', $this->_last_response, 'User should not have permission to create users.' );
+		$this->assertContains( 'Permissions issue', $this->_last_response, 'User should not have permission to create users.' );
 		$this->_last_response = '';
 		$this->_delete_all_support_users();
 

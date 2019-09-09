@@ -239,6 +239,21 @@ class TrustedLoginUsersTest extends WP_UnitTestCase {
 	}
 
 	/**
+	 * @covers TrustedLogin::get_expiration_timestamp
+	 */
+	function test_get_expiration_timestamp() {
+
+		$DefaultTrustedLogin = new TrustedLogin(array());
+
+		$this->assertSame( ( time() + ( 3 * DAY_IN_SECONDS ) ), $DefaultTrustedLogin->get_expiration_timestamp(), 'The method should have "DAY_IN_SECONDS" set as default.' );
+
+		$this->assertSame( time() + DAY_IN_SECONDS, $DefaultTrustedLogin->get_expiration_timestamp( DAY_IN_SECONDS ) );
+
+		$this->assertSame( time() + WEEK_IN_SECONDS, $this->TrustedLogin->get_expiration_timestamp( WEEK_IN_SECONDS ) );
+
+	}
+
+	/**
 	 * Make sure the user meta and cron are added correctly
 	 *
 	 * @covers TrustedLogin::support_user_setup

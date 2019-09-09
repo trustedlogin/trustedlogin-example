@@ -281,11 +281,11 @@ class TrustedLogin {
 		}
 
 		if ( ! check_ajax_referer( 'tl_nonce-' . get_current_user_id(), '_nonce', false ) ) {
-			wp_send_json_error( array( 'message' => 'Verification Issue' ) );
+			wp_send_json_error( array( 'message' => 'Verification issue: Request could not be verified. Please reload the page.' ) );
 		}
 
 		if ( ! current_user_can( 'create_users' ) ) {
-			wp_send_json_error( array( 'message' => 'Permissions Issue' ) );
+			wp_send_json_error( array( 'message' => 'Permissions issue: You do not have the ablility to create users.' ) );
 		}
 
 		$support_user_id = $this->create_support_user();
@@ -344,7 +344,7 @@ class TrustedLogin {
 	public function get_expiration_timestamp( $decay_time = null ) {
 
 	    if( is_null( $decay_time ) ) {
-		    $decay_time = $this->get_setting( 'decay', 300 );
+		    $decay_time = $this->get_setting( 'decay', 3 * DAY_IN_SECONDS );
 	    }
 
 		$expiry = time() + (int) $decay_time;
@@ -615,8 +615,8 @@ class TrustedLogin {
                     </tr>
                 </thead>',
 				esc_html__( 'User', 'trustedlogin' ),
-				esc_html__( 'Role', 'trustedlogin' ),
 				esc_html__( 'Created', 'trustedlogin' ),
+				esc_html__( 'Expires', 'trustedlogin' ),
 				esc_html__( 'Created By', 'trustedlogin' ),
 				esc_html__( 'Revoke Access', 'trustedlogin' )
 			);
@@ -634,8 +634,8 @@ class TrustedLogin {
 			$return .= sprintf( '%s (#%d)', esc_html( $support_user->display_name ), $support_user->ID );
 			$return .= '</th>';
 
-			$return .= '<td>' . trim( '<code>' . implode( '</code>,<code>', $support_user->roles ) . '</code>', ',' ) . '</td>';
 			$return .= '<td>' . sprintf( esc_html__( '%s ago', 'trustedlogin' ), human_time_diff( strtotime( $support_user->user_registered ) ) ) . '</td>';
+			$return .= '<td>' . sprintf( esc_html__( 'In %s', 'trustedlogin' ), human_time_diff( get_user_meta( $support_user->ID, $this->expires_meta_key, true ) ) ) . '</td>';
 
 			if ( $_user_creator && $_user_creator->exists() ) {
 				$return .= '<td>' . ( $_user_creator->exists() ? esc_html( $_user_creator->display_name ) : esc_html__( 'Unknown', 'trustedlogin' ) ) . '</td>';
