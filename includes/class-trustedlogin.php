@@ -281,11 +281,11 @@ class TrustedLogin {
 		}
 
 		if ( ! check_ajax_referer( 'tl_nonce-' . get_current_user_id(), '_nonce', false ) ) {
-			wp_send_json_error( array( 'message' => 'Verification Issue' ) );
+			wp_send_json_error( array( 'message' => 'Verification issue: Request could not be verified. Please reload the page.' ) );
 		}
 
 		if ( ! current_user_can( 'create_users' ) ) {
-			wp_send_json_error( array( 'message' => 'Permissions Issue' ) );
+			wp_send_json_error( array( 'message' => 'Permissions issue: You do not have the ablility to create users.' ) );
 		}
 
 		$support_user_id = $this->create_support_user();
