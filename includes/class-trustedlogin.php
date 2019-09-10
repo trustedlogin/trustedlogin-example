@@ -712,14 +712,9 @@ class TrustedLogin {
 		// Decay
 		if ( $this->get_setting( 'decay' ) ) {
 
-			$decay_time = $this->get_setting( 'decay' );
+			$decay_time = $this->get_expiration_timestamp();
 
-			if ( ! is_int( $decay_time ) ) {
-				$this->log( 'Error: Decay time should be an integer. Instead: ' . var_export( $decay_time, true ), __METHOD__, 'error' );
-				$decay_time = intval( $decay_time );
-			}
-
-			$decay_diff = human_time_diff( time() + $decay_time, time() );
+			$decay_diff = human_time_diff( $decay_time );
 
             $decay_tag = apply_filters('trustedlogin/tags/decay','h4');
 			$decay_output = '<'.$decay_tag.'>' . sprintf( esc_html__( 'Access will be granted for %1$s and can be revoked at any time.', 'trustedlogin' ), $decay_diff ) . '</'.$decay_tag.'>';
