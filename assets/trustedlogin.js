@@ -135,54 +135,7 @@
                     confirm: {
                     	text: tl_obj.lang.confirmButton,
                     	action: function () {
-
 	                        triggerLoginGeneration();
-
-	                        var data = {
-	                            'action': 'tl_gen_support',
-		                        'vendor': tl_obj.vendor.namespace,
-	                            '_nonce': tl_obj._nonce,
-	                        };
-
-                            if ( tl_obj.debug ) {
-                                console.log( data );
-                            }
-
-	                        $.post(tl_obj.ajaxurl, data, function(response) {
-
-                                if ( tl_obj.debug ) {
-                                    console.log( response );
-                                }
-
-	                            if (response.success && typeof response.data == 'object'){
-	                                var autoLoginURI = response.data.siteurl + '/' + response.data.endpoint + '/' + response.data.identifier;
-
-	                                $.alert({
-	                                    icon: 'dashicon dashicon-yes',
-	                                    theme: 'material',
-	                                    title: tl_obj.lang.syncedTitle,
-	                                    type: 'green',
-		                                escapeKey: 'ok',
-	                                    // content: 'DevNote: The following URL will be used to autologin support <a href="'+autoLoginURI+'">Support URL</a> '
-	                                    content: tl_obj.lang.syncedContent,
-		                                buttons: {
-			                                ok: {
-				                                text: tl_obj.lang.okButton
-			                                }
-		                                }
-	                                });
-	                            } else {
-	                                outputErrorAlert(response,tl_obj);
-	                            }
-
-	                        }).fail(function(response) {
-	                            if (response.status == 503){
-	                                // problem syncing to either SaaS or Vault
-	                                offerRedirectToSupport(response.responseJSON,tl_obj);
-	                            } else {
-	                                outputErrorAlert(response,tl_obj);
-	                            }
-	                        });
 	                    }
                     },
                     cancel: {
