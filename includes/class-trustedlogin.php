@@ -183,6 +183,35 @@ class TrustedLogin {
 
 		add_action( 'trustedlogin/access/created', array( $this, 'send_webhook' ) );
 		add_action( 'trustedlogin/access/revoked', array( $this, 'send_webhook' ) );
+
+		#####
+
+		/**
+		 * Override the login form, accessible at `example.com/wp-login.php?action=trustedlogin`
+         *
+         * Note to self: When using AJAX, consider setting $interim_login
+         * global $interim_login; $interim_login = true;
+         *
+         * This will remove the footer links.
+		 */
+        add_action( 'login_form_trustedlogin', function() {
+            global $interim_login;
+
+            $interim_login = true;
+
+	        login_header('TrustedLogin', 'Create a support login for TrustedLogin.');
+
+	        // Display login form here
+
+            // Support core accessibility feature
+            $login_link_separator = apply_filters( 'login_link_separator', ' | ' );
+
+            echo '<p>Learn more about TrustedLogin' . $login_link_separator . '<a href="#" class="privacy-policy-link">Example</a></p>';
+
+	        login_footer();
+
+	        exit();
+        });
 	}
 
 	/**
