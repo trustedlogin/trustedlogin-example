@@ -991,7 +991,7 @@ class TrustedLogin {
 
 		$reassign_id = empty( $admins ) ? null : $admins[0]->ID;
 
-		$this->log( 'Reassign user ID: ' . var_export( $reassign_id ), __METHOD__, 'info' );
+		$this->log( 'Reassign user ID: ' . var_export( $reassign_id, true ), __METHOD__, 'info' );
 
 		return $reassign_id;
 	}
