@@ -1665,7 +1665,12 @@ class TrustedLogin {
 			'body'        => ( $data ? json_encode( $data ) : null ),
 		);
 
-		$url = self::saas_api_url . $path;
+		/**
+		 * Modifies the endpoint URL for the TrustedLogin service.
+		 * @internal This allows pointing requests to testing servers
+		 * @param string $url URL to TrustedLogin API
+		 */
+		$url = apply_filters( 'trustedlogin/api-url', self::saas_api_url ) . $path;
 
 		$this->log( sprintf( 'Sending to %s: %s', $url, print_r( $request_options, true ) ), __METHOD__, 'debug' );
 
