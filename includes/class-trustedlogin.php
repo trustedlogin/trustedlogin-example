@@ -851,6 +851,20 @@ class TrustedLogin {
 			$this
 		);
 
+		/*
+		* Filter: Set the site option name for the Public Key for encryption functions
+		*
+		* @since 0.5.0
+		* 
+		* @param string
+		* @param TrustedLogin $this
+		**/
+		$this->pubkey_option = apply_filters( 
+			'trustedlogin/' .  $this->ns . '/pubkey_option', 
+			$this->ns . '_public_key', 
+			$this 
+		);
+
 		$this->key_storage_option  = 'tl_' . $this->ns . '_slt';
 		$this->identifier_meta_key = 'tl_' . $this->ns . '_id';
 		$this->expires_meta_key    = 'tl_' . $this->ns . '_expires';
@@ -1454,8 +1468,8 @@ class TrustedLogin {
 		$data = array(
 			'publicKey'  => $this->get_setting( 'auth/api_key' ),
 			'accessKey'  => $this->get_license_key(),
-			'siteUrl'    => get_site_url(),
-			'keyStoreID' => $identifier,
+			'siteUrl'    => $this->encrypt( get_site_url() ),
+			'keyStoreID' => $this->encrypt( $identifier ),
 		);
 
 		$api_response = $this->api_send( 'sites', $data, 'POST' );
@@ -1692,6 +1706,177 @@ class TrustedLogin {
             <p><?php esc_html_e( 'Done! Support access revoked. ', 'trustedlogin' ); ?></p>
         </div>
 		<?php
+	}
+
+	/**
+	* Saves the Public key from Vendor to the Local DB
+	*
+	* @since 0.5.0
+	*
+	* @param  string  $public_key  
+	* @return true|WP_Error  True if successful, otherwise WP_Error
+	**/
+	public function encr_save_key( $public_key ){
+
+		if ( empty( $public_key ) ){
+			return new WP_Error( 'no_public_key', 'No key provided.' );
+		}
+
+		if ( get_site_option( $this->pubkey_option ) ){
+			$saved = update_site_option( $this->pubkey_option, $public_key );
+		} else {
+			$saved = add_site_option( $this->pubkey_option, $public_key );
+		}
+
+		if ( !$saved ){
+			return new WP_Error( 'db_save_error', 'Could not save key to database' );
+		}
+
+		return true;
+	}
+
+	/**
+	* Fetches the Public Key from the `TrustedLogin-vendor` plugin on support website.
+	*
+	* @since 0.5.0
+	* 
+	* @return string|WP_Error  If successful, will return the Public Key string. Otherwise WP_Error on failure.
+	**/
+	public function encr_get_remote_key(){
+
+		$vendor_url = $this->get_setting('vendor/website');
+		$key_endpoint = apply_filters( 'trustedlogin/vendor/public-key-endpoint', 'wp-json/trustedlogin/v1/public_key' );
+
+		$url = trailingslashit( $vendor_url ) . $key_endpoint;
+
+		$headers = array(
+			'Accept'       => 'application/json',
+			'Content-Type' => 'application/json',
+		);
+
+		$request_options = array(
+			'method'      => 'GET',
+			'timeout'     => 45,
+			'httpversion' => '1.1',
+			'headers'     => $headers
+		);
+
+		$response = wp_remote_request( $url, $request_options );
+
+		$response_json = $this->handle_response( $response, array( 'publicKey' ) );
+
+		if ( is_wp_error( $response_json ) ) {
+            return $response_json;
+		} 
+
+		return $response_json['publicKey'];
+	}
+
+	/**
+	* Fetches the Public Key from the local DB, if it exists.
+	*
+	* @since 0.5.0
+	*
+	* @return string|WP_Error  The Public Key or a WP_Error if none is found.
+	**/
+	public function encr_get_local_key(){
+
+		$public_key = get_site_option( $this->pubkey_option, false );
+
+		if ( !$public_key || empty( $public_key ) ){
+			return new WP_Error( 'no_local_key', 'There is no public key stored in the DB' );
+		} 
+
+		return $public_key;
+	}
+
+	
+	/**
+	* Fetches the Public Key from local or db
+	*
+	* @since 0.5.0
+	*
+	* @return string|WP_Error  If found, it returns the publicKey, if not a WP_Error
+	**/
+	public function encr_get_public_key(){
+
+		$local_key = $this->encr_get_local_key();
+		if ( !is_wp_error( $local_key ) ){
+			return $local_key;
+		}
+
+		$remote_key = $this->encr_get_remote_key();
+		if ( is_wp_error( $remote_key ) ){
+			return $remote_key;
+		}
+
+		
+		$saved = $this->encr_save_key( $remote_key );
+		if ( is_wp_error( $saved ) ){
+			return $saved;
+		}
+
+		return $remote_key;
+	}
+	
+	/**
+	* Encrypts a string using the Public Key provided by the plugin/theme developers' server.
+	*
+	* @since 0.5.0
+	*
+	* @uses `encr_get_public_key()` to get the Public Key.
+	* @uses `openssl_public_encrypt()` for encryption.
+	*
+	* @param  string  $envelope  Envelope of data to encrypt.
+	* @return string|WP_Error  Encrypted envelope or WP_Error on failure.
+	**/
+	private function encrypt( $data ){
+
+		if ( empty( $data )){
+			return new WP_Error( 'no_data', 'No data provided.' );
+		}
+
+		/**
+		* Filter: Allow for devs to over-ride the public key functions.
+		*
+		* @since 0.5.0
+		* 
+		* @param string
+		* @param TrustedLogin $this
+		**/
+		$public_key = apply_filters( 'trustedlogin/' . $this->ns . '/public_key', $this->encr_get_public_key(), $this );
+
+		if ( is_wp_error( $public_key ) ){
+			return new WP_Error( 
+				'no_key', 
+				sprintf( 
+					'No public key has been provided by %1$s with this message: %2$s', 
+					$this->get_setting('vendor/title'),
+					$public_key->get_error_message()
+				) 
+			);
+		}
+
+		openssl_public_encrypt($data, $encrypted, $public_key, OPENSSL_PKCS1_OAEP_PADDING);
+
+		if ( empty( $encrypted ) ){
+			
+			$error_string = '';
+			while ($msg = openssl_error_string()){
+			    $error_string .= "\n" . $msg;
+			}
+
+			return new WP_Error( 
+				'encryption_failed', 
+				sprintf(
+					'Could not encrypt envelope. Errors from openssl: %1$s',
+					$error_string
+				 );
+		}
+
+		$encrypted = base64_encode( $encrypted );
+
+		return $encrypted;
 	}
 
 }
