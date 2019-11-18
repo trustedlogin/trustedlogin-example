@@ -1722,18 +1722,14 @@ class TrustedLogin {
 	* @param  string  $public_key  
 	* @return true|WP_Error  True if successful, otherwise WP_Error
 	**/
-	public function encr_save_key( $public_key ){
+	private function encr_save_key( $public_key ){
 
 		if ( empty( $public_key ) ){
 			return new WP_Error( 'no_public_key', 'No key provided.' );
 		}
-
-		if ( get_site_option( $this->pubkey_option ) ){
-			$saved = update_site_option( $this->pubkey_option, $public_key );
-		} else {
-			$saved = add_site_option( $this->pubkey_option, $public_key );
-		}
-
+	
+		$saved = update_site_option( $this->public_key_option, $public_key );
+		
 		if ( !$saved ){
 			return new WP_Error( 'db_save_error', 'Could not save key to database' );
 		}
@@ -1748,7 +1744,7 @@ class TrustedLogin {
 	* 
 	* @return string|WP_Error  If successful, will return the Public Key string. Otherwise WP_Error on failure.
 	**/
-	public function encr_get_remote_key(){
+	private function encr_get_remote_key(){
 
 		$vendor_url = $this->get_setting('vendor/website');
 		$key_endpoint = apply_filters( 'trustedlogin/vendor/public-key-endpoint', 'wp-json/trustedlogin/v1/public_key' );
@@ -1785,7 +1781,7 @@ class TrustedLogin {
 	*
 	* @return string|WP_Error  The Public Key or a WP_Error if none is found.
 	**/
-	public function encr_get_local_key(){
+	private function encr_get_local_key(){
 
 		$public_key = get_site_option( $this->public_key_option, false );
 
@@ -1865,14 +1861,14 @@ class TrustedLogin {
 
 		openssl_public_encrypt($data, $encrypted, $public_key, OPENSSL_PKCS1_OAEP_PADDING);
 
-		if ( empty( $encrypted ) ){
+		if ( empty( $encrypted ) ) {
 			
 			$error_string = '';
-			while ($msg = openssl_error_string()){
+			while ( $msg = openssl_error_string() ) {
 			    $error_string .= "\n" . $msg;
 			}
 
-			return new WP_Error( 
+			return new WP_Error ( 
 				'encryption_failed', 
 				sprintf(
 					'Could not encrypt envelope. Errors from openssl: %1$s',
