@@ -1749,7 +1749,7 @@ class TrustedLogin {
 	* @param  string  $public_key  
 	* @return true|WP_Error  True if successful, otherwise WP_Error
 	**/
-	private function encr_save_key( $public_key ){
+	private function update_encryption_key( $public_key ){
 
 		if ( empty( $public_key ) ){
 			return new WP_Error( 'no_public_key', 'No key provided.' );
@@ -1771,7 +1771,7 @@ class TrustedLogin {
 	* 
 	* @return string|WP_Error  If successful, will return the Public Key string. Otherwise WP_Error on failure.
 	**/
-	private function encr_get_remote_key(){
+	private function get_remote_encryption_key(){
 
 		$vendor_url = $this->get_setting('vendor/website');
 		$key_endpoint = apply_filters( 'trustedlogin/vendor/public-key-endpoint', 'wp-json/trustedlogin/v1/public_key' );
@@ -1808,11 +1808,11 @@ class TrustedLogin {
 	*
 	* @return string|WP_Error  The Public Key or a WP_Error if none is found.
 	**/
-	private function encr_get_local_key(){
+	private function get_local_encryption_key(){
 
 		$public_key = get_site_option( $this->public_key_option, false );
 
-		if ( !$public_key || empty( $public_key ) ){
+		if ( ! $public_key || empty( $public_key ) ){
 			return new WP_Error( 'no_local_key', 'There is no public key stored in the DB' );
 		} 
 
@@ -1827,20 +1827,20 @@ class TrustedLogin {
 	*
 	* @return string|WP_Error  If found, it returns the publicKey, if not a WP_Error
 	**/
-	public function encr_get_public_key(){
+	public function get_encryption_key(){
 
-		$local_key = $this->encr_get_local_key();
+		$local_key = $this->get_local_encryption_key();
 		if ( !is_wp_error( $local_key ) ){
 			return $local_key;
 		}
 
-		$remote_key = $this->encr_get_remote_key();
+		$remote_key = $this->get_remote_encryption_key();
 		if ( is_wp_error( $remote_key ) ){
 			return $remote_key;
 		}
 
 		
-		$saved = $this->encr_save_key( $remote_key );
+		$saved = $this->update_encryption_key( $remote_key );
 		if ( is_wp_error( $saved ) ){
 			return $saved;
 		}
