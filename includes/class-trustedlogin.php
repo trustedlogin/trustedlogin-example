@@ -78,6 +78,12 @@ class TrustedLogin {
 	 */
 	private $ns;
 
+	/**
+	* @var string $public_key_option - where the plugin should store the public key for encrypting data
+	* @since 0.5.0
+	**/
+	private $public_key_option;
+
 	public function __construct( $config ) {
 
 		/**
@@ -859,8 +865,8 @@ class TrustedLogin {
 		* @param string
 		* @param TrustedLogin $this
 		**/
-		$this->pubkey_option = apply_filters( 
-			'trustedlogin/' .  $this->ns . '/pubkey_option', 
+		$this->public_key_option = apply_filters( 
+			'trustedlogin/' .  $this->ns . '/public-key-option', 
 			$this->ns . '_public_key', 
 			$this 
 		);
@@ -1781,7 +1787,7 @@ class TrustedLogin {
 	**/
 	public function encr_get_local_key(){
 
-		$public_key = get_site_option( $this->pubkey_option, false );
+		$public_key = get_site_option( $this->public_key_option, false );
 
 		if ( !$public_key || empty( $public_key ) ){
 			return new WP_Error( 'no_local_key', 'There is no public key stored in the DB' );
