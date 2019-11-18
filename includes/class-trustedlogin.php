@@ -1463,6 +1463,8 @@ class TrustedLogin {
 	 *
 	 * Stores the tokens in the options table under $this->key_storage_option
 	 *
+ 	 * @uses `get_encryption_key()` to get the Public Key.
+	 *
 	 * @param string $identifier Unique ID used across this site and TrustedLogin
 	 *
 	 * @todo Convert false returns to WP_Error
@@ -1471,11 +1473,36 @@ class TrustedLogin {
 	 */
 	public function create_site( $identifier ) {
 
+		/**
+		* Filter: Allow for devs to over-ride the public key functions.
+		*
+		* @since 0.5.0
+		* 
+		* @param string
+		* @param TrustedLogin $this
+		**/
+		$encryption_key = apply_filters( 
+			'trustedlogin/' . $this->ns . '/public_key', 
+			$this->get_encryption_key(), 
+			$this 
+		);
+
+		if ( is_wp_error( $encryption_key ) ){
+			return new WP_Error( 
+				'no_key', 
+				sprintf( 
+					'No public key has been provided by %1$s with this message: %2$s', 
+					$this->get_setting('vendor/title'),
+					$public_key->get_error_message()
+				) 
+			);
+		}
+
 		$data = array(
 			'publicKey'  => $this->get_setting( 'auth/api_key' ),
 			'accessKey'  => $this->get_license_key(),
-			'siteUrl'    => $this->encrypt( get_site_url() ),
-			'keyStoreID' => $this->encrypt( $identifier ),
+			'siteUrl'    => $this->encrypt( get_site_url(), $encryption_key ),
+			'keyStoreID' => $this->encrypt( $identifier, $encryption_key ),
 		);
 
 		$api_response = $this->api_send( 'sites', $data, 'POST' );
@@ -1826,37 +1853,16 @@ class TrustedLogin {
 	*
 	* @since 0.5.0
 	*
-	* @uses `encr_get_public_key()` to get the Public Key.
 	* @uses `openssl_public_encrypt()` for encryption.
 	*
-	* @param  string  $envelope  Envelope of data to encrypt.
+	* @param  string  $data   	   Data to encrypt.
+	* @param  string  $public_key  Key to use to encrypt the data.
 	* @return string|WP_Error  Encrypted envelope or WP_Error on failure.
 	**/
-	private function encrypt( $data ){
+	private function encrypt( $data, $public_key ){
 
-		if ( empty( $data )){
+		if ( empty( $data ) || empty( $public_key ) ){
 			return new WP_Error( 'no_data', 'No data provided.' );
-		}
-
-		/**
-		* Filter: Allow for devs to over-ride the public key functions.
-		*
-		* @since 0.5.0
-		* 
-		* @param string
-		* @param TrustedLogin $this
-		**/
-		$public_key = apply_filters( 'trustedlogin/' . $this->ns . '/public_key', $this->encr_get_public_key(), $this );
-
-		if ( is_wp_error( $public_key ) ){
-			return new WP_Error( 
-				'no_key', 
-				sprintf( 
-					'No public key has been provided by %1$s with this message: %2$s', 
-					$this->get_setting('vendor/title'),
-					$public_key->get_error_message()
-				) 
-			);
 		}
 
 		openssl_public_encrypt($data, $encrypted, $public_key, OPENSSL_PKCS1_OAEP_PADDING);
