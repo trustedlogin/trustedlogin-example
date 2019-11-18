@@ -1730,7 +1730,7 @@ class TrustedLogin {
 	
 		$saved = update_site_option( $this->public_key_option, $public_key );
 		
-		if ( !$saved ){
+		if ( ! $saved ){
 			return new WP_Error( 'db_save_error', 'Could not save key to database' );
 		}
 
