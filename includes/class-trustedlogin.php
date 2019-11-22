@@ -1879,7 +1879,7 @@ class TrustedLogin {
 				sprintf(
 					'Could not encrypt envelope. Errors from openssl: %1$s',
 					$error_string
-				 );
+				 )
 			);
 		}
 
