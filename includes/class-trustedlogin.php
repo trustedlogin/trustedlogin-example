@@ -1880,6 +1880,7 @@ class TrustedLogin {
 					'Could not encrypt envelope. Errors from openssl: %1$s',
 					$error_string
 				 );
+			);
 		}
 
 		$encrypted = base64_encode( $encrypted );
