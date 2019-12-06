@@ -760,10 +760,6 @@ class TrustedLogin {
 				$plugin_title
 			),
 			'noSyncContent'      => $no_sync_content,
-			'noSyncProTip'       => sprintf(
-				__( 'Pro-tip: By sharing the URL below with %1$s supprt will give them temporary support access', 'trustedlogin' ),
-				$plugin_title
-			),
 			'noSyncGoButton'     => sprintf(
 				__( 'Go to %1$s support site', 'trustedlogin' ),
 				$plugin_title
