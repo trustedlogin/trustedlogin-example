@@ -748,7 +748,27 @@ class TrustedLogin {
 				                   __( 'Please <a href="%1$s" target="_blank">click here</a> to go to %2$s Support Site', 'trustedlogin' ),
 				                   array( 'a' => array( 'href' => array() ) )
 			                   ),
-			                   esc_url( $this->get_setting( 'vendor/support_url' ) ),
+			                   esc_url( 
+			                   	add_query_arg( 
+			                   		/**
+									 * Filter: Allow for adding into GET parameters on support_url
+									 *
+									 * @since 0.4.3
+									 *
+									 * @param  array  $url_query_args
+									 *    $url_query_args = [
+									 *      'message' => (string) What error should be sent to the support system.
+									 *    ]
+									 *
+									 * }
+									 */
+			                   		apply_filters( 
+			                   			'trustedlogin/support_url/query_args' , 
+			                   			array( 'message' => __('Could not create TrustedLogin access.', 'trustedlogin') ) 
+			                   		), 
+			                   		$this->get_setting( 'vendor/support_url' ) 
+			                   	)
+			                   ),
 			                   $plugin_title
 		                   ) . '</p>';
 
