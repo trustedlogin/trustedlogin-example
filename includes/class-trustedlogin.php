@@ -89,10 +89,9 @@ class TrustedLogin {
 		/**
 		 * Filter: Whether debug logging is enabled in trustedlogin drop-in
 		 *
-		 * @param bool
-		 *
 		 * @since 0.4.2
 		 *
+		 * @param bool $debug_mode
 		 */
 		$this->debug_mode = apply_filters( 'trustedlogin_debug_enabled', true );
 
@@ -355,9 +354,9 @@ class TrustedLogin {
 	 *
 	 * Note: This is a server timestamp, not a WordPress timestamp
 	 *
-	 * @param int $decay If passed, override the `decay` setting
+	 * @param int $decay_time If passed, override the `decay` setting
 	 *
-	 * @return int Default: time() + 300
+	 * @return int Timestamp in seconds. Default is 3 days in seconds from creation (`time()` + 259200)
 	 */
 	public function get_expiration_timestamp( $decay_time = null ) {
 
@@ -784,6 +783,8 @@ class TrustedLogin {
 		/**
 		 * Filter: Allow for adding into GET parameters on support_url
 		 *
+		 * @since 0.4.3
+		 *
 		 * ```
 		 * $url_query_args = [
 		 *   'message' => (string) What error should be sent to the support system.
@@ -793,8 +794,6 @@ class TrustedLogin {
 		 * @param array $url_query_args {
 		 *   @type string $message What error should be sent to the support system.
 		 * }
-		 *
-		 * @since 0.4.3
 		 */
 		$query_args = apply_filters(
 			'trustedlogin/support_url/query_args',
@@ -906,11 +905,10 @@ class TrustedLogin {
 		/**
 		 * Filter: Set endpoint setting name
 		 *
-		 * @param string
-		 * @param TrustedLogin $this
-		 *
 		 * @since 0.3.0
 		 *
+		 * @param string
+		 * @param TrustedLogin $this
 		 */
 		$this->endpoint_option = apply_filters(
 			'trustedlogin_' . $this->ns . '_endpoint_option_title',
@@ -921,11 +919,10 @@ class TrustedLogin {
 		/**
 		 * Filter: Sets the site option name for the Public Key for encryption functions
 		 *
-		 * @param string $public_key_option
-		 * @param TrustedLogin $this
-		 *
 		 * @since 0.5.0
 		 *
+		 * @param string $public_key_option
+		 * @param TrustedLogin $this
 		 */
 		$this->public_key_option = apply_filters(
 			'trustedlogin/' . $this->ns . '/public-key-option',
@@ -943,10 +940,10 @@ class TrustedLogin {
 	/**
 	 * Helper Function: Get a specific setting or return a default value.
 	 *
+	 * @since 0.1.0
+	 *
 	 * @param string $slug - the setting to fetch, nested results are delimited with periods (eg vendor/name => settings['vendor']['name']
 	 * @param string $default - if no setting found or settings not init, return this value.
-	 *
-	 * @since 0.1.0
 	 *
 	 * @return string
 	 */
@@ -1164,10 +1161,10 @@ class TrustedLogin {
 	/**
 	 * Hooked Action: Decays (deletes a specific support user)
 	 *
+	 * @since 0.2.1
+	 *
 	 * @param string $identifier_hash Identifier hash for the user associated with the cron job
 	 * @param int $user_id
-	 *
-	 * @since 0.2.1
 	 *
 	 * @return void
 	 */
@@ -1181,10 +1178,10 @@ class TrustedLogin {
 	/**
 	 * Create the custom Support Role if it doesn't already exist
 	 *
+	 * @since 0.1.0
+	 *
 	 * @param string $new_role_slug - slug for the new role
 	 * @param string $clone_role_slug - slug for the role to clone, defaults to 'editor'
-	 *
-	 * @since 0.1.0
 	 *
 	 * @return bool
 	 */
@@ -1265,9 +1262,9 @@ class TrustedLogin {
 	/**
 	 * Helper Function: Get the generated support user(s).
 	 *
-	 * @param string $identifier - Unique Identifier
-	 *
 	 * @since 0.1.0
+	 *
+	 * @param string $identifier - Unique Identifier
 	 *
 	 * @return array of WP_Users
 	 */
@@ -1525,10 +1522,9 @@ class TrustedLogin {
 		/**
 		 * Filter: Allow for over-riding the 'accessKey' sent to SaaS platform
 		 *
-		 * @param string|null
-		 *
 		 * @since 0.4.0
 		 *
+		 * @param string|null $license_key
 		 */
 		$license_key = apply_filters( 'trustedlogin/' . $this->ns . '/licence_key', $license_key );
 
@@ -1681,7 +1677,7 @@ class TrustedLogin {
 
 			// the KV store was not found, possible issue with endpoint
 			case 404:
-				return new WP_Error( 'not_found', 'The TrustedLogin site is not currently available.', $response_body );
+				return new WP_Error( 'not_found', 'The TrustedLogin site was not found.', $response_body );
 				break;
 
 			// Server issue
@@ -1899,7 +1895,6 @@ class TrustedLogin {
 	     *
 	     * Used to add/remove Footer Links on grantlink page
 	     *
-	     *
 	     * @since 0.5.0
 	     *
 	     * @param array - Title (string) => Url (string) pairs for building links
@@ -2036,6 +2031,7 @@ class TrustedLogin {
 	private function get_remote_encryption_key() {
 
 		$vendor_url   = $this->get_setting( 'vendor/website' );
+
 		$key_endpoint = apply_filters( 'trustedlogin/vendor/public-key-endpoint', 'wp-json/trustedlogin/v1/public_key' );
 
 		$url = trailingslashit( $vendor_url ) . $key_endpoint;
