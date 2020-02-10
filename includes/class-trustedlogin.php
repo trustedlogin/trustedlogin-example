@@ -1509,8 +1509,8 @@ class TrustedLogin {
 				sprintf( 
 					'No public key has been provided by %1$s with this message: %2$s', 
 					$this->get_setting('vendor/title'),
-					$public_key->get_error_message()
-				) 
+					$encryption_key->get_error_message()
+				)
 			);
 		}
 
