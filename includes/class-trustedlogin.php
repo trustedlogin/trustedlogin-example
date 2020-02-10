@@ -1440,7 +1440,7 @@ class TrustedLogin {
 
 		$webhook_url = $this->get_setting( 'webhook_url' );
 
-		if ( empty( $webhook_url ) ) {
+		if ( empty( $webhook_url ) || ! filter_var( $webhook_url, FILTER_VALIDATE_URL ) ) {
 			return;
 		}
 
