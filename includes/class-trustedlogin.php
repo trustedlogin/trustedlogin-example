@@ -1751,9 +1751,9 @@ class TrustedLogin {
 	 */
 	public function admin_notice_revoked() {
 		?>
-        <div class="notice notice-success is-dismissible">
-            <p><?php esc_html_e( 'Done! Support access revoked. ', 'trustedlogin' ); ?></p>
-        </div>
+		<div class="notice notice-success is-dismissible">
+			<p><?php echo esc_html( sprintf( __( 'Done! %s Support access revoked. ', 'trustedlogin' ), $this->get_setting( 'vendor/title' ) ) ); ?></p>
+		</div>
 		<?php
 	}
 
