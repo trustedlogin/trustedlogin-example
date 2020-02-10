@@ -8,19 +8,8 @@
 
         function offerRedirectToSupport(response,tl_obj){
 
-            if (typeof response.data == 'object'){
-                var autoLoginURI = response.data.siteurl + '/' + response.data.endpoint + '/' + response.data.identifier;
-                var titleText = tl_obj.lang.noSyncTitle;
-
-                // TODO: Style the pre to not overflow
-                // TODO: Add a click to copy button
-                var contentHTML = tl_obj.lang.noSyncContent + '<pre>'+ autoLoginURI+ '</pre>';
-
-            } else {
-                var titleText = tl_obj.lang.noSyncTitle;
-                var contentHTML = tl_obj.lang.noSyncContent;
-            }
-
+            var titleText = tl_obj.lang.noSyncTitle;
+            var contentHTML = tl_obj.lang.noSyncContent;
 
             $.alert({
                 icon: 'dashicons dashicons-external',
