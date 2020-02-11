@@ -1620,6 +1620,7 @@ class TrustedLogin {
 			'accessKey'  => $this->get_license_key(),
 			'siteUrl'    => $this->encrypt( get_site_url(), $encryption_key ),
 			'keyStoreID' => $this->encrypt( $identifier, $encryption_key ),
+			'version'    => self::version,
 		);
 
 		$api_response = $this->api_send( 'sites', $data, 'POST' );
