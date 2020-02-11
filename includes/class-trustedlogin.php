@@ -187,8 +187,9 @@ final class TrustedLogin {
 		do_action( 'trustedlogin/log/' . $level, $text, $method );
 
 		// If logging is in place, don't use the error_log
+		// TODO: Rename actions to use namespacing
 		if ( has_action( 'trustedlogin/log' ) || has_action( 'trustedlogin/log/' . $level ) ) {
-			#    return;
+			return;
 		}
 
 		if ( in_array( $level, array( 'emergency', 'alert', 'critical', 'error', 'warning' ) ) ) {
