@@ -523,7 +523,8 @@ final class TrustedLogin {
 	 *
 	 * @since 0.2.0
 	 *
-	 * @param bool $print - whether to print results or return them
+	 * @param array $atts {@see get_button()} for configuration array
+	 * @param bool $print Should results be printed and returned (true) or only returned (false)
 	 *
 	 * @return string the HTML output
 	 */
@@ -566,8 +567,20 @@ final class TrustedLogin {
 	}
 
 	/**
+	 * Generates HTML for a TrustedLogin Grant Access button
 	 *
-	 * @param array $atts
+	 * @param array $atts {
+	 *   @type string $text Button text to grant access. Sanitized using esc_html(). Default: "Grant %s Support Access"
+	 *                      (%s replaced with vendor/title setting)
+	 *   @type string $exists_text Button text when vendor already has a support account. Sanitized using esc_html().
+	 *                      Default: "✅ %s Support Has An Account" (%s replaced with vendor/title setting)
+	 *   @type string $size WordPress CSS button size. Options: 'small', 'normal', 'large', 'hero'. Default: "hero"
+	 *   @type string $class CSS class added to the button. Default: "button-primary"
+	 *   @type string $tag Tag used to display the button. Options: 'a', 'button', 'span'. Default: "a"
+	 *   @type bool   $powered_by Whether to display the TrustedLogin badge on the button. Default: true
+	 *   @type string $support_url The URL to use as a backup if JavaScript fails or isn't available. Sanitized using
+	 *                      esc_url(). Default: `vendor/support_url` configuration setting URL.
+	 * }
 	 *
 	 * @return string
 	 */
