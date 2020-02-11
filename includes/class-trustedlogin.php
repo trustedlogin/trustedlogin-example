@@ -617,7 +617,7 @@ final class TrustedLogin {
 		} else {
 			$text      = esc_html( $atts['text'] );
 			$css_class .= ' trustedlogin–grant-access'; // Tell JS to grant access on click
-			$href      = esc_html( $atts['support_url'] );
+			$href      = $atts['support_url'];
 		}
 
 		$css_class = implode( ' ', array( $css_class, $atts['class'] ) );
