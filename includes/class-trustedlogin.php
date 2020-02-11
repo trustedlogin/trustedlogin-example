@@ -579,7 +579,6 @@ final class TrustedLogin {
 			'size'        => 'hero',
 			'class'       => 'button-primary',
 			'tag'         => 'a', // "a", "button", "span"
-			'id'          => null,
 			'powered_by'  => true,
 			'support_url' => $this->get_setting( 'vendor/support_url' ),
 		);
