@@ -30,7 +30,7 @@ use \WP_Error;
 /**
  * The TrustedLogin all-in-one drop-in class.
  */
-class TrustedLogin {
+final class TrustedLogin {
 
 	/**
 	 * @var string $version - the current drop-in file version
