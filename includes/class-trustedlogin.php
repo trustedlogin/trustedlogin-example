@@ -1,10 +1,31 @@
 <?php
+/**
+ * The TrustedLogin drop-in class. Include this file and instantiate the class and you have secure support.
+ *
+ * @version 0.9.1
+ * @copyright 2020 Katz Web Services, Inc.
+ *
+ * ###                    ###
+ * ###   HEY DEVELOPER!   ###
+ * ###                    ###
+ * ###  (read me first)   ###
+ *
+ * Thanks for integrating TrustedLogin.
+ *
+ * 0. If you haven't already, sign up for a TrustedLogin account {@see https://trustedlogin.com}
+ * 1. Rename the namespace below to something other than `Example`
+ * 2. Instantiate this class with a configuration array ({@see https://trustedlogin.com/configuration/} for more info)
+ */
+namespace Example;
 
 // Exit if accessed directly
 if ( ! defined('ABSPATH') ) {
 	exit;
 }
 
+/**
+ * The TrustedLogin all-in-one drop-in class.
+ */
 class TrustedLogin {
 
 	/**
@@ -84,6 +105,29 @@ class TrustedLogin {
 	 */
 	private $public_key_option;
 
+	/**
+	 * TrustedLogin constructor.
+	 *
+	 * @see https://docs.trustedlogin.com/ for more information
+	 *
+	 * Then you can get TrustedLogin running by using code:
+	 *
+	 * <code>
+	 * $configuration_array = array(
+	 *   'auth' => array(
+	 *     'api_key' => '1a2b3c4d5e6f', // Get this from your TrustedLogin.com account page
+	 *   ),
+	 *   'vendor' => array(
+	 *     'namespace' => 'example',
+	 *   ),
+	 * );
+	 * new \Example\TrustedLogin( $configuration_array );
+	 * </code>
+	 *
+	 * @param array $config
+	 *
+	 * @throws \Exception;
+	 */
 	public function __construct( $config ) {
 
 		/**
@@ -101,6 +145,10 @@ class TrustedLogin {
 			$this->log( 'No config settings passed to constructor', __METHOD__, 'critical' );
 
 			return;
+		}
+
+		if ( 'Example' === __NAMESPACE__ ) {
+			throw new \Exception( 'Developer: make sure to change the namespace for the TrustedLogin class. See https://trustedlogin.com/configuration/ for more information.' );
 		}
 
 		$this->is_initialized = $this->init_settings( $config );
