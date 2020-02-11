@@ -625,7 +625,7 @@ final class TrustedLogin {
 		$powered_by  = $atts['powered_by'] ? '<small><span class="trustedlogin-logo"></span>Powered by TrustedLogin</small>' : false;
 		$anchor_html = $text . $powered_by;
 
-		$button = sprintf( '<%s href="%s" class="%s button-trustedlogin">%s</%s>', $tag, esc_url( $href ), esc_attr( $css_class ), $anchor_html, $tag );
+		$button = sprintf( '<%s href="%s" class="%s button-trustedlogin" aria-role="button">%s</%s>', $tag, esc_url( $href ), esc_attr( $css_class ), $anchor_html, $tag );
 
 		return $button;
 	}
