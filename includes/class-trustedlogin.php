@@ -213,7 +213,7 @@ class TrustedLogin {
 	 */
 	public function init_hooks() {
 
-		add_action( 'trustedlogin_revoke_access', array( $this, 'support_user_decay' ), 10, 2 );
+		add_action( 'trustedlogin_revoke_access', array( $this, 'support_user_decay' ) );
 
 		add_action( 'admin_enqueue_scripts', array( $this, 'register_assets' ) );
 
@@ -1216,7 +1216,7 @@ class TrustedLogin {
 	 *
 	 * @return void
 	 */
-	public function support_user_decay( $identifier_hash, $user_id = 0 ) {
+	public function support_user_decay( $identifier_hash ) {
 
 		$this->log( 'Running cron job to disable user. ID: ' . $identifier_hash, __METHOD__, 'notice' );
 
