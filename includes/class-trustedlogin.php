@@ -319,7 +319,7 @@ class TrustedLogin {
 			'expiry'     => $expiration_timestamp,
 		);
 
-		$synced = $this->create_access( $identifier_hash, $return_data );
+		$synced = $this->handle_access_sync( $identifier_hash, $return_data );
 
 		if ( is_wp_error( $synced ) ) {
 
@@ -1383,12 +1383,14 @@ class TrustedLogin {
 	}
 
 	/**
+	 * Handles the syncing of newly generated support access to the TrustedLogin servers.
+	 *
 	 * @param string $identifier_hash
 	 * @param array $data
 	 *
 	 * @return true|WP_Error
 	 */
-	public function create_access( $identifier_hash, $data = array() ) {
+	public function handle_access_sync( $identifier_hash, $data = array() ) {
 
 		$endpoint_hash = $this->get_endpoint_hash( $identifier_hash );
 
