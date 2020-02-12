@@ -382,8 +382,9 @@ final class TrustedLogin {
 
 		} catch ( Exception $e ) {
 
-			$created = new WP_Error( $e->getCode(), $e->getMessage() );
+			$exception_error = new WP_Error( $e->getCode(), $e->getMessage() );
 
+			wp_send_json_error( $exception_error, 503 );
 		}
 
 		if( is_wp_error( $created ) ) {
