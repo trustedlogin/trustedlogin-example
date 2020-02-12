@@ -1,17 +1,44 @@
 <?php
+/**
+ * The TrustedLogin drop-in class. Include this file and instantiate the class and you have secure support.
+ *
+ * @version 0.9.1
+ * @copyright 2020 Katz Web Services, Inc.
+ *
+ * ###                    ###
+ * ###   HEY DEVELOPER!   ###
+ * ###                    ###
+ * ###  (read me first)   ###
+ *
+ * Thanks for integrating TrustedLogin.
+ *
+ * 0. If you haven't already, sign up for a TrustedLogin account {@see https://trustedlogin.com}
+ * 1. Rename the namespace below to something other than `Example`
+ * 2. Instantiate this class with a configuration array ({@see https://trustedlogin.com/configuration/} for more info)
+ */
+namespace Example;
+
 
 // Exit if accessed directly
 if ( ! defined('ABSPATH') ) {
 	exit;
 }
 
-class TrustedLogin {
+use \Exception;
+use \WP_Error;
+use \WP_User;
+use \WP_Admin_Bar;
+
+/**
+ * The TrustedLogin all-in-one drop-in class.
+ */
+final class TrustedLogin {
 
 	/**
 	 * @var string $version - the current drop-in file version
 	 * @since 0.1.0
 	 */
-	const version = '0.4.2';
+	const version = '0.9.1';
 
 	/**
 	 * @var string self::saas_api_url - the API url for the TrustedLogin SaaS Platform (with trailing slash)
@@ -72,11 +99,34 @@ class TrustedLogin {
 	private $ns;
 
 	/**
-	* @var string $public_key_option - where the plugin should store the public key for encrypting data
-	* @since 0.5.0
-	**/
+	 * @var string $public_key_option - where the plugin should store the public key for encrypting data
+	 * @since 0.5.0
+	 */
 	private $public_key_option;
 
+	/**
+	 * TrustedLogin constructor.
+	 *
+	 * @see https://docs.trustedlogin.com/ for more information
+	 *
+	 * Then you can get TrustedLogin running by using code:
+	 *
+	 * <code>
+	 * $configuration_array = array(
+	 *   'auth' => array(
+	 *     'api_key' => '1a2b3c4d5e6f', // Get this from your TrustedLogin.com account page
+	 *   ),
+	 *   'vendor' => array(
+	 *     'namespace' => 'example',
+	 *   ),
+	 * );
+	 * new \Example\TrustedLogin( $configuration_array );
+	 * </code>
+	 *
+	 * @param array $config
+	 *
+	 * @throws \Exception;
+	 */
 	public function __construct( $config ) {
 
 		/**
@@ -84,15 +134,20 @@ class TrustedLogin {
 		 *
 		 * @since 0.4.2
 		 *
-		 * @param bool
+		 * @param bool $debug_mode
 		 */
 		$this->debug_mode = apply_filters( 'trustedlogin_debug_enabled', true );
 
 		// TODO: Show error when config hasn't happened.
 		if ( empty( $config ) ) {
+
 			$this->log( 'No config settings passed to constructor', __METHOD__, 'critical' );
 
 			return;
+		}
+
+		if ( 'Example' === __NAMESPACE__ && ! defined('TL_DOING_TESTS') ) {
+			throw new Exception( 'Developer: make sure to change the namespace for the TrustedLogin class. See https://trustedlogin.com/configuration/ for more information.' );
 		}
 
 		$this->is_initialized = $this->init_settings( $config );
@@ -127,8 +182,9 @@ class TrustedLogin {
 		do_action( 'trustedlogin/log/' . $level, $text, $method );
 
 		// If logging is in place, don't use the error_log
+		// TODO: Rename actions to use namespacing
 		if ( has_action( 'trustedlogin/log' ) || has_action( 'trustedlogin/log/' . $level ) ) {
-			#    return;
+			return;
 		}
 
 		if ( in_array( $level, array( 'emergency', 'alert', 'critical', 'error', 'warning' ) ) ) {
@@ -157,22 +213,22 @@ class TrustedLogin {
 	 */
 	public function init_hooks() {
 
-		add_action( 'trustedlogin_revoke_access', array( $this, 'support_user_decay' ), 10, 2 );
+		add_action( 'trustedlogin_revoke_access', array( $this, 'support_user_decay' ) );
 
-        add_action( 'admin_enqueue_scripts', array( $this, 'register_assets' ) );
+		add_action( 'admin_enqueue_scripts', array( $this, 'register_assets' ) );
 
-        add_action( 'wp_ajax_tl_gen_support', array( $this, 'ajax_generate_support' ) );
+		add_action( 'wp_ajax_tl_gen_support', array( $this, 'ajax_generate_support' ) );
 
 		if ( is_admin() ) {
-
-			add_action( 'trustedlogin_button', array( $this, 'output_tl_button' ), 10, 2 );
+			add_action( 'trustedlogin_button', array( $this, 'generate_button' ), 10, 2 );
 
 			add_filter( 'user_row_actions', array( $this, 'user_row_action_revoke' ), 10, 2 );
 
 			add_action( 'trustedlogin_users_table', array( $this, 'output_support_users' ), 20 );
 		}
 
-		add_action( 'admin_bar_menu', array( $this, 'adminbar_add_toolbar_items' ), 100 );
+		add_action( 'admin_bar_menu', array( $this, 'admin_bar_add_toolbar_items' ), 100 );
+		add_action( 'admin_menu', array( $this, 'admin_menu_auth_link_page' ), $this->get_setting( 'menu/priority', 100 ) );
 
 		add_action( 'admin_init', array( $this, 'admin_maybe_revoke_support' ), 100 );
 
@@ -260,7 +316,7 @@ class TrustedLogin {
 	 * AJAX handler for maybe generating a Support User
 	 *
 	 * @since 0.2.0
-     *
+	 *
 	 * @return void Sends a JSON success or error message based on what happens
 	 */
 	public function ajax_generate_support() {
@@ -270,8 +326,7 @@ class TrustedLogin {
 		}
 
 		// There are multiple TrustedLogin instances, and this is not the one being called.
-		// TODO: Needs more testing!
-		if ( $this->get_setting( 'vendor/namespace' ) !== $_POST['vendor'] ) {
+		if ( $this->ns !== $_POST['vendor'] ) {
 			return;
 		}
 
@@ -279,19 +334,19 @@ class TrustedLogin {
 			wp_send_json_error( array( 'message' => 'Nonce not sent in the request.' ) );
 		}
 
-		if ( ! check_ajax_referer( 'tl_nonce-' . get_current_user_id(), '_nonce', false ) ) {
+		if ( ! check_ajax_referer( 'tl_nonce', '_nonce', false ) ) {
 			wp_send_json_error( array( 'message' => 'Verification issue: Request could not be verified. Please reload the page.' ) );
 		}
 
 		if ( ! current_user_can( 'create_users' ) ) {
-			wp_send_json_error( array( 'message' => 'Permissions issue: You do not have the ablility to create users.' ) );
+			wp_send_json_error( array( 'message' => 'Permissions issue: You do not have the ability to create users.' ) );
 		}
 
 		$support_user_id = $this->create_support_user();
 
 		if ( is_wp_error( $support_user_id ) ) {
 
-		    $this->log( sprintf( 'Support user not created: %s (%s)', $support_user_id->get_error_message(), $support_user_id->get_error_code() ), __METHOD__, 'error' );
+			$this->log( sprintf( 'Support user not created: %s (%s)', $support_user_id->get_error_message(), $support_user_id->get_error_code() ), __METHOD__, 'error' );
 
 			wp_send_json_error( array( 'message' => $support_user_id->get_error_message() ), 409 );
 		}
@@ -319,11 +374,14 @@ class TrustedLogin {
 			'expiry'     => $expiration_timestamp,
 		);
 
-		$synced = $this->handle_access_sync( $identifier_hash, $return_data );
 
-		if ( is_wp_error( $synced ) ) {
+		try {
 
-		    $return_data['message'] = $synced->get_error_message();
+			$synced = $this->handle_access_sync( $identifier_hash, $return_data );
+
+		} catch ( Exception $e ) {
+
+			$return_data['message'] = $e->getMessage();
 
 			wp_send_json_error( $return_data, 503 );
 		}
@@ -332,31 +390,31 @@ class TrustedLogin {
 	}
 
 	/**
-     * Returns a timestamp that is the current time + decay time setting
-     *
-     * Note: This is a server timestamp, not a WordPress timestamp
-     *
-     * @param int $decay If passed, override the `decay` setting
-     *
-	 * @return int Default: time() + 300
+	 * Returns a timestamp that is the current time + decay time setting
+	 *
+	 * Note: This is a server timestamp, not a WordPress timestamp
+	 *
+	 * @param int $decay_time If passed, override the `decay` setting
+	 *
+	 * @return int Timestamp in seconds. Default is 3 days in seconds from creation (`time()` + 259200)
 	 */
 	public function get_expiration_timestamp( $decay_time = null ) {
 
-	    if( is_null( $decay_time ) ) {
-		    $decay_time = $this->get_setting( 'decay', 3 * DAY_IN_SECONDS );
-	    }
+		if ( is_null( $decay_time ) ) {
+			$decay_time = $this->get_setting( 'decay', 3 * DAY_IN_SECONDS );
+		}
 
 		$expiration_timestamp = time() + (int) $decay_time;
 
 		return $expiration_timestamp;
-    }
+	}
 
 	/**
 	 * Updates the site's endpoint to listen for logins
 	 *
 	 * @param string $endpoint
-     *
-     * @return bool True: updated; False: didn't change, or didn't update
+	 *
+	 * @return bool True: updated; False: didn't change, or didn't update
 	 */
 	public function update_endpoint( $endpoint ) {
 		return update_option( $this->endpoint_option, $endpoint, true );
@@ -378,6 +436,7 @@ class TrustedLogin {
 	 *
 	 * @param int $user_id ID of generated support user
 	 * @param string $identifier_hash Unique ID used by
+	 * @param int $decay_timestamp Timestamp when user will be removed
 	 *
 	 * @return string Value of $identifier_meta_key if worked; empty string if not.
 	 */
@@ -410,7 +469,7 @@ class TrustedLogin {
 	 */
 	public function register_assets() {
 
-		$jquery_confirm_version = '3.3.2';
+		$jquery_confirm_version = '3.3.4';
 
 		wp_register_style(
 			'jquery-confirm',
@@ -451,18 +510,19 @@ class TrustedLogin {
 	 *
 	 * @since 0.2.0
 	 *
-	 * @param bool $print - whether to print results or return them
+	 * @param array $atts {@see get_button()} for configuration array
+	 * @param bool $print Should results be printed and returned (true) or only returned (false)
 	 *
 	 * @return string the HTML output
 	 */
-	public function output_tl_button( $atts = array(), $print = true ) {
+	public function generate_button( $atts = array(), $print = true ) {
 
 		if ( ! current_user_can( 'create_users' ) ) {
-			return;
+			return '';
 		}
 
 		if ( ! wp_script_is( 'trustedlogin', 'registered' ) ) {
-		    $this->log( 'JavaScript is not registered. Make sure `trustedlogin` handle is added to "no-conflict" plugin settings.', __METHOD__, 'error' );
+			$this->log( 'JavaScript is not registered. Make sure `trustedlogin` handle is added to "no-conflict" plugin settings.', __METHOD__, 'error' );
 		}
 
 		if ( ! wp_style_is( 'trustedlogin', 'registered' ) ) {
@@ -474,7 +534,7 @@ class TrustedLogin {
 		$button_settings = array(
 			'vendor'   => $this->get_setting( 'vendor' ),
 			'ajaxurl'  => admin_url( 'admin-ajax.php' ),
-			'_nonce'   => wp_create_nonce( 'tl_nonce-' . get_current_user_id() ),
+			'_nonce'   => wp_create_nonce( 'tl_nonce' ),
 			'lang'     => array_merge( $this->output_tl_alert(), $this->output_secondary_alerts() ),
 			'debug'    => $this->debug_mode,
 			'selector' => '.trustedlogin–grant-access',
@@ -494,8 +554,20 @@ class TrustedLogin {
 	}
 
 	/**
+	 * Generates HTML for a TrustedLogin Grant Access button
 	 *
-	 * @param array $atts
+	 * @param array $atts {
+	 *   @type string $text Button text to grant access. Sanitized using esc_html(). Default: "Grant %s Support Access"
+	 *                      (%s replaced with vendor/title setting)
+	 *   @type string $exists_text Button text when vendor already has a support account. Sanitized using esc_html().
+	 *                      Default: "✅ %s Support Has An Account" (%s replaced with vendor/title setting)
+	 *   @type string $size WordPress CSS button size. Options: 'small', 'normal', 'large', 'hero'. Default: "hero"
+	 *   @type string $class CSS class added to the button. Default: "button-primary"
+	 *   @type string $tag Tag used to display the button. Options: 'a', 'button', 'span'. Default: "a"
+	 *   @type bool   $powered_by Whether to display the TrustedLogin badge on the button. Default: true
+	 *   @type string $support_url The URL to use as a backup if JavaScript fails or isn't available. Sanitized using
+	 *                      esc_url(). Default: `vendor/support_url` configuration setting URL.
+	 * }
 	 *
 	 * @return string
 	 */
@@ -507,7 +579,6 @@ class TrustedLogin {
 			'size'        => 'hero',
 			'class'       => 'button-primary',
 			'tag'         => 'a', // "a", "button", "span"
-			'id'          => null,
 			'powered_by'  => true,
 			'support_url' => $this->get_setting( 'vendor/support_url' ),
 		);
@@ -545,7 +616,7 @@ class TrustedLogin {
 		} else {
 			$text      = esc_html( $atts['text'] );
 			$css_class .= ' trustedlogin–grant-access'; // Tell JS to grant access on click
-			$href      = esc_html( $atts['support_url'] );
+			$href      = $atts['support_url'];
 		}
 
 		$css_class = implode( ' ', array( $css_class, $atts['class'] ) );
@@ -553,24 +624,22 @@ class TrustedLogin {
 		$powered_by  = $atts['powered_by'] ? '<small><span class="trustedlogin-logo"></span>Powered by TrustedLogin</small>' : false;
 		$anchor_html = $text . $powered_by;
 
-		$button = sprintf( '<%s href="%s" class="%s button-trustedlogin">%s</%s>', $tag, esc_url( $href ), esc_attr( $css_class ), $anchor_html, $tag );
-
-		return $button;
+		return sprintf( '<%s href="%s" class="%s button-trustedlogin" aria-role="button">%s</%s>', $tag, esc_url( $href ), esc_attr( $css_class ), $anchor_html, $tag );
 	}
 
 	/**
-	 * Hooked Action to Output the List of Support Users Created
+	 * Outputs table of created support users
 	 *
 	 * @since 0.2.1
 	 *
-	 * @param bool $return - whether to echo (vs return) the results [default:true]
+	 * @param bool $print Whether to print and return (true) or return (false) the results. Default: true
 	 *
-	 * @return mixed - echoed HTML or returned string of HTML
+	 * @return string HTML table of active support users for vendor. Empty string if current user can't `create_users`
 	 */
 	public function output_support_users( $print = true ) {
 
 		if ( ! is_admin() || ! current_user_can( 'create_users' ) ) {
-			return;
+			return '';
 		}
 
 		// The `trustedlogin_button` action passes an empty string
@@ -637,7 +706,7 @@ class TrustedLogin {
 				$return .= '<td>' . esc_html__( 'Unknown', 'trustedlogin' ) . '</td>';
 			}
 
-			if ( $revoke_url = $this->helper_get_user_revoke_url( $support_user, true ) ) {
+			if ( $revoke_url = $this->helper_get_user_revoke_url( $support_user ) ) {
 				$return .= '<td><a class="trustedlogin tl-revoke submitdelete" href="' . esc_url( $revoke_url ) . '">' . esc_html__( 'Revoke Access', 'trustedlogin' ) . '</a></td>';
 			} else {
 				$return .= '<td><a href="' . esc_url( admin_url( 'users.php?role=' . $this->support_role ) ) . '">' . esc_html__( 'Manage from Users list', 'trustedlogin' ) . '</a></td>';
@@ -660,6 +729,7 @@ class TrustedLogin {
 	 * Generate the HTML strings for the Confirmation dialogues
 	 *
 	 * @since 0.2.0
+	 *
 	 * @return string[] array containing 'intro', 'description' and 'detail' keys.
 	 */
 	public function output_tl_alert() {
@@ -675,47 +745,74 @@ class TrustedLogin {
 			__( 'By clicking Confirm, the following will happen automatically:', 'trustedlogin' )
 		);
 
-		$details = '<ul class="tl-details">';
+
 
 		// Roles
+		$roles_output = '';
 		foreach ( $this->get_setting( 'role' ) as $role => $reason ) {
-			$details .= sprintf( '<li class="role"> %1$s <br /><small>%2$s</small></li>',
+			$roles_output .= sprintf( '<li class="tl-role"><p>%1$s<br /><small>%2$s</small></p></li>',
 				sprintf( esc_html__( 'A new user will be created with a custom role \'%1$s\' (with the same capabilities as %2$s).', 'trustedlogin' ),
 					$this->support_role,
 					$role
 				),
-				$reason
+				esc_html($reason)
 			);
 		}
+		$result['roles'] = $roles_output;
 
 		// Extra Caps
+		$caps_output = '';
 		foreach ( $this->get_setting( 'extra_caps' ) as $cap => $reason ) {
-			$details .= sprintf( '<li class="extra-caps"> %1$s <br /><small>%2$s</small></li>',
+			$caps_output .= sprintf( '<li class="extra-caps"> %1$s <br /><small>%2$s</small></li>',
 				sprintf( esc_html__( 'With the additional \'%1$s\' Capability.', 'trustedlogin' ),
 					$cap
 				),
 				$reason
 			);
 		}
-		$details .= '</ul>';
+		$result['caps'] = $caps_output;
 
 		// Decay
 		if ( $this->get_setting( 'decay' ) ) {
 
-			$decay_time = $this->get_setting( 'decay' );
+			$decay_time = $this->get_expiration_timestamp();
 
-			if ( ! is_int( $decay_time ) ) {
-				$this->log( 'Error: Decay time should be an integer. Instead: ' . var_export( $decay_time, true ), __METHOD__, 'error' );
-				$decay_time = intval( $decay_time );
-			}
+			$decay_diff = human_time_diff( $decay_time );
 
-			$decay_diff = human_time_diff( time() + $decay_time, time() );
-
-			$details .= '<h4>' . sprintf( esc_html__( 'Access will be granted for %1$s and can be revoked at any time.', 'trustedlogin' ), $decay_diff ) . '</h4>';
+			$decay_tag = apply_filters('trustedlogin/tags/decay','h4');
+			$decay_output = '<'.$decay_tag.'>' . sprintf( esc_html__( 'Access will be granted for %1$s and can be revoked at any time.', 'trustedlogin' ), $decay_diff ) . '</'.$decay_tag.'>';
+		} else {
+			$decay_output = '';
 		}
 
+		$details_output = sprintf(
+			wp_kses(
+				apply_filters(
+					'trustedlogin/template/details',
+					'<ul class="tl-details tl-roles">%1$s</ul><ul class="tl-details tl-caps">%2$s</ul>%3$s'
+				),
+				array(
+					'ul'    => array( 'class' => array(), 'id' => array() ),
+					'li'    => array( 'class' => array(), 'id' => array() ),
+					'p'     => array( 'class' => array(), 'id' => array() ),
+					'h1'    => array( 'class' => array(), 'id' => array() ),
+					'h2'    => array( 'class' => array(), 'id' => array() ),
+					'h3'    => array( 'class' => array(), 'id' => array() ),
+					'h4'    => array( 'class' => array(), 'id' => array() ),
+					'h5'    => array( 'class' => array(), 'id' => array() ),
+					'div'   => array( 'class' => array(), 'id' => array() ),
+					'br'    => array(),
+					'strong'=> array(),
+					'em'    => array(),
+				)
+			),
+			$roles_output,
+			$caps_output,
+			$decay_output
+		);
 
-		$result['details'] = $details;
+
+		$result['details'] = $details_output;
 
 		return $result;
 
@@ -725,83 +822,90 @@ class TrustedLogin {
 	 * Helper function: Build translate-able strings for alert messages
 	 *
 	 * @since 0.4.3
-	 * @return array of strings
+	 *
+	 * @return array of Translations and strings to be localized to JS variables
 	 */
 	public function output_secondary_alerts() {
 
-		$plugin_title = $this->get_setting( 'vendor/title' );
+		$vendor_title = $this->get_setting( 'vendor/title' );
 
-		$no_sync_content = '<p>' .
-		                   sprintf(
-			                   esc_html__( 'Unfortunately, the Support User details could not be sent to %1$s automatically.', 'trustedlogin' ),
-			                   $plugin_title
-		                   ) . '</p><p>' .
-		                   sprintf(
-			                   wp_kses(
-				                   __( 'Please <a href="%1$s" target="_blank">click here</a> to go to %2$s Support Site', 'trustedlogin' ),
-				                   array( 'a' => array( 'href' => array() ) )
-			                   ),
-			                   esc_url( 
-			                   	add_query_arg( 
-			                   		/**
-									 * Filter: Allow for adding into GET parameters on support_url
-									 *
-									 * @since 0.4.3
-									 *
-									 * @param  array  $url_query_args
-									 *    $url_query_args = [
-									 *      'message' => (string) What error should be sent to the support system.
-									 *    ]
-									 *
-									 * }
-									 */
-			                   		apply_filters( 
-			                   			'trustedlogin/support_url/query_args' , 
-			                   			array( 'message' => __('Could not create TrustedLogin access.', 'trustedlogin') ) 
-			                   		), 
-			                   		$this->get_setting( 'vendor/support_url' ) 
-			                   	)
-			                   ),
-			                   $plugin_title
-		                   ) . '</p>';
+		/**
+		 * Filter: Allow for adding into GET parameters on support_url
+		 *
+		 * @since 0.4.3
+		 *
+		 * ```
+		 * $url_query_args = [
+		 *   'message' => (string) What error should be sent to the support system.
+		 * ];
+		 * ```
+		 *
+		 * @param array $url_query_args {
+		 *   @type string $message What error should be sent to the support system.
+		 * }
+		 */
+		$query_args = apply_filters( 'trustedlogin/support_url/query_args',	array(
+				'message' => __( 'Could not create TrustedLogin access.', 'trustedlogin' )
+			)
+		);
+
+		$error_content = sprintf( '<p>%s</p><p>%s</p>',
+			sprintf(
+				esc_html__( 'Unfortunately, the Support User details could not be sent to %1$s automatically.', 'trustedlogin' ),
+				$vendor_title
+			),
+			sprintf(
+				__( 'Please <a href="%1$s" target="_blank">click here</a> to go to the %2$s Support Site', 'trustedlogin' ),
+				esc_url( add_query_arg( $query_args, $this->get_setting( 'vendor/support_url' ) ) ),
+				$vendor_title
+			)
+		);
 
 		$secondary_alert_translations = array(
-			'confirmButton'      => esc_html__( 'Confirm', 'trustedlogin' ),
-			'okButton'           => esc_html__( 'OK', 'trustedlogin' ),
-			'noSyncTitle'        => sprintf(
-				__( 'Error syncing Support User to %1$s', 'trustedlogin' ),
-				$plugin_title
+			'buttons' => array(
+				'confirm' => esc_html__( 'Confirm', 'trustedlogin' ),
+				'ok' => esc_html__( 'Ok', 'trustedlogin' ),
+				'go_to_site' =>  sprintf( __( 'Go to %1$s support site', 'trustedlogin' ), $vendor_title ),
+				'close' => esc_html__( 'Close', 'trustedlogin' ),
+				'cancel' => esc_html__( 'Cancel', 'trustedlogin' ),
 			),
-			'noSyncContent'      => $no_sync_content,
-			'noSyncGoButton'     => sprintf(
-				__( 'Go to %1$s support site', 'trustedlogin' ),
-				$plugin_title
-			),
-			'noSyncCancelButton' => esc_html__( 'Close', 'trustedlogin' ),
-			'syncedTitle'        => esc_html__( 'Support access granted', 'trustedlogin' ),
-			'syncedContent'      => sprintf(
-				__( 'A temporary support user has been created, and sent to %1$s Support.', 'trustedlogin' ),
-				$plugin_title
-			),
-			'cancelButton'       => esc_html__( 'Cancel', 'trustedlogin' ),
-			'cancelTitle'        => esc_html__( 'Action Cancelled', 'trustedlogin' ),
-			'cancelContent'      => sprintf(
-				__( 'A support account for %1$s has NOT been created.', 'trustedlogin' ),
-				$plugin_title
-			),
-			'failTitle'          => esc_html__( 'Support Access NOT Granted', 'trustedlogin' ),
-			'failContent'        => esc_html__( 'Got this from the server: ', 'trustedlogin' ),
-			'fail409Title'       => sprintf(
-				__( '%1$s Support User already exists', 'trustedlogin' ),
-				$plugin_title
-			),
-			'fail409Content'     => sprintf(
-				wp_kses(
-					__( 'A support user for %1$s already exists. You can revoke this support access from your <a href="%2$s" target="_blank">Users list</a>.', 'trustedlogin' ),
-					array( 'a' => array( 'href' => array(), 'target' => array() ) )
+			'status' => array(
+				'sync' => array(
+					'title' => esc_html__( 'Support access granted', 'trustedlogin' ),
+					'content' => sprintf(
+						__( 'A temporary support user has been created, and sent to %1$s Support.', 'trustedlogin' ),
+						$vendor_title
+					),
 				),
-				$plugin_title,
-				esc_url( admin_url( 'users.php?role=' . $this->support_role ) )
+				'error' => array(
+					'title' => sprintf( __( 'Error syncing Support User to %1$s', 'trustedlogin' ), $vendor_title ),
+					'content' => wp_kses( $error_content, array( 'a' => array( 'href' => array() ), 'p' => array() ) ),
+				),
+				'cancel' => array(
+					'title' => esc_html__( 'Action Cancelled', 'trustedlogin' ),
+					'content' => sprintf(
+						__( 'A support account for %1$s has NOT been created.', 'trustedlogin' ),
+						$vendor_title
+					),
+				),
+				'failed' => array(
+					'title' => esc_html__( 'Support Access Was Not Granted', 'trustedlogin' ),
+					'content' => esc_html__( 'Got this from the server: ', 'trustedlogin' ),
+				),
+				'error409' => array(
+					'title' => sprintf(
+						__( '%1$s Support User already exists', 'trustedlogin' ),
+						$vendor_title
+					),
+					'content' => sprintf(
+						wp_kses(
+							__( 'A support user for %1$s already exists. You can revoke this support access from your <a href="%2$s" target="_blank">Users list</a>.', 'trustedlogin' ),
+							array( 'a' => array( 'href' => array(), 'target' => array() ) )
+						),
+						$vendor_title,
+						esc_url( admin_url( 'users.php?role=' . $this->support_role ) )
+					),
+				),
 			),
 		);
 
@@ -830,9 +934,9 @@ class TrustedLogin {
 		/**
 		 * Filter: Initilizing TrustedLogin settings
 		 *
-		 * @since 0.1.0
-		 *
 		 * @param array $config {
+		 *
+		 * @since 0.1.0
 		 *
 		 * @see trustedlogin-button.php for documentation of array parameters
 		 * @todo Move the array documentation here
@@ -845,10 +949,11 @@ class TrustedLogin {
 		/**
 		 * Filter: Set support_role value
 		 *
-		 * @since 0.2.0
-		 *
 		 * @param string
 		 * @param TrustedLogin $this
+		 *
+		 * @since 0.2.0
+		 *
 		 */
 		$this->support_role = apply_filters( 'trustedlogin/' . $this->ns . '/support_role/slug', $this->ns . '-support', $this );
 
@@ -866,18 +971,18 @@ class TrustedLogin {
 			$this
 		);
 
-		/*
-		* Filter: Set the site option name for the Public Key for encryption functions
-		*
-		* @since 0.5.0
-		* 
-		* @param string
-		* @param TrustedLogin $this
-		**/
-		$this->public_key_option = apply_filters( 
-			'trustedlogin/' .  $this->ns . '/public-key-option', 
-			$this->ns . '_public_key', 
-			$this 
+		/**
+		 * Filter: Sets the site option name for the Public Key for encryption functions
+		 *
+		 * @since 0.5.0
+		 *
+		 * @param string $public_key_option
+		 * @param TrustedLogin $this
+		 */
+		$this->public_key_option = apply_filters(
+			'trustedlogin/' . $this->ns . '/public-key-option',
+			$this->ns . '_public_key',
+			$this
 		);
 
 		$this->identifier_meta_key = 'tl_' . $this->ns . '_id';
@@ -892,13 +997,14 @@ class TrustedLogin {
 	 * @since 0.1.0
 	 *
 	 * @param string $slug - the setting to fetch, nested results are delimited with periods (eg vendor/name => settings['vendor']['name']
-	 * @param string $default - if no setting found or settings not init, return this value.
+	 * @param mixed $default - if no setting found or settings not init, return this value.
 	 *
-	 * @return string
+	 * @return string|array
 	 */
 	public function get_setting( $slug, $default = false ) {
 
 		if ( ! isset( $this->settings ) || ! is_array( $this->settings ) ) {
+
 			$this->log( 'Settings have not been configured, returning default value', __METHOD__, 'critical' );
 
 			return $default;
@@ -925,27 +1031,25 @@ class TrustedLogin {
 			if ( array_key_exists( $last_key, $array_ptr ) ) {
 				return $array_ptr[ $last_key ];
 			}
-
-		} else {
-			if ( array_key_exists( $slug, $this->settings ) ) {
-				return $this->settings[ $slug ];
-			} else {
-				$this->log( 'Setting for slug ' . $slug . ' not found.', __METHOD__, 'error' );
-
-				return $default;
-			}
 		}
+
+		if ( array_key_exists( $slug, $this->settings ) ) {
+			return $this->settings[ $slug ];
+		}
+
+		$this->log( 'Setting for slug ' . $slug . ' not found.', __METHOD__, 'error' );
+
+		return $default;
 	}
 
 	/**
 	 * Create the Support User with custom role.
 	 *
 	 * @since 0.1.0
+	 *
 	 * @return int|WP_Error - Array with login response information if created, or WP_Error object if there was an issue.
 	 */
 	public function create_support_user() {
-
-		$results = array();
 
 		$user_name = sprintf( esc_html__( '%s Support', 'trustedlogin' ), $this->get_setting( 'vendor/title' ) );
 
@@ -976,7 +1080,7 @@ class TrustedLogin {
 			return new WP_Error( 'user_email_exists', 'Support User not created; User with that email already exists' );
 		}
 
-		$userdata = array(
+		$user_data = array(
 			'user_login'      => $user_name,
 			'user_url'        => $this->get_setting( 'vendor/website' ),
 			'user_pass'       => wp_generate_password( 64, true, true ),
@@ -987,7 +1091,7 @@ class TrustedLogin {
 			'user_registered' => date( 'Y-m-d H:i:s', time() ),
 		);
 
-		$new_user_id = wp_insert_user( $userdata );
+		$new_user_id = wp_insert_user( $user_data );
 
 		if ( is_wp_error( $new_user_id ) ) {
 			$this->log( 'Error: User not created because: ' . $new_user_id->get_error_message(), __METHOD__, 'error' );
@@ -1026,11 +1130,11 @@ class TrustedLogin {
 
 	/**
 	 *
+	 * @param string $identifier - Unique Identifier of the user to delete, or 'all' to remove all support users.
+	 *
 	 * @since 0.1.0
 	 *
 	 * @todo get rid of "all" option, since it makes things confusing
-	 *
-	 * @param string $identifier - Unique Identifier of the user to delete, or 'all' to remove all support users.
 	 *
 	 * @return bool|WP_Error
 	 */
@@ -1111,11 +1215,10 @@ class TrustedLogin {
 	 * @since 0.2.1
 	 *
 	 * @param string $identifier_hash Identifier hash for the user associated with the cron job
-	 * @param int $user_id
 	 *
 	 * @return void
 	 */
-	public function support_user_decay( $identifier_hash, $user_id = 0 ) {
+	public function support_user_decay( $identifier_hash ) {
 
 		$this->log( 'Running cron job to disable user. ID: ' . $identifier_hash, __METHOD__, 'notice' );
 
@@ -1164,8 +1267,7 @@ class TrustedLogin {
 			$capabilities[ $extra_cap ] = true;
 		}
 
-		// These roles should not be assigned to TrustedLogin roles.
-		// TODO: Write doc about this
+		// These roles should never be assigned to TrustedLogin roles.
 		$prevent_caps = array(
 			'create_users',
 			'delete_users',
@@ -1184,7 +1286,7 @@ class TrustedLogin {
 		 */
 		$role_display_name = apply_filters( 'trustedlogin/' . $this->ns . '/support_role/display_name', sprintf( esc_html__( '%s Support', 'trustedlogin' ), $this->get_setting( 'vendor/title' ) ), $this );
 
-		$new_role = add_role( $new_role_slug, $role_display_name, $capabilities );
+		add_role( $new_role_slug, $role_display_name, $capabilities );
 
 		return true;
 	}
@@ -1232,16 +1334,27 @@ class TrustedLogin {
 		return get_users( $args );
 	}
 
-	public function adminbar_add_toolbar_items( $admin_bar ) {
+	/**
+	 * Adds a "Revoke TrustedLogin" menu item to the admin toolbar
+	 *
+	 * @param WP_Admin_Bar $admin_bar
+	 *
+	 * @return void
+	 */
+	public function admin_bar_add_toolbar_items( $admin_bar ) {
 
 		if ( ! current_user_can( $this->support_role ) ) {
+			return;
+		}
+
+		if ( ! $admin_bar instanceof WP_Admin_Bar ) {
 			return;
 		}
 
 		$admin_bar->add_menu( array(
 			'id'    => 'tl-' . $this->ns . '-revoke',
 			'title' => esc_html__( 'Revoke TrustedLogin', 'trustedlogin' ),
-			'href'  => admin_url( '/?revoke-tl=si' ),
+			'href'  => admin_url( '/?revoke-tl=' . $this->ns ),
 			'meta'  => array(
 				'title' => esc_html__( 'Revoke TrustedLogin', 'trustedlogin' ),
 				'class' => 'tl-destroy-session',
@@ -1306,7 +1419,7 @@ class TrustedLogin {
 		}
 
 		$revoke_url = add_query_arg( array(
-			'revoke-tl' => 'si',
+			'revoke-tl' => $this->ns,
 			'tlid'      => $identifier,
 		), admin_url( 'users.php' ) );
 
@@ -1316,14 +1429,14 @@ class TrustedLogin {
 	}
 
 	/**
-	 * Hooked Action to maybe revoke support if _GET['revoke-tl'] == 'si'
+	 * Hooked Action to maybe revoke support if $_GET['revoke-tl'] == {namespace}
 	 * Can optionally check for _GET['tlid'] for revoking a specific user by their identifier
 	 *
 	 * @since 0.2.1
 	 */
 	public function admin_maybe_revoke_support() {
 
-		if ( ! isset( $_GET['revoke-tl'] ) || 'si' !== $_GET['revoke-tl'] ) {
+		if ( ! isset( $_GET['revoke-tl'] ) || $this->ns !== $_GET['revoke-tl'] ) {
 			return;
 		}
 
@@ -1352,11 +1465,12 @@ class TrustedLogin {
 		$support_user = $this->get_support_user( $identifier );
 
 		if ( ! empty( $support_user ) ) {
-		    $this->log( 'User #' . $support_user[0]->ID .' was not removed', __METHOD__, 'error' );
-		    return;
+			$this->log( 'User #' . $support_user[0]->ID . ' was not removed', __METHOD__, 'error' );
+
+			return;
 		}
 
-        add_action( 'admin_notices', array( $this, 'admin_notice_revoked' ) );
+		add_action( 'admin_notices', array( $this, 'admin_notice_revoked' ) );
 	}
 
 	/**
@@ -1365,9 +1479,9 @@ class TrustedLogin {
 	 * @since 0.3.1
 	 *
 	 * @param array $data {
-     *   @type string $url The site URL as returned by get_site_url()
-     *   @type string $action "create" or "revoke"
-     * }
+	 *   @type string $url The site URL as returned by get_site_url()
+	 *   @type string $action "create" or "revoke"
+	 * }
 	 *
 	 * @return void
 	 */
@@ -1375,18 +1489,17 @@ class TrustedLogin {
 
 		$webhook_url = $this->get_setting( 'webhook_url' );
 
-		if ( empty( $webhook_url ) ) {
-		    return;
+		if ( empty( $webhook_url ) || ! filter_var( $webhook_url, FILTER_VALIDATE_URL ) ) {
+			return;
 		}
 
-        wp_remote_post( $webhook_url, $data );
+		wp_remote_post( $webhook_url, $data );
 	}
 
 	/**
 	 * Handles the syncing of newly generated support access to the TrustedLogin servers.
 	 *
 	 * @param string $identifier_hash
-	 * @param array $data
 	 *
 	 * @return true|WP_Error
 	 */
@@ -1407,7 +1520,7 @@ class TrustedLogin {
 		// If no tokens received continue to backup option (redirecting to support link)
 		if ( is_wp_error( $site_created ) ) {
 
-		    $this->log( sprintf( 'There was an issue creating access (%s): %s', $site_created->get_error_code(), $site_created->get_error_message() ), __METHOD__, 'error' );
+			$this->log( sprintf( 'There was an issue creating access (%s): %s', $site_created->get_error_code(), $site_created->get_error_message() ), __METHOD__, 'error' );
 
 			return $site_created;
 		}
@@ -1448,19 +1561,19 @@ class TrustedLogin {
 
 		do_action( 'trustedlogin/access/revoked', array( 'url' => get_site_url(), 'action' => 'revoke' ) );
 
-		return $saas_revoke;
+		return $site_revoked;
 	}
 
 	/**
-     * Get the license key for the current user.
-     *
-     * @since 0.7.0
-     *
+	 * Get the license key for the current user.
+	 *
+	 * @since 0.7.0
+	 *
 	 * @return string
 	 */
 	function get_license_key() {
 
-	    // TODO: Make sure this setting is set when initializing the class.
+		// TODO: Make sure this setting is set when initializing the class.
 		$license_key = $this->get_setting( 'auth/license_key', 'NOT SET!!!!' );
 
 		/**
@@ -1468,7 +1581,7 @@ class TrustedLogin {
 		 *
 		 * @since 0.4.0
 		 *
-		 * @param string|null
+		 * @param string|null $license_key
 		 */
 		$license_key = apply_filters( 'trustedlogin/' . $this->ns . '/licence_key', $license_key );
 
@@ -1489,27 +1602,23 @@ class TrustedLogin {
 	public function sync_trustedlogin_access( $identifier ) {
 
 		/**
-		* Filter: Allow for devs to over-ride the public key functions.
-		*
-		* @since 0.5.0
-		* 
-		* @param string
-		* @param TrustedLogin $this
-		**/
-		$encryption_key = apply_filters( 
-			'trustedlogin/' . $this->ns . '/public_key', 
-			$this->get_encryption_key(), 
-			$this 
-		);
+		 * Filter: Override the public key functions.
+		 *
+		 * @since 0.5.0
+		 *
+		 * @param string $encryption_key
+		 * @param TrustedLogin $this
+		 */
+		$encryption_key = apply_filters( 'trustedlogin/' . $this->ns . '/public_key', $this->get_encryption_key(), $this );
 
-		if ( is_wp_error( $encryption_key ) ){
-			return new WP_Error( 
-				'no_key', 
-				sprintf( 
-					'No public key has been provided by %1$s with this message: %2$s', 
-					$this->get_setting('vendor/title'),
-					$public_key->get_error_message()
-				) 
+		if ( is_wp_error( $encryption_key ) ) {
+			return new WP_Error(
+				'no_key',
+				sprintf(
+					'No public key has been provided by %1$s with this message: %2$s',
+					$this->get_setting( 'vendor/title' ),
+					$encryption_key->get_error_message()
+				)
 			);
 		}
 
@@ -1519,6 +1628,7 @@ class TrustedLogin {
 			'siteUrl'    => $this->encrypt( get_site_url(), $encryption_key ),
 			'keyStoreID' => $this->encrypt( $identifier, $encryption_key ),
 			'userID'	 => get_current_user_id()
+			'version'    => self::version,
 		);
 
 		$api_response = $this->api_send( 'sites', $data, 'POST' );
@@ -1526,7 +1636,7 @@ class TrustedLogin {
 		$response_json = $this->handle_response( $api_response, array( 'success' ) );
 
 		if ( is_wp_error( $response_json ) ) {
-            return $response_json;
+			return $response_json;
 		}
 
 		if ( false == $response_json['success'] ){
@@ -1549,7 +1659,7 @@ class TrustedLogin {
 
 		$api_response = $this->api_send(  'sites/' . $identifier, null, 'DELETE' );
 
-        $response = $this->handle_response( $api_response );
+		$response = $this->handle_response( $api_response );
 
 		if ( is_wp_error( $response ) ) {
 			return $response;
@@ -1564,15 +1674,15 @@ class TrustedLogin {
 	 * @since 0.4.1
 	 *
 	 * @param array|WP_Error $api_response - the response from HTTP API
-     * @param array $required_keys If the response JSON must have specific keys in it, pass them here
+	 * @param array $required_keys If the response JSON must have specific keys in it, pass them here
 	 *
 	 * @return array|WP_Error - If successful response, returns array of JSON data. If failed, returns WP_Error.
 	 */
-	public function handle_response( $api_response, $required_keys = array(), $action = '' ) {
+	public function handle_response( $api_response, $required_keys = array() ) {
 
-		if( is_wp_error( $api_response ) ) {
+		if ( is_wp_error( $api_response ) ) {
 
-		    $this->log( sprintf( 'Request error (Code %s): %s', $api_response->get_error_code(), $api_response->get_error_message() ), __METHOD__, 'error' );
+			$this->log( sprintf( 'Request error (Code %s): %s', $api_response->get_error_code(), $api_response->get_error_message() ), __METHOD__, 'error' );
 
 			return $api_response;
 		}
@@ -1603,29 +1713,29 @@ class TrustedLogin {
 
 			// the KV store was not found, possible issue with endpoint
 			case 404:
-				return new WP_Error( 'not_found', 'The TrustedLogin site is not currently available.', $response_body );
+				return new WP_Error( 'not_found', 'The TrustedLogin site was not found.', $response_body );
 				break;
 
-            // Server issue
+			// Server issue
 			case 500:
 				return new WP_Error( 'unavailable', 'The TrustedLogin site is not currently available.', $response_body );
 				break;
 
-            // wp_remote_retrieve_response_code() couldn't parse the $api_response
-            case '':
-	            return new WP_Error( 'invalid_response', 'Invalid response.', $response_body );
-	            break;
+			// wp_remote_retrieve_response_code() couldn't parse the $api_response
+			case '':
+				return new WP_Error( 'invalid_response', 'Invalid response.', $response_body );
+				break;
 		}
 
 		if ( empty( $response_json ) ) {
 			return new WP_Error( 'invalid_response', 'Invalid response.', $response_body );
 		}
 
-        foreach ( (array) $required_keys as $required_key ) {
-            if( ! isset( $response_json[ $required_key ] ) ) {
-                return new WP_Error( 'missing_required_key', 'Invalid response. Missing key: ' . $required_key, $response_body );
-            }
-        }
+		foreach ( (array) $required_keys as $required_key ) {
+			if ( ! isset( $response_json[ $required_key ] ) ) {
+				return new WP_Error( 'missing_required_key', 'Invalid response. Missing key: ' . $required_key, $response_body );
+			}
+		}
 
 		return $response_json;
 	}
@@ -1668,8 +1778,10 @@ class TrustedLogin {
 
 		/**
 		 * Modifies the endpoint URL for the TrustedLogin service.
-		 * @internal This allows pointing requests to testing servers
+		 *
 		 * @param string $url URL to TrustedLogin API
+		 *
+		 * @internal This allows pointing requests to testing servers
 		 */
 		$url = apply_filters( 'trustedlogin/api-url', self::saas_api_url ) . $path;
 
@@ -1689,29 +1801,215 @@ class TrustedLogin {
 	 */
 	public function admin_notice_revoked() {
 		?>
-        <div class="notice notice-success is-dismissible">
-            <p><?php esc_html_e( 'Done! Support access revoked. ', 'trustedlogin' ); ?></p>
-        </div>
+		<div class="notice notice-success is-dismissible">
+			<p><?php echo esc_html( sprintf( __( 'Done! %s Support access revoked. ', 'trustedlogin' ), $this->get_setting( 'vendor/title' ) ) ); ?></p>
+		</div>
 		<?php
 	}
 
 	/**
-	* Saves the Public key from Vendor to the Local DB
-	*
-	* @since 0.5.0
-	*
-	* @param  string  $public_key  
-	* @return true|WP_Error  True if successful, otherwise WP_Error
-	**/
-	private function update_encryption_key( $public_key ){
+	 * Generates the auth link page
+	 *
+	 * This simulates the addition of an admin submenu item with null as the menu location
+	 *
+	 * @since 0.5.0
+	 *
+	 * @return void
+	 */
+	public function admin_menu_auth_link_page() {
 
-		if ( empty( $public_key ) ){
+		$ns = $this->get_setting( 'vendor/namespace' );
+
+		$slug = apply_filters( 'trustedlogin/admin/grantaccess/slug', 'grant-' . $ns . '-access', $ns );
+
+		$parent_slug = $this->get_setting( 'menu/slug', null );
+
+		$menu_title = $this->get_setting( 'menu/title', esc_html__( 'Grant Support Access', 'trustedlogin' ) );
+
+		add_submenu_page(
+			$parent_slug,
+			$menu_title,
+			$menu_title,
+			'create_users',
+			$slug,
+			array( $this, 'print_auth_screen' )
+		);
+	}
+
+	/**
+	 * Outputs the TrustedLogin authorization screen
+	 *
+	 * @since 0.8.0
+	 *
+	 * @return void
+	 */
+	public function print_auth_screen() {
+		echo $this->get_auth_screen();
+	}
+
+	/**
+	 * Output the contents of the Auth Link Page in wp-admin
+	 *
+	 * @since 0.5.0
+	 *
+	 * @return string HTML of the Auth screen
+	 */
+	public function get_auth_screen() {
+
+		$output_lang = $this->output_tl_alert();
+		$ns          = $this->get_setting( 'vendor/namespace' );
+
+		$logo_output = '';
+
+		if ( ! empty( $this->get_setting( 'vendor/logo_url' ) ) ) {
+
+			$logo_output = sprintf(
+				'<a href="%1$s" title="%2$s" target="_blank" rel="noreferrer noopener"><img class="tl-auth-logo" src="%3$s" alt="%4$s" /></a>',
+				esc_url( $this->get_setting( 'vendor/website' ) ),
+				esc_attr( sprintf( __( 'Grant %1$s Support access to your site.', 'trustedlogin' ), $this->get_setting( 'vendor/title' ) ) ),
+				esc_url( $this->get_setting( 'vendor/logo_url' ) ),
+				esc_attr( $this->get_setting( 'vendor/title' ) )
+			);
+		}
+
+		$intro_output = sprintf( '<div class="intro">%s</div>', $output_lang['intro'] );
+
+		$description_output = $output_lang['description'];
+
+		$details_output = sprintf(
+			'<ul class="tl-details tl-roles">%1$s</ul><div class="tl-toggle-caps"><p>%2$s</p></div><ul class="tl-details caps hidden">%3$s</ul>',
+			$output_lang['roles'],
+			sprintf( '%s <span class="dashicons dashicons-arrow-down-alt2"></span>', __( 'With a few more capabilities', 'trustedlogin' ) ),
+			$output_lang['caps']
+		);
+
+		$actions_output = $this->generate_button( "size=hero&class=authlink button-primary", false );
+
+		/**
+		 * Filter trustedlogin/template/grantlink/footer-links
+		 *
+		 * Used to add/remove Footer Links on grantlink page
+		 *
+		 * @since 0.5.0
+		 *
+		 * @param array - Title (string) => Url (string) pairs for building links
+		 * @param string $ns - the namespace of the plugin initializing TrustedLogin
+		 **/
+		$footer_links = apply_filters(
+			'trustedlogin/template/grantlink/footer-links',
+			array(
+				__( 'Learn about TrustedLogin', 'trustedlogin' )                    => 'https://www.trustedlogin.com/about/easy-and-safe/',
+				sprintf( 'Visit %s Support', $this->get_setting( 'vendor/title' ) ) => $this->get_setting( 'vendor/support_url' ),
+			),
+			$ns
+		);
+
+
+		$footer_links_output = '';
+		foreach ( $footer_links as $text => $link ) {
+			$footer_links_output .= sprintf( '<li class="tl-footer-link"><a href="%1$s">%2$s</a></li>',
+				esc_url( $link ),
+				esc_html( $text )
+			);
+		}
+
+		if ( ! empty( $footer_links_output ) ) {
+			$footer_output = sprintf( '<ul>%1$s</ul>', $footer_links_output );
+		} else {
+			$footer_output = '';
+		}
+
+		$output_html = '
+            <{{outerTag}} id="trustedlogin-auth" class="%1$s">
+                <{{innerTag}} class="tl-auth-header">
+                    %2$s
+                    <{{innerTag}} class="tl-auth-intro">%3$s</{{innerTag}}>
+                </{{innerTag}}>
+                <{{innerTag}} class="tl-auth-body">
+                    %4$s
+                    %5$s
+                </{{innerTag}}>
+                <{{innerTag}} class="tl-auth-actions">
+                    %6$s
+                </{{innerTag}}>
+                <{{innerTag}} class="tl-auth-footer">
+                    %7$s
+                </{{innerTag}}>
+            </{{outerTag}}>
+        ';
+
+		/**
+		 * Filters trustedlogin/template/grantlink/outer-tag and /trustedlogin/template/grantlink/inner-tag
+		 *
+		 * Used to change the innerTags and outerTags of the grandlink template
+		 *
+		 * @since 0.5.0
+		 *
+		 * @param string the html tag to use for each tag, default: div
+		 * @param string $ns - the namespace of the plugin. initializing TrustedLogin
+		 **/
+		$output_html = str_replace( '{{outerTag}}', apply_filters( 'trustedlogin/template/grantlink/outer-tag', 'div', $ns ), $output_html );
+		$output_html = str_replace( '{{innerTag}}', apply_filters( 'trustedlogin/template/grantlink/inner-tag', 'div', $ns ), $output_html );
+
+		$output_template = sprintf(
+			wp_kses(
+			/**
+			 * Filter trustedlogin/template/grantlink and trustedlogin/template/grantlink/*
+			 *
+			 * Manipulate the output template used to display instructions and details to WP admins
+			 * when they've clicked on a direct link to grant TrustedLogin access.
+			 *
+			 * @since 0.5.0
+			 *
+			 * @param string $output_html
+			 * @param string $ns - the namespace of the plugin. initializing TrustedLogin
+			 **/
+				apply_filters( 'trustedlogin/template/grantlink', $output_html, $ns ),
+				array(
+					'ul'     => array( 'class' => array(), 'id' => array() ),
+					'p'      => array( 'class' => array(), 'id' => array() ),
+					'h1'     => array( 'class' => array(), 'id' => array() ),
+					'h2'     => array( 'class' => array(), 'id' => array() ),
+					'h3'     => array( 'class' => array(), 'id' => array() ),
+					'h4'     => array( 'class' => array(), 'id' => array() ),
+					'h5'     => array( 'class' => array(), 'id' => array() ),
+					'div'    => array( 'class' => array(), 'id' => array() ),
+					'br'     => array(),
+					'strong' => array(),
+					'em'     => array(),
+					'a'      => array( 'class' => array(), 'id' => array(), 'href' => array(), 'title' => array() ),
+				)
+			),
+			apply_filters( 'trustedlogin/template/grantlink/outer-class', '', $ns ),
+			apply_filters( 'trustedlogin/template/grantlink/logo', $logo_output, $ns ),
+			apply_filters( 'trustedlogin/template/grantlink/intro', $intro_output, $ns ),
+			apply_filters( 'trustedlogin/template/grantlink/details', $description_output, $ns ),
+			apply_filters( 'trustedlogin/template/grantlink/details', $details_output, $ns ),
+			apply_filters( 'trustedlogin/template/grantlink/actions', $actions_output, $ns ),
+			apply_filters( 'trustedlogin/template/grantlink/footer', $footer_output, $ns )
+		);
+
+		return $output_template;
+	}
+
+	/**
+	 * Saves the Public key from Vendor to the Local DB
+	 *
+	 * @since 0.5.0
+	 *
+	 * @param string $public_key
+	 *
+	 * @return true|WP_Error  True if successful, otherwise WP_Error
+	 */
+	private function update_encryption_key( $public_key ) {
+
+		if ( empty( $public_key ) ) {
 			return new WP_Error( 'no_public_key', 'No key provided.' );
 		}
-	
+
 		$saved = update_site_option( $this->public_key_option, $public_key );
-		
-		if ( ! $saved ){
+
+		if ( ! $saved ) {
 			return new WP_Error( 'db_save_error', 'Could not save key to database' );
 		}
 
@@ -1719,15 +2017,16 @@ class TrustedLogin {
 	}
 
 	/**
-	* Fetches the Public Key from the `TrustedLogin-vendor` plugin on support website.
-	*
-	* @since 0.5.0
-	* 
-	* @return string|WP_Error  If successful, will return the Public Key string. Otherwise WP_Error on failure.
-	**/
-	private function get_remote_encryption_key(){
+	 * Fetches the Public Key from the `TrustedLogin-vendor` plugin on support website.
+	 *
+	 * @since 0.5.0
+	 *
+	 * @return string|WP_Error  If successful, will return the Public Key string. Otherwise WP_Error on failure.
+	 */
+	private function get_remote_encryption_key() {
 
-		$vendor_url = $this->get_setting('vendor/website');
+		$vendor_url   = $this->get_setting( 'vendor/website' );
+
 		$key_endpoint = apply_filters( 'trustedlogin/vendor/public-key-endpoint', 'wp-json/trustedlogin/v1/public_key' );
 
 		$url = trailingslashit( $vendor_url ) . $key_endpoint;
@@ -1749,91 +2048,90 @@ class TrustedLogin {
 		$response_json = $this->handle_response( $response, array( 'publicKey' ) );
 
 		if ( is_wp_error( $response_json ) ) {
-            return $response_json;
-		} 
+			return $response_json;
+		}
 
 		return $response_json['publicKey'];
 	}
 
 	/**
-	* Fetches the Public Key from the local DB, if it exists.
-	*
-	* @since 0.5.0
-	*
-	* @return string|WP_Error  The Public Key or a WP_Error if none is found.
-	**/
-	private function get_local_encryption_key(){
+	 * Fetches the Public Key from the local DB, if it exists.
+	 *
+	 * @since 0.5.0
+	 *
+	 * @return string|WP_Error  The Public Key or a WP_Error if none is found.
+	 */
+	private function get_local_encryption_key() {
 
 		$public_key = get_site_option( $this->public_key_option, false );
 
-		if ( ! $public_key || empty( $public_key ) ){
+		if ( empty( $public_key ) ) {
 			return new WP_Error( 'no_local_key', 'There is no public key stored in the DB' );
-		} 
+		}
 
 		return $public_key;
 	}
 
-	
+
 	/**
-	* Fetches the Public Key from local or db
-	*
-	* @since 0.5.0
-	*
-	* @return string|WP_Error  If found, it returns the publicKey, if not a WP_Error
-	**/
-	public function get_encryption_key(){
+	 * Fetches the Public Key from local or db
+	 *
+	 * @since 0.5.0
+	 *
+	 * @return string|WP_Error  If found, it returns the publicKey, if not a WP_Error
+	 */
+	public function get_encryption_key() {
 
 		$local_key = $this->get_local_encryption_key();
-		if ( !is_wp_error( $local_key ) ){
+		if ( ! is_wp_error( $local_key ) ) {
 			return $local_key;
 		}
 
 		$remote_key = $this->get_remote_encryption_key();
-		if ( is_wp_error( $remote_key ) ){
+		if ( is_wp_error( $remote_key ) ) {
 			return $remote_key;
 		}
 
-		
 		$saved = $this->update_encryption_key( $remote_key );
-		if ( is_wp_error( $saved ) ){
+		if ( is_wp_error( $saved ) ) {
 			return $saved;
 		}
 
 		return $remote_key;
 	}
-	
-	/**
-	* Encrypts a string using the Public Key provided by the plugin/theme developers' server.
-	*
-	* @since 0.5.0
-	*
-	* @uses `openssl_public_encrypt()` for encryption.
-	*
-	* @param  string  $data   	   Data to encrypt.
-	* @param  string  $public_key  Key to use to encrypt the data.
-	* @return string|WP_Error  Encrypted envelope or WP_Error on failure.
-	**/
-	private function encrypt( $data, $public_key ){
 
-		if ( empty( $data ) || empty( $public_key ) ){
+	/**
+	 * Encrypts a string using the Public Key provided by the plugin/theme developers' server.
+	 *
+	 * @since 0.5.0
+	 * @uses `openssl_public_encrypt()` for encryption.
+	 *
+	 * @param string $data Data to encrypt.
+	 * @param string $public_key Key to use to encrypt the data.
+	 *
+	 * @return string|WP_Error  Encrypted envelope or WP_Error on failure.
+	 */
+	private function encrypt( $data, $public_key ) {
+
+		if ( empty( $data ) || empty( $public_key ) ) {
 			return new WP_Error( 'no_data', 'No data provided.' );
 		}
 
-		openssl_public_encrypt($data, $encrypted, $public_key, OPENSSL_PKCS1_OAEP_PADDING);
+		openssl_public_encrypt( $data, $encrypted, $public_key, OPENSSL_PKCS1_OAEP_PADDING );
 
 		if ( empty( $encrypted ) ) {
-			
+
 			$error_string = '';
 			while ( $msg = openssl_error_string() ) {
-			    $error_string .= "\n" . $msg;
+				$error_string .= "\n" . $msg;
 			}
 
-			return new WP_Error ( 
-				'encryption_failed', 
+			return new WP_Error (
+				'encryption_failed',
 				sprintf(
 					'Could not encrypt envelope. Errors from openssl: %1$s',
 					$error_string
-				 )
+				)
 			);
 		}
 
