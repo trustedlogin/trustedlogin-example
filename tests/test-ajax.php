@@ -161,7 +161,15 @@ class TrustedLoginAJAXTest extends WP_Ajax_UnitTestCase {
 
 		$last_response = $this->_last_response;
 
+		$this->assertNotEquals( '', $last_response, 'Last response was empty - likely returning something instead of exiting with die() or wp_send_json_{status}' );
+
 		$json = json_decode( $last_response, true );
+
+		$this->assertTrue( is_array( $json ) );
+
+		$this->assertArrayHasKey( 'success', $json );
+
+		$this->assertTrue( $json['success'], 'JSON was not successfully fetched. There was an error: ' . print_r( $json, true ) );
 
 		$this->assertArrayHasKey( 'data', $json );
 

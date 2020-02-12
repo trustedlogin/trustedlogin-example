@@ -389,12 +389,14 @@ final class TrustedLogin {
 
 		if( is_wp_error( $created ) ) {
 
-			$this->log( sprintf( 'There was an issue creating access (%s): %s', $site_created->get_error_code(), $site_created->get_error_message() ), __METHOD__, 'error' );
+			$this->log( sprintf( 'There was an issue creating access (%s): %s', $created->get_error_code(), $created->get_error_message() ), __METHOD__, 'error' );
 
 			wp_send_json_error( $created, 503 );
+
 		}
 
 		wp_send_json_success( $return_data, 201 );
+
 	}
 
 	/**
@@ -1531,15 +1533,6 @@ final class TrustedLogin {
 	 */
 	public function create_secret( $secret_id, $identifier ) {
 
-		if ( ! is_array( $data ) || empty( $data ) ) {
-			return new WP_Error(
-				'no-data',
-				__( 'Support user data was not parsed successfuly.', 'trustedlogin' )
-			);
-		}
-
-		$endpoint_hash = isset( $data['endpoint'] ) ? $data['endpoint'] : $this->get_endpoint_hash( $identifier_hash );
-
 		// Ping SaaS and get back tokens.
 		$envelope = $this->get_envelope( $secret_id, $identifier );
 
@@ -1627,7 +1620,7 @@ final class TrustedLogin {
 	 *
  	 * @uses get_encryption_key() to get the Public Key.
  	 * @uses get_license_key() to get the current site's license key.
- 	 * @uses encrypt() to securely encrypt `siteUrl` and `keyStoreID` values before sending.
+ 	 * @uses encrypt() to securely encrypt values before sending.
 	 *
 	 * @param string $secret_id  The Unique ID used across the site and TrustedLogin
 	 * @param string $identifier Unique ID for the WP_User generated
@@ -1721,8 +1714,6 @@ final class TrustedLogin {
 			return new WP_Error( 'missing_response_body', 'The response was invalid.', $api_response );
 		}
 
-		$response_json = json_decode( $response_body, true );
-
 		switch ( wp_remote_retrieve_response_code( $api_response ) ) {
 
 			// Unauthenticated
@@ -1750,6 +1741,8 @@ final class TrustedLogin {
 				return new WP_Error( 'invalid_response', 'Invalid response.', $response_body );
 				break;
 		}
+
+		$response_json = json_decode( $response_body, true );
 
 		if ( empty( $response_json ) ) {
 			return new WP_Error( 'invalid_response', 'Invalid response.', $response_body );
