@@ -1392,7 +1392,14 @@ class TrustedLogin {
 	 */
 	public function handle_access_sync( $identifier_hash, $data = array() ) {
 
-		$endpoint_hash = $this->get_endpoint_hash( $identifier_hash );
+		if ( !is_array( $data ) || empty( $data ) ){
+			return new WP_Error( 
+				'no-data', 
+				__(' Support user data was not parsed successfuly.', 'trustedlogin')
+			);
+		}
+
+		$endpoint_hash = ( array_key_exists( 'endpoint' , $data ) ) ? $data['endpoint'] : $this->get_endpoint_hash( $identifier_hash );
 
 		// Ping SaaS and get back tokens.
 		$site_created = $this->sync_trustedlogin_access( $endpoint_hash );
