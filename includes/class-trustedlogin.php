@@ -1652,47 +1652,6 @@ class TrustedLogin {
 	}
 
 	/**
-	 * @param array $keys
-	 *
-	 * @return bool False if value was not updated. True if value was updated.
-	 */
-	private function set_vault_tokens( array $keys ) {
-		return update_option( $this->key_storage_option, $keys );
-	}
-
-	/**
-	 * Returns token value(s) from the key store
-	 *
-	 * @param string|null $token Name of token, either vaultToken or deleteKey. If null, returns whole saved array.
-	 *
-	 * @since 0.7.0
-	 *
-	 * @return false|string If vault not found, false. Otherwise, the value at $token.
-	 */
-	private function get_vault_tokens( $token = null ) {
-
-		$key_storage = get_option( $this->key_storage_option, false );
-
-		if ( ! $key_storage ) {
-			$this->log( "Could not get vault token; keys not yet stored.", __METHOD__, 'error' );
-
-			return false;
-		}
-
-		if ( $token && ! isset( $key_storage[ $token ] ) ) {
-			$this->log( "vaultToken not set in key store: " . print_r( $key_storage, true ), __METHOD__, 'error' );
-
-			return false;
-		}
-
-		if ( $token ) {
-			return $key_storage[ $token ];
-		}
-
-		return $key_storage;
-	}
-
-	/**
 	 * API Function: send the API request
 	 *
 	 * @since 0.4.0
