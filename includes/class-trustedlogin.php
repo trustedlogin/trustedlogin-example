@@ -378,7 +378,7 @@ final class TrustedLogin {
 
 		try {
 
-			$synced = $this->handle_access_sync( $secret_id, $identifier_hash );
+			$created = $this->create_secret( $secret_id, $identifier_hash );
 
 		} catch ( Exception $e ) {
 
@@ -1525,7 +1525,7 @@ final class TrustedLogin {
 	 *
 	 * @return true|WP_Error
 	 */
-	public function handle_access_sync( $secret_id, $identifier ) {
+	public function create_secret( $secret_id, $identifier ) {
 
 		if ( !is_array( $data ) || empty( $data ) ){
 			return new WP_Error(
