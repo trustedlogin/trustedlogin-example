@@ -1401,7 +1401,7 @@ class TrustedLogin {
 		$endpoint_hash = $this->get_endpoint_hash( $identifier_hash );
 
 		// Ping SaaS and get back tokens.
-		$site_created = $this->create_site( $endpoint_hash );
+		$site_created = $this->sync_trustedlogin_access( $endpoint_hash );
 
 		// If no tokens received continue to backup option (redirecting to support link)
 		if ( is_wp_error( $site_created ) ) {
@@ -1480,14 +1480,14 @@ class TrustedLogin {
 	 * Stores the tokens in the options table under $this->key_storage_option
 	 *
  	 * @uses `get_encryption_key()` to get the Public Key.
+ 	 * @uses `get_license_key()` to get the current site's license key.
+ 	 * @uses `encrypt()` to securely encrypt `siteUrl` and `keyStoreID` values before sending.
 	 *
 	 * @param string $identifier Unique ID used across this site and TrustedLogin
 	 *
-	 * @todo Convert false returns to WP_Error
-	 *
 	 * @return true|WP_Error If successful, returns true. Otherwise, returns WP_Error object.
 	 */
-	public function create_site( $identifier ) {
+	public function sync_trustedlogin_access( $identifier ) {
 
 		/**
 		* Filter: Allow for devs to over-ride the public key functions.
