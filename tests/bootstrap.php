@@ -5,7 +5,7 @@
  * @package Trustedlogin_Button
  */
 
-// Allow 
+// Allow tests to do things that shouldn't be allowed, like using the "Example" namespace
 define( 'TL_DOING_TESTS', true );
 
 $_tests_dir = getenv( 'WP_TESTS_DIR' );

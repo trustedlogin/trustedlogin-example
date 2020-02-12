@@ -5,6 +5,8 @@
  * @package Trustedlogin_Button
  */
 
+use Example;
+
 /**
  * Sample test case.
  * @group ajax
