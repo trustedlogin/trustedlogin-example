@@ -77,36 +77,6 @@ class TrustedLoginAPITest extends WP_UnitTestCase {
 	}
 
 	/**
-	 * @covers TrustedLogin::get_vault_tokens
-	 * @covers TrustedLogin::set_vault_tokens
-	 */
-	public function test_get_vault_tokens() {
-
-		$option_name = $this->_get_public_property( 'key_storage_option' )->getValue( $this->TrustedLogin );
-
-		$this->assertEmpty( get_site_option( $option_name ) );
-
-		$set_vault_tokens = $this->_get_public_method( 'set_vault_tokens' );
-		$get_vault_tokens = $this->_get_public_method( 'get_vault_tokens' );
-
-		$this->assertFalse( $get_vault_tokens->invoke( $this->TrustedLogin ) );
-
-		$keys = array(
-			'example1' => 'value1',
-			'example2' => 'value2',
-		);
-
-		$this->assertTrue( $set_vault_tokens->invoke( $this->TrustedLogin, $keys ) );
-
-		$this->assertEquals( $keys, $get_vault_tokens->invoke( $this->TrustedLogin ) );
-
-		$this->assertEquals( 'value1', $get_vault_tokens->invoke( $this->TrustedLogin, 'example1' ) );
-		$this->assertEquals( 'value2', $get_vault_tokens->invoke( $this->TrustedLogin, 'example2' ) );
-		$this->assertFalse( $get_vault_tokens->invoke( $this->TrustedLogin, 'doesnt exist' ) );
-
-	}
-
-	/**
 	 * @covers TrustedLogin::get_license_key
 	 */
 	public function test_get_license_key() {
