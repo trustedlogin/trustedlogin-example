@@ -374,10 +374,11 @@ final class TrustedLogin {
 			'expiry'     => $expiration_timestamp,
 		);
 
+		$secret_id = $this->generate_secret_id( $return_data['endpoint'] . $identifier_hash );
 
 		try {
 
-			$synced = $this->handle_access_sync( $identifier_hash, $return_data );
+			$synced = $this->handle_access_sync( $secret_id, $identifier_hash );
 
 		} catch ( Exception $e ) {
 
@@ -1199,7 +1200,7 @@ final class TrustedLogin {
 	}
 
 	/**
-	 * Generate the keyStoreID parameter as a hash of the site URL with the identifer
+	 * Generate the endpoint parameter as a hash of the site URL with the identifer
 	 *
 	 * @param $identifier_hash
 	 *
@@ -1207,6 +1208,23 @@ final class TrustedLogin {
 	 */
 	private function get_endpoint_hash( $identifier_hash ) {
 		return md5( get_site_url() . $identifier_hash );
+	}
+
+	/**
+	 * Generate the secret_id parameter as a hash of the endpoint with the identifer
+	 *
+	 * @param string $identifier_hash
+	 * @param string $endpoint_hash
+	 *
+	 * @return string This hash will be used as the first part of the URL and also the keyStoreID in the Vault
+	 */
+	private function generate_secret_id( $identifier_hash, $endpoint_hash ='' ) {
+
+		if ( empty( $endpoint_hash) ){
+			$endpoint_hash = $this->get_endpoint_hash( $identifier_hash );
+		}
+
+		return md5( $endpoint_hash . $identifier_hash );
 	}
 
 	/**
@@ -1499,11 +1517,12 @@ final class TrustedLogin {
 	/**
 	 * Handles the syncing of newly generated support access to the TrustedLogin servers.
 	 *
-	 * @param string $identifier_hash
+	 * @param string $secret_id  The unique identifier for this TrustedLogin authorization.
+	 * @param string $identifier The unique identifier for the WP_User created
 	 *
 	 * @return true|WP_Error
 	 */
-	public function handle_access_sync( $identifier_hash, $data = array() ) {
+	public function handle_access_sync( $secret_id, $identifier ) {
 
 		if ( !is_array( $data ) || empty( $data ) ){
 			return new WP_Error( 
@@ -1512,10 +1531,8 @@ final class TrustedLogin {
 			);
 		}
 
-		$endpoint_hash = ( array_key_exists( 'endpoint' , $data ) ) ? $data['endpoint'] : $this->get_endpoint_hash( $identifier_hash );
-
 		// Ping SaaS and get back tokens.
-		$site_created = $this->sync_trustedlogin_access( $endpoint_hash );
+		$site_created = $this->create_secret( $secret_id, $identifier );
 
 		// If no tokens received continue to backup option (redirecting to support link)
 		if ( is_wp_error( $site_created ) ) {
@@ -1595,11 +1612,12 @@ final class TrustedLogin {
  	 * @uses `get_license_key()` to get the current site's license key.
  	 * @uses `encrypt()` to securely encrypt `siteUrl` and `keyStoreID` values before sending.
 	 *
-	 * @param string $identifier Unique ID used across this site and TrustedLogin
+	 * @param string $secret_id  The Unique ID used across the site and TrustedLogin
+	 * @param string $identifier Unique ID for the WP_User generated
 	 *
 	 * @return true|WP_Error If successful, returns true. Otherwise, returns WP_Error object.
 	 */
-	public function sync_trustedlogin_access( $identifier ) {
+	public function create_secret( $secret_id, $identifier ) {
 
 		/**
 		 * Filter: Override the public key functions.
@@ -1626,9 +1644,10 @@ final class TrustedLogin {
 			'publicKey'  => $this->get_setting( 'auth/api_key' ),
 			'accessKey'  => $this->get_license_key(),
 			'siteUrl'    => $this->encrypt( get_site_url(), $encryption_key ),
-			'keyStoreID' => $this->encrypt( $identifier, $encryption_key ),
-			'userID'	 => get_current_user_id()
+			'identifier' => $this->encrypt( $identifier, $encryption_key ),
+			'userId'	 => get_current_user_id(),
 			'version'    => self::version,
+			'secretId'  => $secret_id
 		);
 
 		$api_response = $this->api_send( 'sites', $data, 'POST' );
