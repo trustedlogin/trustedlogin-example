@@ -86,7 +86,7 @@ class TrustedLogin_Button {
 			'reassign_posts' => true,
 		);
 
-		$trustedlogin = new TrustedLogin( $config );
+		$trustedlogin = new \Example\TrustedLogin( $config );
 	}
 
 	public function load_includes() {

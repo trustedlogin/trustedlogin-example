@@ -16,7 +16,7 @@
  * 1. Rename the namespace below to something other than `Example`
  * 2. Instantiate this class with a configuration array ({@see https://trustedlogin.com/configuration/} for more info)
  */
-namespace GV;
+namespace Example;
 
 
 // Exit if accessed directly
@@ -153,7 +153,7 @@ final class TrustedLogin {
 			return;
 		}
 
-		if ( 'Example' === __NAMESPACE__ ) {
+		if ( 'Example' === __NAMESPACE__ && ! defined('TL_DOING_TESTS') ) {
 			throw new Exception( 'Developer: make sure to change the namespace for the TrustedLogin class. See https://trustedlogin.com/configuration/ for more information.' );
 		}
 

@@ -5,6 +5,9 @@
  * @package Trustedlogin_Button
  */
 
+// Allow 
+define( 'TL_DOING_TESTS', true );
+
 $_tests_dir = getenv( 'WP_TESTS_DIR' );
 
 if ( ! $_tests_dir ) {
