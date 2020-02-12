@@ -180,6 +180,8 @@ class TrustedLoginAJAXTest extends WP_Ajax_UnitTestCase {
 		$this->assertArrayHasKey( 'identifier', $data );
 		$this->assertArrayHasKey( 'user_id', $data );
 		$this->assertArrayHasKey( 'expiry', $data );
+
+		$this->_delete_all_support_users();
 	}
 
 	function _delete_all_support_users() {
