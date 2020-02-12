@@ -423,7 +423,7 @@ final class TrustedLogin {
 
 	/**
 	 * Generate a hash that is used to add two levels of security to the login URL:
-	 * The hash is stored as usermeta, but then also used to generate the Vault keyStoreID.
+	 * The hash is stored as usermeta, and is used when generating $secret_id.
 	 * Both parts are required to access the site.
 	 *
 	 * @return string
@@ -1204,7 +1204,7 @@ final class TrustedLogin {
 	 *
 	 * @param $identifier_hash
 	 *
-	 * @return string This hash will be used as the first part of the URL and also the keyStoreID in the Vault
+	 * @return string This hash will be used as the first part of the URL and also a part of $secret_id 
 	 */
 	private function get_endpoint_hash( $identifier_hash ) {
 		return md5( get_site_url() . $identifier_hash );
@@ -1216,7 +1216,7 @@ final class TrustedLogin {
 	 * @param string $identifier_hash
 	 * @param string $endpoint_hash
 	 *
-	 * @return string This hash will be used as the first part of the URL and also the keyStoreID in the Vault
+	 * @return string This hash will be used as an identifier in the Vault
 	 */
 	private function generate_secret_id( $identifier_hash, $endpoint_hash ='' ) {
 
@@ -1606,11 +1606,11 @@ final class TrustedLogin {
 	}
 
 	/**
-	 * Creates a site in TrustedLogin using the identifier hash as the keyStoreID
+	 * Creates a site in TrustedLogin using the $secret_id hash as the ID
 	 *
  	 * @uses `get_encryption_key()` to get the Public Key.
  	 * @uses `get_license_key()` to get the current site's license key.
- 	 * @uses `encrypt()` to securely encrypt `siteUrl` and `keyStoreID` values before sending.
+ 	 * @uses `encrypt()` to securely encrypt `siteUrl` and `identifier` values before sending.
 	 *
 	 * @param string $secret_id  The Unique ID used across the site and TrustedLogin
 	 * @param string $identifier Unique ID for the WP_User generated
