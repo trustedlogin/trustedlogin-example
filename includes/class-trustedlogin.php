@@ -333,8 +333,7 @@ final class TrustedLogin {
 		}
 
 		// There are multiple TrustedLogin instances, and this is not the one being called.
-		// TODO: Needs more testing!
-		if ( $this->get_setting( 'vendor/namespace' ) !== $_POST['vendor'] ) {
+		if ( $this->ns !== $_POST['vendor'] ) {
 			return;
 		}
 
