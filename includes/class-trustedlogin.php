@@ -1541,22 +1541,13 @@ class TrustedLogin {
 	 *
 	 * @since 0.4.1
 	 *
-	 * @param string $action - is the TrustedLogin being created or removed ('new' or 'revoke' respectively)
-	 * @param string $vault_keyStoreID - the unique identifier of the entry in the Vault Keystore
+	 * @param string $identifier - the unique identifier of the entry in the Vault Keystore
 	 *
 	 * @return true|WP_Error Was the sync to TrustedLogin successful
 	 */
-	public function revoke_site( $vault_keyStoreID ) {
+	public function revoke_site( $identifier ) {
 
-		$deleteKey = $this->get_vault_tokens( 'deleteKey' );
-
-        if ( empty( $deleteKey ) ) {
-            $this->log( "deleteKey is not set; revoking site will not work.", __METHOD__, 'error' );
-
-            return new WP_Error( 'missing_delete_key', 'Revoking site failed: deleteKey is not set.' );
-        }
-
-		$api_response = $this->api_send(  'sites/' . $deleteKey, null, 'DELETE' );
+		$api_response = $this->api_send(  'sites/' . $identifier, null, 'DELETE' );
 
         $response = $this->handle_response( $api_response );
 
