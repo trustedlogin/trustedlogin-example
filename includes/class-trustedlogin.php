@@ -382,12 +382,15 @@ final class TrustedLogin {
 
 		} catch ( Exception $e ) {
 
-			$synced = new WP_Error( $e->getCode(), $e->getMessage() );
+			$created = new WP_Error( $e->getCode(), $e->getMessage() );
 
 		}
 
-		if( is_wp_error( $synced ) ) {
-			wp_send_json_error( $synced, 503 );
+		if( is_wp_error( $created ) ) {
+
+			$this->log( sprintf( 'There was an issue creating access (%s): %s', $site_created->get_error_code(), $site_created->get_error_message() ), __METHOD__, 'error' );
+
+			wp_send_json_error( $created, 503 );
 		}
 
 		wp_send_json_success( $return_data, 201 );
@@ -1527,25 +1530,35 @@ final class TrustedLogin {
 	 */
 	public function create_secret( $secret_id, $identifier ) {
 
-		if ( !is_array( $data ) || empty( $data ) ){
+		if ( ! is_array( $data ) || empty( $data ) ) {
 			return new WP_Error(
 				'no-data',
-				__(' Support user data was not parsed successfuly.', 'trustedlogin')
+				__( 'Support user data was not parsed successfuly.', 'trustedlogin' )
 			);
 		}
 
+		$endpoint_hash = isset( $data['endpoint'] ) ? $data['endpoint'] : $this->get_endpoint_hash( $identifier_hash );
+
 		// Ping SaaS and get back tokens.
-		$site_created = $this->create_secret( $secret_id, $identifier );
+		$envelope = $this->get_envelope( $endpoint_hash );
 
-		// If no tokens received continue to backup option (redirecting to support link)
-		if ( is_wp_error( $site_created ) ) {
+		$api_response = $this->api_send( 'sites', $envelope, 'POST' );
 
-			$this->log( sprintf( 'There was an issue creating access (%s): %s', $site_created->get_error_code(), $site_created->get_error_message() ), __METHOD__, 'error' );
-
-			return $site_created;
+		if ( is_wp_error( $api_response ) ) {
+			return $api_response;
 		}
 
-		do_action( 'trustedlogin/access/created', array( 'url' => get_site_url(), 'action' => 'create' ) );
+		$response_json = $this->handle_response( $api_response, array( 'success' ) );
+
+		if ( is_wp_error( $response_json ) ) {
+			return $response_json;
+		}
+
+		if ( empty( $response_json['success'] ) ) {
+			return new WP_Error( 'sync_error', __( 'Could not sync to TrustedLogin server', 'trustedlogin' ) );
+		}
+
+		do_action( 'trustedlogin/secret/created', array( 'url' => get_site_url(), 'action' => 'create' ) );
 
 		return true;
 	}
@@ -1611,16 +1624,16 @@ final class TrustedLogin {
 	/**
 	 * Creates a site in TrustedLogin using the $secret_id hash as the ID
 	 *
- 	 * @uses `get_encryption_key()` to get the Public Key.
- 	 * @uses `get_license_key()` to get the current site's license key.
- 	 * @uses `encrypt()` to securely encrypt `siteUrl` and `identifier` values before sending.
+ 	 * @uses get_encryption_key() to get the Public Key.
+ 	 * @uses get_license_key() to get the current site's license key.
+ 	 * @uses encrypt() to securely encrypt `siteUrl` and `keyStoreID` values before sending.
 	 *
 	 * @param string $secret_id  The Unique ID used across the site and TrustedLogin
 	 * @param string $identifier Unique ID for the WP_User generated
 	 *
-	 * @return true|WP_Error If successful, returns true. Otherwise, returns WP_Error object.
+	 * @return array|WP_Error Returns array of data to be sent to TL. If public key not fetched, returns WP_Error
 	 */
-	public function create_secret( $secret_id, $identifier ) {
+	public function get_envelope( $identifier ) {
 
 		/**
 		 * Filter: Override the public key functions.
@@ -1636,14 +1649,14 @@ final class TrustedLogin {
 			return new WP_Error(
 				'no_key',
 				sprintf(
-					'No public key has been provided by %1$s with this message: %2$s',
+					'No public key has been provided by %1$s: %2$s',
 					$this->get_setting( 'vendor/title' ),
 					$encryption_key->get_error_message()
 				)
 			);
 		}
 
-		$data = array(
+		$envelope = array(
 			'publicKey'  => $this->get_setting( 'auth/api_key' ),
 			'accessKey'  => $this->get_license_key(),
 			'siteUrl'    => $this->encrypt( get_site_url(), $encryption_key ),
@@ -1653,19 +1666,7 @@ final class TrustedLogin {
 			'secretId'  => $secret_id,
 		);
 
-		$api_response = $this->api_send( 'sites', $data, 'POST' );
-
-		$response_json = $this->handle_response( $api_response, array( 'success' ) );
-
-		if ( is_wp_error( $response_json ) ) {
-			return $response_json;
-		}
-
-		if ( false == $response_json['success'] ){
-			return new WP_Error( 'sync-error', __('Could not sync to TrustedLogin server', 'trustedlogin') );
-		}
-
-		return true;
+		return $envelope;
 	}
 
 	/**
