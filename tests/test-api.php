@@ -5,7 +5,7 @@
  * @package Trustedlogin_Button
  */
 
-use Example;
+use Example\TrustedLogin;
 
 /**
  * Sample test case.
