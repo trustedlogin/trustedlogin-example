@@ -67,13 +67,6 @@ final class TrustedLogin {
 	private $endpoint_option;
 
 	/**
-	 * @var string $key_storage_option - The namespaced setting name for storing the vaultToken and deleteKey
-	 * @example 'tl_{vendor/namespace}_slt
-	 * @since 0.7.0
-	 */
-	private $key_storage_option;
-
-	/**
 	 * @var string $identifier_meta_key - The namespaced setting name for storing the unique identifier hash in user meta
 	 * @example tl_{vendor/namespace}_id
 	 * @since 0.7.0
@@ -381,25 +374,29 @@ final class TrustedLogin {
 			'expiry'     => $expiration_timestamp,
 		);
 
+		$secret_id = $this->generate_secret_id( $return_data['endpoint'] . $identifier_hash );
+
 		try {
 
-			$synced = $this->create_access( $identifier_hash );
+			$created = $this->create_secret( $secret_id, $identifier_hash );
 
 		} catch ( Exception $e ) {
 
-			$return_data['message'] = $e->getMessage();
+			$exception_error = new WP_Error( $e->getCode(), $e->getMessage() );
 
-			wp_send_json_error( $return_data, 503 );
+			wp_send_json_error( $exception_error, 503 );
 		}
 
-		if ( is_wp_error( $synced ) ) {
+		if( is_wp_error( $created ) ) {
 
-			$return_data['message'] = $synced->get_error_message();
+			$this->log( sprintf( 'There was an issue creating access (%s): %s', $created->get_error_code(), $created->get_error_message() ), __METHOD__, 'error' );
 
-			wp_send_json_error( $return_data, 503 );
+			wp_send_json_error( $created, 503 );
+
 		}
 
 		wp_send_json_success( $return_data, 201 );
+
 	}
 
 	/**
@@ -435,7 +432,7 @@ final class TrustedLogin {
 
 	/**
 	 * Generate a hash that is used to add two levels of security to the login URL:
-	 * The hash is stored as usermeta, but then also used to generate the Vault keyStoreID.
+	 * The hash is stored as usermeta, and is used when generating $secret_id.
 	 * Both parts are required to access the site.
 	 *
 	 * @return string
@@ -998,7 +995,6 @@ final class TrustedLogin {
 			$this
 		);
 
-		$this->key_storage_option  = 'tl_' . $this->ns . '_slt';
 		$this->identifier_meta_key = 'tl_' . $this->ns . '_id';
 		$this->expires_meta_key    = 'tl_' . $this->ns . '_expires';
 
@@ -1213,14 +1209,31 @@ final class TrustedLogin {
 	}
 
 	/**
-	 * Generate the keyStoreID parameter as a hash of the site URL with the identifer
+	 * Generate the endpoint parameter as a hash of the site URL with the identifer
 	 *
 	 * @param $identifier_hash
 	 *
-	 * @return string This hash will be used as the first part of the URL and also the keyStoreID in the Vault
+	 * @return string This hash will be used as the first part of the URL and also a part of $secret_id
 	 */
 	private function get_endpoint_hash( $identifier_hash ) {
 		return md5( get_site_url() . $identifier_hash );
+	}
+
+	/**
+	 * Generate the secret_id parameter as a hash of the endpoint with the identifer
+	 *
+	 * @param string $identifier_hash
+	 * @param string $endpoint_hash
+	 *
+	 * @return string This hash will be used as an identifier in the Vault
+	 */
+	private function generate_secret_id( $identifier_hash, $endpoint_hash = '' ) {
+
+		if ( empty( $endpoint_hash ) ) {
+			$endpoint_hash = $this->get_endpoint_hash( $identifier_hash );
+		}
+
+		return md5( $endpoint_hash . $identifier_hash );
 	}
 
 	/**
@@ -1511,26 +1524,35 @@ final class TrustedLogin {
 	}
 
 	/**
-	 * @param string $identifier_hash
+	 * Handles the syncing of newly generated support access to the TrustedLogin servers.
 	 *
-	 * @return true|WP_Error
+	 * @param string $secret_id  The unique identifier for this TrustedLogin authorization.
+	 * @param string $identifier The unique identifier for the WP_User created
+	 *
+	 * @return true|WP_Error True if successfully created secret on TrustedLogin servers; WP_Error if failed.
 	 */
-	public function create_access( $identifier_hash ) {
-
-		$endpoint_hash = $this->get_endpoint_hash( $identifier_hash );
+	public function create_secret( $secret_id, $identifier ) {
 
 		// Ping SaaS and get back tokens.
-		$site_created = $this->create_site( $endpoint_hash );
+		$envelope = $this->get_envelope( $secret_id, $identifier );
 
-		// If no tokens received continue to backup option (redirecting to support link)
-		if ( is_wp_error( $site_created ) ) {
+		$api_response = $this->api_send( 'sites', $envelope, 'POST' );
 
-			$this->log( sprintf( 'There was an issue creating access (%s): %s', $site_created->get_error_code(), $site_created->get_error_message() ), __METHOD__, 'error' );
-
-			return $site_created;
+		if ( is_wp_error( $api_response ) ) {
+			return $api_response;
 		}
 
-		do_action( 'trustedlogin/access/created', array( 'url' => get_site_url(), 'action' => 'create' ) );
+		$response_json = $this->handle_response( $api_response, array( 'success' ) );
+
+		if ( is_wp_error( $response_json ) ) {
+			return $response_json;
+		}
+
+		if ( empty( $response_json['success'] ) ) {
+			return new WP_Error( 'sync_error', __( 'Could not sync to TrustedLogin server', 'trustedlogin' ) );
+		}
+
+		do_action( 'trustedlogin/secret/created', array( 'url' => get_site_url(), 'action' => 'create' ) );
 
 		return true;
 	}
@@ -1594,18 +1616,18 @@ final class TrustedLogin {
 	}
 
 	/**
-	 * Creates a site in TrustedLogin using the identifier hash as the keyStoreID
+	 * Creates a site in TrustedLogin using the $secret_id hash as the ID
 	 *
-	 * Stores the tokens in the options table under $this->key_storage_option
+ 	 * @uses get_encryption_key() to get the Public Key.
+ 	 * @uses get_license_key() to get the current site's license key.
+ 	 * @uses encrypt() to securely encrypt values before sending.
 	 *
-	 * @todo Convert false returns to WP_Error
-	 * @uses `get_encryption_key()` to get the Public Key.
+	 * @param string $secret_id  The Unique ID used across the site and TrustedLogin
+	 * @param string $identifier Unique ID for the WP_User generated
 	 *
-	 * @param string $identifier Unique ID used across this site and TrustedLogin
-	 *
-	 * @return true|WP_Error If successful, returns true. Otherwise, returns WP_Error object.
+	 * @return array|WP_Error Returns array of data to be sent to TL. If public key not fetched, returns WP_Error.
 	 */
-	public function create_site( $identifier ) {
+	public function get_envelope( $secret_id, $identifier ) {
 
 		/**
 		 * Filter: Override the public key functions.
@@ -1621,38 +1643,24 @@ final class TrustedLogin {
 			return new WP_Error(
 				'no_key',
 				sprintf(
-					'No public key has been provided by %1$s with this message: %2$s',
+					'No public key has been provided by %1$s: %2$s',
 					$this->get_setting( 'vendor/title' ),
 					$encryption_key->get_error_message()
 				)
 			);
 		}
 
-		$data = array(
+		$envelope = array(
+			'secretId'   => $secret_id,
+			'identifier' => $this->encrypt( $identifier, $encryption_key ),
 			'publicKey'  => $this->get_setting( 'auth/api_key' ),
 			'accessKey'  => $this->get_license_key(),
 			'siteUrl'    => $this->encrypt( get_site_url(), $encryption_key ),
-			'keyStoreID' => $this->encrypt( $identifier, $encryption_key ),
+			'userId'     => get_current_user_id(),
 			'version'    => self::version,
 		);
 
-		$api_response = $this->api_send( 'sites', $data, 'POST' );
-
-		$response_json = $this->handle_response( $api_response, array( 'token', 'deleteKey' ) );
-
-		if ( is_wp_error( $response_json ) ) {
-			return $response_json;
-		}
-
-		// Handle short-lived tokens for TrustedLogin
-		$keys = array(
-			'vaultToken' => $response_json['token'],
-			'deleteKey'  => $response_json['deleteKey'],
-		);
-
-		$this->set_vault_tokens( $keys );
-
-		return true;
+		return $envelope;
 	}
 
 	/**
@@ -1660,34 +1668,18 @@ final class TrustedLogin {
 	 *
 	 * @since 0.4.1
 	 *
-	 * @param string $vault_keyStoreID - the unique identifier of the entry in the Vault Keystore
+	 * @param string $identifier - the unique identifier of the entry in the Vault Keystore
 	 *
 	 * @return true|WP_Error Was the sync to TrustedLogin successful
 	 */
-	public function revoke_site( $vault_keyStoreID ) {
+	public function revoke_site( $identifier ) {
 
-		$deleteKey = $this->get_vault_tokens( 'deleteKey' );
-
-		if ( empty( $deleteKey ) ) {
-			$this->log( "deleteKey is not set; revoking site will not work.", __METHOD__, 'error' );
-
-			return new WP_Error( 'missing_delete_key', 'Revoking site failed: deleteKey is not set.' );
-		}
-
-		$api_response = $this->api_send( 'sites/' . $deleteKey, null, 'DELETE' );
+		$api_response = $this->api_send(  'sites/' . $identifier, null, 'DELETE' );
 
 		$response = $this->handle_response( $api_response );
 
 		if ( is_wp_error( $response ) ) {
 			return $response;
-		}
-
-		// remove the site option
-		// TODO: Should we delete this even when the SaaS response fails?
-		$deleted = delete_option( $this->key_storage_option );
-
-		if ( ! $deleted ) {
-			$this->log( "delete_option failed for 'tl_{$this->ns}_slt' key. Perhaps was already deleted.", __METHOD__, 'warning' );
 		}
 
 		return true;
@@ -1722,8 +1714,6 @@ final class TrustedLogin {
 			return new WP_Error( 'missing_response_body', 'The response was invalid.', $api_response );
 		}
 
-		$response_json = json_decode( $response_body, true );
-
 		switch ( wp_remote_retrieve_response_code( $api_response ) ) {
 
 			// Unauthenticated
@@ -1752,6 +1742,8 @@ final class TrustedLogin {
 				break;
 		}
 
+		$response_json = json_decode( $response_body, true );
+
 		if ( empty( $response_json ) ) {
 			return new WP_Error( 'invalid_response', 'Invalid response.', $response_body );
 		}
@@ -1763,47 +1755,6 @@ final class TrustedLogin {
 		}
 
 		return $response_json;
-	}
-
-	/**
-	 * @param array $keys
-	 *
-	 * @return bool False if value was not updated. True if value was updated.
-	 */
-	private function set_vault_tokens( array $keys ) {
-		return update_option( $this->key_storage_option, $keys );
-	}
-
-	/**
-	 * Returns token value(s) from the key store
-	 *
-	 * @since 0.7.0
-	 *
-	 * @param string|null $token Name of token, either vaultToken or deleteKey. If null, returns whole saved array.
-	 *
-	 * @return false|string If vault not found, false. Otherwise, the value at $token.
-	 */
-	private function get_vault_tokens( $token = null ) {
-
-		$key_storage = get_option( $this->key_storage_option, false );
-
-		if ( ! $key_storage ) {
-			$this->log( "Could not get vault token; keys not yet stored.", __METHOD__, 'error' );
-
-			return false;
-		}
-
-		if ( $token && ! isset( $key_storage[ $token ] ) ) {
-			$this->log( "vaultToken not set in key store: " . print_r( $key_storage, true ), __METHOD__, 'error' );
-
-			return false;
-		}
-
-		if ( $token ) {
-			return $key_storage[ $token ];
-		}
-
-		return $key_storage;
 	}
 
 	/**
