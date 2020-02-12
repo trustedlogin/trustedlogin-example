@@ -876,42 +876,50 @@ final class TrustedLogin {
 		);
 
 		$secondary_alert_translations = array(
-			'confirmButton'      => esc_html__( 'Confirm', 'trustedlogin' ),
-			'okButton'           => esc_html__( 'OK', 'trustedlogin' ),
-			'noSyncTitle'        => sprintf(
-				__( 'Error syncing Support User to %1$s', 'trustedlogin' ),
-				$plugin_title
+			'buttons' => array(
+				'confirm' => esc_html__( 'Confirm', 'trustedlogin' ),
+				'ok' => esc_html__( 'Ok', 'trustedlogin' ),
+				'go_to_site' =>  sprintf( __( 'Go to %1$s support site', 'trustedlogin' ), $vendor_title ),
+				'close' => esc_html__( 'Close', 'trustedlogin' ),
+				'cancel' => esc_html__( 'Cancel', 'trustedlogin' ),
 			),
-			'noSyncContent'      => $no_sync_content,
-			'noSyncGoButton'     => sprintf(
-				__( 'Go to %1$s support site', 'trustedlogin' ),
-				$plugin_title
-			),
-			'noSyncCancelButton' => esc_html__( 'Close', 'trustedlogin' ),
-			'syncedTitle'        => esc_html__( 'Support access granted', 'trustedlogin' ),
-			'syncedContent'      => sprintf(
-				__( 'A temporary support user has been created, and sent to %1$s Support.', 'trustedlogin' ),
-				$plugin_title
-			),
-			'cancelButton'       => esc_html__( 'Cancel', 'trustedlogin' ),
-			'cancelTitle'        => esc_html__( 'Action Cancelled', 'trustedlogin' ),
-			'cancelContent'      => sprintf(
-				__( 'A support account for %1$s has NOT been created.', 'trustedlogin' ),
-				$plugin_title
-			),
-			'failTitle'          => esc_html__( 'Support Access NOT Granted', 'trustedlogin' ),
-			'failContent'        => esc_html__( 'Got this from the server: ', 'trustedlogin' ),
-			'fail409Title'       => sprintf(
-				__( '%1$s Support User already exists', 'trustedlogin' ),
-				$plugin_title
-			),
-			'fail409Content'     => sprintf(
-				wp_kses(
-					__( 'A support user for %1$s already exists. You can revoke this support access from your <a href="%2$s" target="_blank">Users list</a>.', 'trustedlogin' ),
-					array( 'a' => array( 'href' => array(), 'target' => array() ) )
+			'status' => array(
+				'sync' => array(
+					'title' => esc_html__( 'Support access granted', 'trustedlogin' ),
+					'content' => sprintf(
+						__( 'A temporary support user has been created, and sent to %1$s Support.', 'trustedlogin' ),
+						$vendor_title
+					),
 				),
-				$plugin_title,
-				esc_url( admin_url( 'users.php?role=' . $this->support_role ) )
+				'error' => array(
+					'title' => sprintf( __( 'Error syncing Support User to %1$s', 'trustedlogin' ), $vendor_title ),
+					'content' => wp_kses( $error_content, array( 'a' => array( 'href' => array() ), 'p' => array() ) ),
+				),
+				'cancel' => array(
+					'title' => esc_html__( 'Action Cancelled', 'trustedlogin' ),
+					'content' => sprintf(
+						__( 'A support account for %1$s has NOT been created.', 'trustedlogin' ),
+						$vendor_title
+					),
+				),
+				'failed' => array(
+					'title' => esc_html__( 'Support Access Was Not Granted', 'trustedlogin' ),
+					'content' => esc_html__( 'Got this from the server: ', 'trustedlogin' ),
+				),
+				'error409' => array(
+					'title' => sprintf(
+						__( '%1$s Support User already exists', 'trustedlogin' ),
+						$vendor_title
+					),
+					'content' => sprintf(
+						wp_kses(
+							__( 'A support user for %1$s already exists. You can revoke this support access from your <a href="%2$s" target="_blank">Users list</a>.', 'trustedlogin' ),
+							array( 'a' => array( 'href' => array(), 'target' => array() ) )
+						),
+						$vendor_title,
+						esc_url( admin_url( 'users.php?role=' . $this->support_role ) )
+					),
+				),
 			),
 		);
 

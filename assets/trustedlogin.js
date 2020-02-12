@@ -1,163 +1,165 @@
+/* global ajaxurl,jQuery,tl_obj */
 (function( $ ) {
 
-    "use strict";
+	"use strict";
 
-    $(document).ready( function(){
+	$( document ).ready( function () {
 
-        jconfirm.pluginDefaults.useBootstrap=false;
+		jconfirm.pluginDefaults.useBootstrap = false;
 
-        function offerRedirectToSupport(response,tl_obj){
+		function outputErrorAlert( response, tl_obj ) {
 
-            var titleText = tl_obj.lang.noSyncTitle;
-            var contentHTML = tl_obj.lang.noSyncContent;
+			var settings = {
+				icon: 'dashicons dashicons-no',
+				title: tl_obj.lang.status.failed.title,
+				content: tl_obj.lang.status.failed.content + '<pre>' + JSON.stringify( response ) + '</pre>',
+				escapeKey: 'ok',
+				type: 'red',
+				theme: 'material',
+				buttons: {
+					ok: {
+						text: tl_obj.lang.buttons.ok
+					}
+				}
+			};
 
-            $.alert({
-                icon: 'dashicons dashicons-external',
-                theme: 'material',
-                title: titleText,
-                type: 'orange',
-                content: contentHTML,
-	            escapeKey: 'close',
-                buttons: {
-                    goToSupport: {
-                        text: tl_obj.lang.noSyncGoButton,
-                        action: function(goToSupportButton){
-                            window.open(tl_obj.vendor.support_url,'_blank');
-                            return false; // you shall not pass
-                        },
-                    },
-                    close: {
-                        text: tl_obj.lang.noSyncCancelButton
-                    },
-                }
-            });
-        }
+			switch ( response.status ) {
 
-        function outputErrorAlert(response,tl_obj){
+				case 409: /** user already exists */
+				settings.title = tl_obj.lang.status.error409.title;
+					settings.content = tl_obj.lang.status.error409.content;
+					break;
 
-            if (response.status == 409){
-                var errorTitle = tl_obj.lang.fail409Title;
-                var errorContent = tl_obj.lang.fail409Content;
-            } else {
-                var errorTitle = tl_obj.lang.failTitle;
-                var errorContent = tl_obj.lang.failContent + '<pre>' + JSON.stringify( response ) + '</pre>';
-            }
-            $.alert({
-                icon: 'dashicons dashicons-no',
-                theme: 'material',
-                title: errorTitle,
-                type: 'red',
-	            escapeKey: 'ok',
-                content: errorContent,
-	            buttons: {
-		            ok: {
-			            text: tl_obj.lang.okButton
-		            }
-	            }
-            });
-        }
+				case 503: /** problem syncing to SaaS */
+				settings.title = tl_obj.lang.status.error.title;
+					settings.content = tl_obj.lang.status.error.content;
+					settings.icon = 'dashicons dashicons-external';
+					settings.escapeKey = 'close';
+					settings.type = 'orange';
+					settings.buttons = {
+						goToSupport: {
+							text: tl_obj.lang.buttons.go_to_site,
+							action: function ( goToSupportButton ) {
+								window.open( tl_obj.vendor.support_url, '_blank' );
+								return false; // you shall not pass
+							},
+						},
+						close: {
+							text: tl_obj.lang.buttons.close
+						},
+					};
+					break;
+			}
 
-        function triggerLoginGeneration(){
-            var data = {
-                'action': 'tl_gen_support',
-	            'vendor': tl_obj.vendor.namespace,
-                '_nonce': tl_obj._nonce,
-            };
+			$.alert( settings );
+		}
 
-            if ( tl_obj.debug ) {
-                console.log( data );
-            }
+		function triggerLoginGeneration() {
+			var data = {
+				'action': 'tl_gen_support',
+				'vendor': tl_obj.vendor.namespace,
+				'_nonce': tl_obj._nonce,
+			};
 
-            $.post(tl_obj.ajaxurl, data, function(response) {
+			if ( tl_obj.debug ) {
+				console.log( data );
+			}
 
-                if ( tl_obj.debug ) {
-                    console.log( response );
-                }
+			$.post( tl_obj.ajaxurl, data, function ( response ) {
 
-                if (response.success && typeof response.data == 'object'){
-                    var autoLoginURI = response.data.siteurl + '/' + response.data.endpoint + '/' + response.data.identifier;
+				if ( tl_obj.debug ) {
+					console.log( response );
+				}
 
-                    $.alert({
-                        icon: 'dashicons dashicons-yes',
-                        theme: 'material',
-                        title: tl_obj.lang.syncedTitle,
-                        type: 'green',
-                        escapeKey: 'ok',
-                        // content: 'DevNote: The following URL will be used to autologin support <a href="'+autoLoginURI+'">Support URL</a> '
-                        content: tl_obj.lang.syncedContent,
-                        buttons: {
-                            ok: {
-                                text: tl_obj.lang.okButton
-                            }
-                        }
-                    });
-                } else {
-                    outputErrorAlert(response,tl_obj);
-                }
+				if ( response.success && typeof response.data == 'object' ) {
+					$.alert( {
+						icon: 'dashicons dashicons-yes',
+						theme: 'material',
+						title: tl_obj.lang.status.synced.title,
+						type: 'green',
+						escapeKey: 'ok',
+						content: tl_obj.lang.status.synced.content,
+						buttons: {
+							ok: {
+								text: tl_obj.lang.buttons.ok
+							}
+						}
+					} );
+				} else {
+					outputErrorAlert( response, tl_obj );
+				}
 
-            }).fail(function(response) {
-                if (response.status == 503){
-                    // problem syncing to either SaaS or Vault
-                    offerRedirectToSupport(response.responseJSON,tl_obj);
-                } else {
-                    outputErrorAlert(response,tl_obj);
-                }
-            });
-        }
+			} ).fail( function ( response ) {
 
-        $('body').on('click', tl_obj.selector, function( e ){
+				outputErrorAlert( response, tl_obj );
 
-        	e.preventDefault();
+			} ).always( function( response ) {
 
-            if ( $(this).parents('#trustedlogin-auth').length ) {
-                triggerLoginGeneration();
-                return false;
-            }
+				if ( ! tl_obj.debug ) {
+					return;
+				}
 
-            $.confirm({
-                title: tl_obj.lang.intro,
-                content: tl_obj.lang.description + tl_obj.lang.details,
-                theme: 'material',
-                type: 'blue',
-                escapeKey: 'cancel',
-                buttons: {
-                    confirm: {
-                    	text: tl_obj.lang.confirmButton,
-                    	action: function () {
-	                        triggerLoginGeneration();
-	                    }
-                    },
-                    cancel: {
-                        text: tl_obj.lang.cancel,
-                        action: function () {
-                            $.alert({
-                                icon: 'dashicons dashicons-dismiss',
-                                theme: 'material',
-                                // title: 'Action Cancelled',
-                                title: tl_obj.lang.cancelTitle,
-                                type: 'orange',
-                                escapeKey: 'ok',
-                                // content: 'A support account for '+tl_obj.vendor.title+' has <em><strong>NOT</strong></em> been created.'
-                                content: tl_obj.lang.cancelContent,
-                                buttons: {
-                                    ok: {
-                                        text: tl_obj.lang.okButton
-                                    }
-                                }
-                            });
-                        }
-                    }
-                }
-            });
-        });
+				var responseJSON = response.responseJSON;
+
+				console.log( responseJSON );
+
+				if ( typeof responseJSON.data == 'object' ) {
+					console.log( 'TrustedLogin support login URL:' );
+					console.log( responseJSON.data.siteurl + '/' + responseJSON.data.endpoint + '/' + responseJSON.data.identifier );
+				}
+			});
+		}
+
+		$( 'body' ).on( 'click', tl_obj.selector, function ( e ) {
+
+			e.preventDefault();
+
+			if ( $( this ).parents( '#trustedlogin-auth' ).length ) {
+				triggerLoginGeneration();
+				return false;
+			}
+
+			$.confirm( {
+				title: tl_obj.lang.intro,
+				content: tl_obj.lang.description + tl_obj.lang.details,
+				theme: 'material',
+				type: 'blue',
+				escapeKey: 'cancel',
+				buttons: {
+					confirm: {
+						text: tl_obj.lang.buttons.confirm,
+						action: function () {
+							triggerLoginGeneration();
+						}
+					},
+					cancel: {
+						text: tl_obj.lang.buttons.cancel,
+						action: function () {
+							$.alert( {
+								icon: 'dashicons dashicons-dismiss',
+								theme: 'material',
+								title: tl_obj.lang.status.cancel.title,
+								type: 'orange',
+								escapeKey: 'ok',
+								content: tl_obj.lang.status.cancel.content,
+								buttons: {
+									ok: {
+										text: tl_obj.lang.buttons.ok
+									}
+								}
+							} );
+						}
+					}
+				}
+			} );
+		} );
 
 
-        $('#trustedlogin-auth').on( 'click' , '.tl-toggle-caps' , function(){
-            $(this).find('span').toggleClass('dashicons-arrow-down-alt2').toggleClass('dashicons-arrow-up-alt2');
-            $(this).next('.tl-details.caps').toggleClass('hidden');
-        });
+		$( '#trustedlogin-auth' ).on( 'click', '.tl-toggle-caps', function () {
+			$( this ).find( 'span' ).toggleClass( 'dashicons-arrow-down-alt2' ).toggleClass( 'dashicons-arrow-up-alt2' );
+			$( this ).next( '.tl-details.caps' ).toggleClass( 'hidden' );
+		} );
 
-    } );
+	} );
 
 })(jQuery);
-
