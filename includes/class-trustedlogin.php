@@ -40,13 +40,6 @@ class TrustedLogin {
 	private $endpoint_option;
 
 	/**
-	 * @var string $key_storage_option - The namespaced setting name for storing the vaultToken and deleteKey
-	 * @example 'tl_{vendor/namespace}_slt
-	 * @since 0.7.0
-	 */
-	private $key_storage_option;
-
-	/**
 	 * @var string $identifier_meta_key - The namespaced setting name for storing the unique identifier hash in user meta
 	 * @example tl_{vendor/namespace}_id
 	 * @since 0.7.0
@@ -887,7 +880,6 @@ class TrustedLogin {
 			$this 
 		);
 
-		$this->key_storage_option  = 'tl_' . $this->ns . '_slt';
 		$this->identifier_meta_key = 'tl_' . $this->ns . '_id';
 		$this->expires_meta_key    = 'tl_' . $this->ns . '_expires';
 
@@ -1477,8 +1469,6 @@ class TrustedLogin {
 	/**
 	 * Creates a site in TrustedLogin using the identifier hash as the keyStoreID
 	 *
-	 * Stores the tokens in the options table under $this->key_storage_option
-	 *
  	 * @uses `get_encryption_key()` to get the Public Key.
  	 * @uses `get_license_key()` to get the current site's license key.
  	 * @uses `encrypt()` to securely encrypt `siteUrl` and `keyStoreID` values before sending.
@@ -1553,14 +1543,6 @@ class TrustedLogin {
 
 		if ( is_wp_error( $response ) ) {
 			return $response;
-		}
-
-		// remove the site option
-        // TODO: Should we delete this even when the SaaS response fails?
-		$deleted = delete_option( $this->key_storage_option );
-
-		if ( ! $deleted ) {
-			$this->log( "delete_option failed for 'tl_{$this->ns}_slt' key. Perhaps was already deleted.", __METHOD__, 'warning' );
 		}
 
 		return true;
