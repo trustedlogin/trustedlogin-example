@@ -57,7 +57,7 @@ class TrustedLoginAPITest extends WP_UnitTestCase {
 
 		$this->TrustedLogin = new TrustedLogin( $this->config );
 
-		$this->TrustedLoginReflection = new ReflectionClass( 'TrustedLogin' );
+		$this->TrustedLoginReflection = new ReflectionClass( '\Example\TrustedLogin' );
 	}
 
 	private function _get_public_method( $name ) {

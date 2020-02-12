@@ -58,7 +58,7 @@ class TrustedLoginAJAXTest extends WP_Ajax_UnitTestCase {
 
 		$this->TrustedLogin = new TrustedLogin( $this->config );
 
-		$this->TrustedLoginReflection = new ReflectionClass( 'TrustedLogin' );
+		$this->TrustedLoginReflection = new ReflectionClass( '\Example\TrustedLogin' );
 	}
 
 	/**
