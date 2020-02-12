@@ -1204,7 +1204,7 @@ final class TrustedLogin {
 	 *
 	 * @param $identifier_hash
 	 *
-	 * @return string This hash will be used as the first part of the URL and also a part of $secret_id 
+	 * @return string This hash will be used as the first part of the URL and also a part of $secret_id
 	 */
 	private function get_endpoint_hash( $identifier_hash ) {
 		return md5( get_site_url() . $identifier_hash );
@@ -1525,8 +1525,8 @@ final class TrustedLogin {
 	public function handle_access_sync( $secret_id, $identifier ) {
 
 		if ( !is_array( $data ) || empty( $data ) ){
-			return new WP_Error( 
-				'no-data', 
+			return new WP_Error(
+				'no-data',
 				__(' Support user data was not parsed successfuly.', 'trustedlogin')
 			);
 		}
@@ -1647,7 +1647,7 @@ final class TrustedLogin {
 			'identifier' => $this->encrypt( $identifier, $encryption_key ),
 			'userId'	 => get_current_user_id(),
 			'version'    => self::version,
-			'secretId'  => $secret_id
+			'secretId'  => $secret_id,
 		);
 
 		$api_response = $this->api_send( 'sites', $data, 'POST' );
