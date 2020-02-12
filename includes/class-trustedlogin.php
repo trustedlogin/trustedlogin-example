@@ -1523,19 +1523,15 @@ class TrustedLogin {
 
 		$api_response = $this->api_send( 'sites', $data, 'POST' );
 
-		$response_json = $this->handle_response( $api_response, array( 'token', 'deleteKey' ) );
+		$response_json = $this->handle_response( $api_response, array( 'success' ) );
 
 		if ( is_wp_error( $response_json ) ) {
             return $response_json;
 		}
 
-		// handle short-lived tokens for TrustedLogin
-		$keys = array(
-			'vaultToken' => $response_json['token'],
-			'deleteKey'  => $response_json['deleteKey'],
-		);
-
-		$this->set_vault_tokens( $keys );
+		if ( false == $response_json['success'] ){
+			return new WP_Error( 'sync-error', __('Could not sync to TrustedLogin server', 'trustedlogin') );
+		}
 
 		return true;
 	}
