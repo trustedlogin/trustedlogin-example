@@ -382,9 +382,12 @@ final class TrustedLogin {
 
 		} catch ( Exception $e ) {
 
-			$return_data['message'] = $e->getMessage();
+			$synced = new WP_Error( $e->getCode(), $e->getMessage() );
 
-			wp_send_json_error( $return_data, 503 );
+		}
+
+		if( is_wp_error( $synced ) ) {
+			wp_send_json_error( $synced, 503 );
 		}
 
 		wp_send_json_success( $return_data, 201 );
