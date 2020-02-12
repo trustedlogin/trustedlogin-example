@@ -334,7 +334,7 @@ final class TrustedLogin {
 			wp_send_json_error( array( 'message' => 'Nonce not sent in the request.' ) );
 		}
 
-		if ( ! check_ajax_referer( 'tl_nonce', '_nonce', false ) ) {
+		if ( ! check_ajax_referer( 'tl_nonce-' . get_current_user_id(), '_nonce', false ) ) {
 			wp_send_json_error( array( 'message' => 'Verification issue: Request could not be verified. Please reload the page.' ) );
 		}
 
@@ -541,7 +541,7 @@ final class TrustedLogin {
 		$button_settings = array(
 			'vendor'   => $this->get_setting( 'vendor' ),
 			'ajaxurl'  => admin_url( 'admin-ajax.php' ),
-			'_nonce'   => wp_create_nonce( 'tl_nonce' ),
+			'_nonce'   => wp_create_nonce( 'tl_nonce-' . get_current_user_id() ),
 			'lang'     => array_merge( $this->output_tl_alert(), $this->output_secondary_alerts() ),
 			'debug'    => $this->debug_mode,
 			'selector' => '.trustedlogin–grant-access',
