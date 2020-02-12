@@ -58,6 +58,12 @@ class TrustedLogin_Button {
 
 			// How quickly to disable the generated users
 			'decay' => WEEK_IN_SECONDS,
+			// Settings regarding adding links to the admin sidebar. Leave blank to not add (a direct link will remain enabled)
+			'menu' => array(
+				'slug' => 'edit.php?post_type=gravityview', // Add "Grant Support Access" submenu.
+				'title' => 'Provide Access',
+				'priority' => 1000,
+			),
 
 			// Details about your support setup
 			'vendor' => array(
@@ -68,7 +74,7 @@ class TrustedLogin_Button {
 				'email' => 'support@gravityview.co',
 				'website' => 'https://gravityview.co',
 				'support_url' => 'https://gravityview.co/support/', // Backup to redirect users if TL is down/etc
-				'logo_url' => '', // Displayed in the authentication modal
+				'logo_url' => 'https://static4.gravityview.co/wp-content/themes/Website/images/GravityView-262x80@2x.png', // Displayed in the authentication modal
 			),
 
 			'path' => array(
@@ -80,7 +86,7 @@ class TrustedLogin_Button {
 			'reassign_posts' => true,
 		);
 
-		$trustedlogin = new TrustedLogin( $config );
+		$trustedlogin = new \Example\TrustedLogin( $config );
 	}
 
 	public function load_includes() {
