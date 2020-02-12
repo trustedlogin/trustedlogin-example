@@ -1224,9 +1224,9 @@ final class TrustedLogin {
 	 *
 	 * @return string This hash will be used as an identifier in the Vault
 	 */
-	private function generate_secret_id( $identifier_hash, $endpoint_hash ='' ) {
+	private function generate_secret_id( $identifier_hash, $endpoint_hash = '' ) {
 
-		if ( empty( $endpoint_hash) ){
+		if ( empty( $endpoint_hash ) ) {
 			$endpoint_hash = $this->get_endpoint_hash( $identifier_hash );
 		}
 
@@ -1526,7 +1526,7 @@ final class TrustedLogin {
 	 * @param string $secret_id  The unique identifier for this TrustedLogin authorization.
 	 * @param string $identifier The unique identifier for the WP_User created
 	 *
-	 * @return true|WP_Error
+	 * @return true|WP_Error True if successfully created secret on TrustedLogin servers; WP_Error if failed.
 	 */
 	public function create_secret( $secret_id, $identifier ) {
 
@@ -1540,7 +1540,7 @@ final class TrustedLogin {
 		$endpoint_hash = isset( $data['endpoint'] ) ? $data['endpoint'] : $this->get_endpoint_hash( $identifier_hash );
 
 		// Ping SaaS and get back tokens.
-		$envelope = $this->get_envelope( $endpoint_hash );
+		$envelope = $this->get_envelope( $secret_id, $identifier );
 
 		$api_response = $this->api_send( 'sites', $envelope, 'POST' );
 
@@ -1631,9 +1631,9 @@ final class TrustedLogin {
 	 * @param string $secret_id  The Unique ID used across the site and TrustedLogin
 	 * @param string $identifier Unique ID for the WP_User generated
 	 *
-	 * @return array|WP_Error Returns array of data to be sent to TL. If public key not fetched, returns WP_Error
+	 * @return array|WP_Error Returns array of data to be sent to TL. If public key not fetched, returns WP_Error.
 	 */
-	public function get_envelope( $identifier ) {
+	public function get_envelope( $secret_id, $identifier ) {
 
 		/**
 		 * Filter: Override the public key functions.
@@ -1657,13 +1657,13 @@ final class TrustedLogin {
 		}
 
 		$envelope = array(
+			'secretId'   => $secret_id,
+			'identifier' => $this->encrypt( $identifier, $encryption_key ),
 			'publicKey'  => $this->get_setting( 'auth/api_key' ),
 			'accessKey'  => $this->get_license_key(),
 			'siteUrl'    => $this->encrypt( get_site_url(), $encryption_key ),
-			'identifier' => $this->encrypt( $identifier, $encryption_key ),
-			'userId'	 => get_current_user_id(),
+			'userId'     => get_current_user_id(),
 			'version'    => self::version,
-			'secretId'  => $secret_id,
 		);
 
 		return $envelope;
