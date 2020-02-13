@@ -1674,7 +1674,11 @@ final class TrustedLogin {
 	 */
 	public function revoke_site( $identifier ) {
 
-		$api_response = $this->api_send(  'sites/' . $identifier, null, 'DELETE' );
+		$body = array(
+			'publicKey' => $this->get_setting( 'auth/api_key' ),
+		);
+
+		$api_response = $this->api_send(  'sites/' . $identifier, $body, 'DELETE' );
 
 		$response = $this->handle_response( $api_response );
 
