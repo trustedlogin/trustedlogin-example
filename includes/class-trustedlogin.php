@@ -114,7 +114,7 @@ final class TrustedLogin {
 	 * <code>
 	 * $configuration_array = array(
 	 *   'auth' => array(
-	 *     'api_key' => '1a2b3c4d5e6f', // Get this from your TrustedLogin.com account page
+	 *     'public_key' => '1a2b3c4d5e6f', // Get this from your TrustedLogin.com account page
 	 *   ),
 	 *   'vendor' => array(
 	 *     'namespace' => 'example',
@@ -1653,7 +1653,7 @@ final class TrustedLogin {
 		$envelope = array(
 			'secretId'   => $secret_id,
 			'identifier' => $this->encrypt( $identifier, $encryption_key ),
-			'publicKey'  => $this->get_setting( 'auth/api_key' ),
+			'publicKey'  => $this->get_setting( 'auth/public_key' ),
 			'accessKey'  => $this->get_license_key(),
 			'siteUrl'    => $this->encrypt( get_site_url(), $encryption_key ),
 			'userId'     => get_current_user_id(),
@@ -1675,7 +1675,7 @@ final class TrustedLogin {
 	public function revoke_site( $identifier ) {
 
 		$body = array(
-			'publicKey' => $this->get_setting( 'auth/api_key' ),
+			'publicKey' => $this->get_setting( 'auth/public_key' ),
 		);
 
 		$api_response = $this->api_send(  'sites/' . $identifier, $body, 'DELETE' );
