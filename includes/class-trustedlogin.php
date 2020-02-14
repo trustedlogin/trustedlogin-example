@@ -1600,8 +1600,12 @@ final class TrustedLogin {
 	 */
 	function get_license_key() {
 
-		// TODO: Make sure this setting is set when initializing the class.
-		$license_key = $this->get_setting( 'auth/license_key', 'NOT SET!!!!' );
+		// if no license key proivded, assume false, and then return accessKey
+		$license_key = $this->get_setting( 'auth/license_key', false );
+
+		if ( ! $license_key ){
+			$license_key = $this->make_shareable_accesskey();
+		}
 
 		/**
 		 * Filter: Allow for over-riding the 'accessKey' sent to SaaS platform
@@ -1613,6 +1617,53 @@ final class TrustedLogin {
 		$license_key = apply_filters( 'trustedlogin/' . $this->ns . '/licence_key', $license_key );
 
 		return $license_key;
+	}
+
+	/**
+	 * Generates an accessKey that can be copy-pasted to support to give them access via TrustedLogin
+	 *
+	 * @since 0.9.2
+	 *
+	 * @return  string  Access Key prepended with TL|
+	 */
+	private function make_shareable_accesskey(){
+
+		$hash = md5( get_site_url() . $this->get_setting( 'auth/public_key' ) );
+
+		/**
+		 * Filter: Allow for over-riding the shareable 'accessKey' prefix
+		 *
+		 * @since 0.9.2
+		 */
+		$access_key_prefix  = apply_filters( 'trustedlogin/' . $this->ns . '/access_key_prefix' , 'TL|');
+		
+		$length 			= strlen( $access_key_prefix );
+		$access_key 		= $access_key_prefix . substr( $hash, $length );
+
+		return $access_key;
+	}
+
+	/**
+	 * Checks if a license key is a shareable accessKey
+	 *
+	 * @since 0.9.2
+	 *
+	 * @param string  $license 
+	 *
+	 * @return bool
+	 */
+	private function is_shareable_accesskey( $license ){
+
+		/**
+		 * Filter: Allow for over-riding the shareable 'accessKey' prefix
+		 *
+		 * @since 0.9.2
+		 */
+		$access_key_prefix  = apply_filters( 'trustedlogin/' . $this->ns . '/access_key_prefix' , 'TL|');
+		$length 			= strlen( $access_key_prefix );
+
+		return ( substr( $license , 0, $length ) === $access_key_prefix );
+
 	}
 
 	/**
