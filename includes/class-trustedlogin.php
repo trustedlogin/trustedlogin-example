@@ -1439,7 +1439,6 @@ final class TrustedLogin {
 
 		$actions = array(
 			'revoke' => "<a class='trustedlogin tl-revoke submitdelete' href='" . esc_url( $revoke_url ) . "'>" . esc_html__( 'Revoke Access', 'trustedlogin' ) . "</a>",
-			'test' => "#".$this->get_accesskey(),
 		);
 
 		return $actions;
