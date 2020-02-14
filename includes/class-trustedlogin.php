@@ -615,7 +615,7 @@ final class TrustedLogin {
 					$atts['size'] = 'hero';
 				}
 
-				$css_class = 'button button-' . $atts['size'];
+				$css_class = 'trustedlogin–grant-access button button-' . $atts['size'];
 		}
 
 		$tags = array( 'a', 'button', 'span' );
@@ -630,12 +630,10 @@ final class TrustedLogin {
 
 		if ( $this->get_support_users() ) {
 			$text        			= esc_html( $atts['exists_text'] );
-			$css_class   			.= ' trustedlogin-show-accesskey';
 			$href 	     			= admin_url( 'users.php?role=' . $this->support_role );
 			$data_atts['accesskey'] = $this->get_accesskey(); // Add the shareable accesskey as a data attribute
 		} else {
 			$text      = esc_html( $atts['text'] );
-			$css_class .= ' trustedlogin–grant-access'; // Tell JS to grant access on click
 			$href      = $atts['support_url'];
 		}
 
