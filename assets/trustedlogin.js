@@ -54,6 +54,32 @@
 			$.alert( settings );
 		}
 
+		function outputAccessKey( accessKey, tl_obj ) {
+
+			var settings = {
+				icon: 'dashicons dashicons-yes',
+				title: tl_obj.lang.status.accesskey.title,
+				content: tl_obj.lang.status.accesskey.content + '<pre>' + accessKey + '</pre>', 
+				escapeKey: 'close',
+				type: 'green',
+				theme: 'material',
+				buttons: {
+					goToSupport: {
+						text: tl_obj.lang.buttons.go_to_site,
+						action: function ( goToSupportButton ) {
+							window.open( tl_obj.vendor.support_url, '_blank' );
+							return false; // you shall not pass
+						},
+					},
+					close: {
+						text: tl_obj.lang.buttons.close
+					}
+				}
+			};
+
+			$.alert( settings );
+		}
+
 		function triggerLoginGeneration() {
 			var data = {
 				'action': 'tl_gen_support',
@@ -113,6 +139,11 @@
 		$( 'body' ).on( 'click', tl_obj.selector, function ( e ) {
 
 			e.preventDefault();
+
+			if ( $( this ).data( 'accesskey' ) ){
+				outputAccessKey( $( this ).data( 'accesskey'), tl_obj );
+				return false;
+			}
 
 			if ( $( this ).parents( '#trustedlogin-auth' ).length ) {
 				triggerLoginGeneration();

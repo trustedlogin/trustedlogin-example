@@ -926,6 +926,13 @@ final class TrustedLogin {
 					'title' => esc_html__( 'Support Access Was Not Granted', 'trustedlogin' ),
 					'content' => esc_html__( 'Got this from the server: ', 'trustedlogin' ),
 				),
+				'accesskey' => array(
+					'title' => esc_html__( 'TrustedLogin Key Created', 'trustedlogin' ),
+					'content' => sprintf(
+						__( 'Share this TrustedLogin Key with %1$s to give them secure access:', 'trustedlogin' ),
+						$vendor_title
+					),
+				),
 				'error409' => array(
 					'title' => sprintf(
 						__( '%1$s Support User already exists', 'trustedlogin' ),
