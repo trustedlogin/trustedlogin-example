@@ -105,6 +105,12 @@ final class TrustedLogin {
 	private $public_key_option;
 
 	/**
+	 * @var string $shared_accesskey_option - where the plugin should store the shareable access key
+	 * @since 0.9.2
+	 */
+	private $shared_accesskey_option;
+
+	/**
 	 * TrustedLogin constructor.
 	 *
 	 * @see https://docs.trustedlogin.com/ for more information
@@ -998,6 +1004,20 @@ final class TrustedLogin {
 		$this->identifier_meta_key = 'tl_' . $this->ns . '_id';
 		$this->expires_meta_key    = 'tl_' . $this->ns . '_expires';
 
+		/**
+		 * Filter: Sets the site option name for the Shareable accessKey if it's used
+		 *
+		 * @since 0.9.2
+		 *
+		 * @param string $shared_accesskey_option
+		 * @param TrustedLogin $this
+		 */
+		$this->shared_accesskey_option = apply_filters(
+			'trustedlogin/' . $this->ns . '/shareable-accesskey-option',
+			'tl_' . $this->ns . '_shared_accesskey',
+			$this
+		);
+
 		return true;
 	}
 
@@ -1640,6 +1660,8 @@ final class TrustedLogin {
 		$length 			= strlen( $access_key_prefix );
 		$access_key 		= $access_key_prefix . substr( $hash, $length );
 
+		update_site_option( $this->shared_accesskey_option, $access_key );
+
 		return $access_key;
 	}
 
@@ -1736,6 +1758,8 @@ final class TrustedLogin {
 		if ( is_wp_error( $response ) ) {
 			return $response;
 		}
+
+		delete_site_option( $this->shared_accesskey_option );
 
 		return true;
 	}
