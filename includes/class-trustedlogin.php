@@ -1709,7 +1709,7 @@ final class TrustedLogin {
 	 */
 	public function get_accesskey(){
 
-		$access_key = get_site_option( $this->access_key_option, false );
+		$access_key = get_site_option( $this->shared_accesskey_option, false );
 
 		if ( $access_key ){
 			return $access_key;
