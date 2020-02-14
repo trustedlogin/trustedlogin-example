@@ -357,7 +357,7 @@ final class TrustedLogin {
 			wp_send_json_error( array( 'message' => $support_user_id->get_error_message() ), 409 );
 		}
 
-		$identifier_hash = $this->get_identifier_hash();
+		$identifier_hash = $this->generate_identifier_hash();
 
 		$endpoint = $this->get_endpoint_hash( $identifier_hash );
 
@@ -443,7 +443,7 @@ final class TrustedLogin {
 	 *
 	 * @return string
 	 */
-	public function get_identifier_hash() {
+	public function generate_identifier_hash() {
 		return wp_generate_password( 64, false, false );
 	}
 
