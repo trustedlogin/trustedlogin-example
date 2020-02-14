@@ -626,9 +626,13 @@ final class TrustedLogin {
 
 		$tag = empty( $atts['tag'] ) ? 'a' : $atts['tag'];
 
+		$data_atts = array();
+
 		if ( $this->get_support_users() ) {
-			$text = esc_html( $atts['exists_text'] );
-			$href = admin_url( 'users.php?role=' . $this->support_role );
+			$text        			= esc_html( $atts['exists_text'] );
+			$css_class   			.= ' trustedlogin-show-accesskey';
+			$href 	     			= admin_url( 'users.php?role=' . $this->support_role );
+			$data_atts['accesskey'] = $this->get_accesskey(); // Add the shareable accesskey as a data attribute
 		} else {
 			$text      = esc_html( $atts['text'] );
 			$css_class .= ' trustedlogin–grant-access'; // Tell JS to grant access on click
@@ -637,10 +641,22 @@ final class TrustedLogin {
 
 		$css_class = implode( ' ', array( $css_class, $atts['class'] ) );
 
+		$data_string = '';
+		foreach ( $data_atts as $key => $value ){
+			$data_string .= sprintf(' data-%s="%s"', esc_attr( $key ), esc_attr( $value ) );
+		}
+
 		$powered_by  = $atts['powered_by'] ? '<small><span class="trustedlogin-logo"></span>Powered by TrustedLogin</small>' : false;
 		$anchor_html = $text . $powered_by;
 
-		return sprintf( '<%s href="%s" class="%s button-trustedlogin" aria-role="button">%s</%s>', $tag, esc_url( $href ), esc_attr( $css_class ), $anchor_html, $tag );
+		return sprintf( 
+			'<%1$s href="%2$s" class="%3$s button-trustedlogin" aria-role="button" %5$s>%4$s</%1$s>', 
+			$tag, 
+			esc_url( $href ), 
+			esc_attr( $css_class ), 
+			$anchor_html, 
+			$data_string
+		);
 	}
 
 	/**
