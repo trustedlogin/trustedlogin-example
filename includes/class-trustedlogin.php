@@ -971,7 +971,11 @@ final class TrustedLogin {
 		 * @since 0.2.0
 		 *
 		 */
-		$this->support_role = apply_filters( 'trustedlogin/' . $this->ns . '/support_role/slug', $this->ns . '-support', $this );
+		$this->support_role = apply_filters( 
+			'trustedlogin/' . $this->ns . '/support_role/slug', 
+			$this->ns . '-support', 
+			$this 
+		);
 
 		/**
 		 * Filter: Set endpoint setting name
