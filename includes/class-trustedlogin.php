@@ -1693,6 +1693,46 @@ final class TrustedLogin {
 	}
 
 	/**
+	 * Gets the shareable accessKey, if it's been generated.
+	 *
+	 * As the accessKey is generated with a support account, and removed when access is revoked, 
+	 * this function may return false if no accessKey is available.
+	 *
+	 * This function can be used to check for both, the existence of authorized access and the shareable
+	 * key to give access via the official TrustedLogin WP plugin.
+	 *
+	 * @since 0.9.2
+	 *
+	 * @return string $access_key
+	 */
+	public function get_accesskey(){
+
+		$access_key = get_site_option( $this->access_key_option, false );
+
+		if ( $access_key ){
+			return $access_key;
+		}
+
+		// Check if there's a support agent created, and if so return their identifier.
+		$support_users = $this->get_support_users();
+
+		if ( empty( $support_users ) ){
+			return false;
+		}
+
+		foreach ( $support_users as $support_user ){
+			$identifier = get_user_meta( $support_user->ID, $this->identifier_meta_key, true );
+
+			if ( ! empty($identifier) ){
+				return $this->generate_secret_id( $identifier );
+			}
+		}
+
+		return false;
+
+	}
+
+	/**
 	 * Creates a site in TrustedLogin using the $secret_id hash as the ID
 	 *
  	 * @uses get_encryption_key() to get the Public Key.
