@@ -1604,7 +1604,7 @@ final class TrustedLogin {
 		$license_key = $this->get_setting( 'auth/license_key', false );
 
 		if ( ! $license_key ){
-			$license_key = $this->make_shareable_accesskey();
+			$license_key = $this->get_shareable_accesskey();
 		}
 
 		/**
@@ -1626,7 +1626,7 @@ final class TrustedLogin {
 	 *
 	 * @return  string  Access Key prepended with TL|
 	 */
-	private function make_shareable_accesskey(){
+	private function get_shareable_accesskey(){
 
 		$hash = md5( get_site_url() . $this->get_setting( 'auth/public_key' ) );
 
