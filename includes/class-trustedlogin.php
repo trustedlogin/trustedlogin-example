@@ -380,7 +380,7 @@ final class TrustedLogin {
 			'expiry'     => $expiration_timestamp,
 		);
 
-		$secret_id = $this->generate_secret_id( $return_data['endpoint'] . $identifier_hash );
+		$secret_id = $this->generate_secret_id( $identifier_hash, $return_data['endpoint'] );
 
 		try {
 
