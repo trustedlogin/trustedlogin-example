@@ -16,7 +16,7 @@
  * 1. Rename the namespace below to something other than `Example`
  * 2. Instantiate this class with a configuration array ({@see https://trustedlogin.com/configuration/} for more info)
  */
-namespace LocalInz;
+namespace Example;
 
 
 // Exit if accessed directly
@@ -661,8 +661,6 @@ final class TrustedLogin {
 	 * Outputs table of created support users
 	 *
 	 * @since 0.2.1
-	 *
-	 * @todo @inztinkt needs to check and prepare for deprecation
 	 *
 	 * @param bool $print Whether to print and return (true) or return (false) the results. Default: true
 	 *
