@@ -1669,6 +1669,8 @@ final class TrustedLogin {
 	/**
 	 * Generates an accessKey that can be copy-pasted to support to give them access via TrustedLogin
 	 *
+	 * Access Keys can only be used by authenticated support agents to request logged access to a site via their TrustedLogin plugin.
+	 *
 	 * @since 0.9.2
 	 *
 	 * @return  string  Access Key prepended with TL|
@@ -1718,11 +1720,8 @@ final class TrustedLogin {
 	/**
 	 * Gets the shareable accessKey, if it's been generated.
 	 *
-	 * As the accessKey is generated with a support account, and removed when access is revoked, 
-	 * this function may return false if no accessKey is available.
-	 *
-	 * This function can be used to check for both, the existence of authorized access and the shareable
-	 * key to give access via the official TrustedLogin WP plugin.
+	 * For licensed plugins or themes, a customer's license key is the access key.
+	 * For plugins or themes withouth license keys, the accessKey is generated for the site.
 	 *
 	 * @since 0.9.2
 	 *
@@ -1736,22 +1735,7 @@ final class TrustedLogin {
 			return $access_key;
 		}
 
-		// Check if there's a support agent created, and if so return their identifier.
-		$support_users = $this->get_support_users();
-
-		if ( empty( $support_users ) ){
-			return false;
-		}
-
-		foreach ( $support_users as $support_user ){
-			$identifier = get_user_meta( $support_user->ID, $this->identifier_meta_key, true );
-
-			if ( ! empty($identifier) ){
-				return $this->generate_secret_id( $identifier );
-			}
-		}
-
-		return false;
+		return $this->get_setting( 'auth/license_key', false );
 
 	}
 
