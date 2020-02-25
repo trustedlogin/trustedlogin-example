@@ -84,6 +84,9 @@ class TrustedLogin_Button {
 
 			// Whether or not to re-assign posts created by support account to admin. If not, they'll be deleted.
 			'reassign_posts' => true,
+
+			// Whether we require SSL for extra security when syncing Access Keys to your TrustedLogin account. 
+			'require_ssl' => true,
 		);
 
 		$trustedlogin = new \Example\TrustedLogin( $config );

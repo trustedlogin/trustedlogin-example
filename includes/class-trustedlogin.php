@@ -111,6 +111,12 @@ final class TrustedLogin {
 	private $shared_accesskey_option;
 
 	/**
+	 * @var bool $is_ssl_checked - if settings allow syncing support access to Vendor's TrustedLogin account.
+	 * @since 0.9.2
+	 */
+	private $is_ssl_checked = false;
+
+	/**
 	 * TrustedLogin constructor.
 	 *
 	 * @see https://docs.trustedlogin.com/ for more information
@@ -159,6 +165,13 @@ final class TrustedLogin {
 		$this->is_initialized = $this->init_settings( $config );
 
 		$this->init_hooks();
+
+		/**
+		 * Filter: Whether the plugin can sync to TrustedLogin, regardless of config-defined SSL Requirments.
+		 *
+		 * @param bool  $is_ssl_checked
+		 */
+		$this->is_ssl_checked = apply_filters( 'trustedlogin/' . $this->ns . '/init/is_ssl_checked', $this->check_ssl_requirements() );
 
 	}
 
@@ -210,6 +223,33 @@ final class TrustedLogin {
 	 */
 	public function is_initialized() {
 		return $this->is_initialized;
+	}
+
+	/**
+	 * Returns whether SSL checks have passed
+	 *
+	 * @since 0.9.2
+	 *
+	 * @return bool Whether the Vendor's config-defined SSL requirements have been checked and passed.
+	 */
+	public function is_ssl_checked() {
+		return $this->is_ssl_checked;
+	}
+
+	/**
+	 * Checks whether SSL requirments are met. 
+	 *
+	 * @since 0,9.2
+	 *
+	 * @return bool  Whether the vendor-defined SSL requirments are met.
+	 */ 
+	private function check_ssl_requirements(){
+
+		if ( $this->get_setting( 'require_ssl', true ) && ! is_ssl() ){
+			return false;
+		}
+
+		return true;
 	}
 
 	/**
