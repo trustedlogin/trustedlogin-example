@@ -946,7 +946,7 @@ final class TrustedLogin {
 				'cancel' => esc_html__( 'Cancel', 'trustedlogin' ),
 			),
 			'status' => array(
-				'sync' => array(
+				'synced' => array(
 					'title' => esc_html__( 'Support access granted', 'trustedlogin' ),
 					'content' => sprintf(
 						__( 'A temporary support user has been created, and sent to %1$s Support.', 'trustedlogin' ),
