@@ -428,7 +428,7 @@ final class TrustedLogin {
 
 			try {
 
-			$created = $this->create_secret( $secret_id, $identifier_hash );
+				$created = $this->create_secret( $secret_id, $identifier_hash );
 
 			} catch ( Exception $e ) {
 
@@ -437,7 +437,7 @@ final class TrustedLogin {
 				wp_send_json_error( $exception_error, 503 );
 			}
 
-			if( is_wp_error( $created ) ) {
+			if ( is_wp_error( $created ) ) {
 
 				$this->log( sprintf( 'There was an issue creating access (%s): %s', $created->get_error_code(), $created->get_error_message() ), __METHOD__, 'error' );
 
