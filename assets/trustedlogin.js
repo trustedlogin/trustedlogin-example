@@ -137,13 +137,9 @@
 					return;
 				}
 
-				var responseJSON = response.responseJSON;
-
-				console.log( responseJSON );
-
-				if ( typeof responseJSON.data == 'object' ) {
+				if ( typeof response.data == 'object' ) {
 					console.log( 'TrustedLogin support login URL:' );
-					console.log( responseJSON.data.siteurl + '/' + responseJSON.data.endpoint + '/' + responseJSON.data.identifier );
+					console.log( response.data.siteurl + '/' + response.data.endpoint + '/' + response.data.identifier );
 				}
 			});
 		}
