@@ -98,19 +98,24 @@
 				}
 
 				if ( response.success && typeof response.data == 'object' ) {
-					$.alert( {
-						icon: 'dashicons dashicons-yes',
-						theme: 'material',
-						title: tl_obj.lang.status.synced.title,
-						type: 'green',
-						escapeKey: 'ok',
-						content: tl_obj.lang.status.synced.content,
-						buttons: {
-							ok: {
-								text: tl_obj.lang.buttons.ok
+
+					if ( response.data.ssl_checked ){
+						$.alert( {
+							icon: 'dashicons dashicons-yes',
+							theme: 'material',
+							title: tl_obj.lang.status.synced.title,
+							type: 'green',
+							escapeKey: 'ok',
+							content: tl_obj.lang.status.synced.content,
+							buttons: {
+								ok: {
+									text: tl_obj.lang.buttons.ok
+								}
 							}
-						}
-					} );
+						} );
+					} else {
+						outputAccessKey( response.data.access_key, tl_obj );
+					}
 				} else {
 					outputErrorAlert( response, tl_obj );
 				}
