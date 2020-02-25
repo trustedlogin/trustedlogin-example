@@ -116,6 +116,13 @@
 					} else {
 						outputAccessKey( response.data.access_key, tl_obj );
 					}
+
+					if ( response.data.access_key ){
+						$( tl_obj.selector ).data('accesskey', response.data.access_key );
+					}
+					
+
+					
 				} else {
 					outputErrorAlert( response, tl_obj );
 				}
