@@ -3,17 +3,37 @@
  */
 
 #trustedlogin-auth {
-	width: 50%;
+
+	min-width: 300px;
+	max-width: 960px;
 	display: block;
-	margin-left: auto;
-	margin-right: auto;
+	margin: 30px auto;
+	font-size: 1em;
 
+	p {
+		font-size: 16px;
+		line-height: 1.5;
+		margin: 1em 0;
+	}
 
-	#trustedlogin-auth .header {
+	.tl-auth-header {
 		text-align: center;
 	}
 
-	#trustedlogin-auth .body {
+	/** @see .about-wrap .lead-description */
+	.tl-auth-intro {
+		padding: 1rem 0;
+		font-size: 1.5em;
+		line-height: 1.5;
+	}
+
+	.tl-auth-logo {
+		width: 400px;
+		max-width: 90%;
+		max-height: 400px;
+	}
+
+	.tl-auth-body {
 		background: #fff;
 		padding: 10px;
 		/*border: 2px solid #ddd;*/
@@ -27,23 +47,41 @@
 		border-radius: 3px;
 	}
 
-	#trustedlogin-auth ul.tl-details li {
+	ul.tl-details li {
 		border-bottom: 1px solid #eee;
 		padding: 10px;
 	}
 
-	#trustedlogin-auth .footer, #trustedlogin-auth .actions {
+	.tl-auth-footer,
+	.tl-auth-actions {
 		text-align: center;
 		padding: 10px;
+		margin: 10px 0 40px;
 	}
 
-	#trustedlogin-auth .intro {
-		font-size: x-large;
-		padding-top: 20px;
-		padding-bottom: 20px;
+	.tl-auth-footer {
+
+		ul {
+			list-style: none;
+		}
+
+		li {
+			display: inline-block;
+
+			&:after {
+				color: lighten( #555d66, 20% ); // #wp-footer color
+				content: '•';
+				padding: 0 .75rem;
+			}
+
+			&:last-child:after {
+				content: '';
+				padding: 0;
+			}
+		}
 	}
 
-	#trustedlogin-auth .toggle-caps {
+	.tl-toggle-caps {
 		cursor: pointer;
 	}
 }
