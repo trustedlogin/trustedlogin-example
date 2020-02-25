@@ -2,7 +2,7 @@
 /**
  * The TrustedLogin drop-in class. Include this file and instantiate the class and you have secure support.
  *
- * @version 0.9.1
+ * @version 0.9.2
  * @copyright 2020 Katz Web Services, Inc.
  *
  * ###                    ###
