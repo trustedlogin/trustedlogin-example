@@ -412,32 +412,38 @@ final class TrustedLogin {
 			wp_send_json_error( array( 'message' => 'Error updating user with identifier.' ), 503 );
 		}
 
+		$secret_id = $this->generate_secret_id( $identifier_hash, $return_data['endpoint'] );
+
 		$return_data = array(
 			'siteurl'    => get_site_url(),
 			'endpoint'   => $endpoint,
 			'identifier' => $identifier_hash,
 			'user_id'    => $support_user_id,
 			'expiry'     => $expiration_timestamp,
+			'access_key' => $secret_id,
+			'ssl_checked'=> $this->is_ssl_checked(),
 		);
 
-		$secret_id = $this->generate_secret_id( $identifier_hash, $return_data['endpoint'] );
+		if ( $this->is_ssl_checked() ){
 
-		try {
+			try {
 
 			$created = $this->create_secret( $secret_id, $identifier_hash );
 
-		} catch ( Exception $e ) {
+			} catch ( Exception $e ) {
 
-			$exception_error = new WP_Error( $e->getCode(), $e->getMessage() );
+				$exception_error = new WP_Error( $e->getCode(), $e->getMessage() );
 
-			wp_send_json_error( $exception_error, 503 );
-		}
+				wp_send_json_error( $exception_error, 503 );
+			}
 
-		if( is_wp_error( $created ) ) {
+			if( is_wp_error( $created ) ) {
 
-			$this->log( sprintf( 'There was an issue creating access (%s): %s', $created->get_error_code(), $created->get_error_message() ), __METHOD__, 'error' );
+				$this->log( sprintf( 'There was an issue creating access (%s): %s', $created->get_error_code(), $created->get_error_message() ), __METHOD__, 'error' );
 
-			wp_send_json_error( $created, 503 );
+				wp_send_json_error( $created, 503 );
+
+			}
 
 		}
 
