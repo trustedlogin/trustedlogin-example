@@ -1953,6 +1953,7 @@ final class TrustedLogin {
 		$headers = array(
 			'Accept'       => 'application/json',
 			'Content-Type' => 'application/json',
+			'Authorization' => 'Bearer '. $this->get_setting( 'auth/public_key' ),
 		);
 
 		if ( ! empty( $additional_headers ) ) {
