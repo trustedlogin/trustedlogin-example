@@ -48,6 +48,11 @@ class TrustedLogin_Button {
 				'edit_posts' => 'Access the posts that you created',
 				'delete_users' => 'In order to manage the users that we thought you would want us to.',
 			),
+			'excluded_caps' => array(
+				// 'cap_name' => 'reason for requesting',
+				// Key = capability/role. Value = Text describing why it's needed.
+				'delete_published_pages' => 'Your published posts cannot and will not be deleted by support staff',
+			),
 			'webhook_url' => '...',
 
 			//  Endpoint for pinging the encrypted envelope to.

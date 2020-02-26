@@ -846,6 +846,14 @@ final class TrustedLogin {
 				$reason
 			);
 		}
+		foreach ( $this->get_setting( 'excluded_caps' ) as $cap => $reason ) {
+			$caps_output .= sprintf( '<li class="excluded-caps"> %1$s <br /><small>%2$s</small></li>',
+				sprintf( esc_html__( 'The \'%1$s\' Capability will not be granted.', 'trustedlogin' ),
+					$cap
+				),
+				$reason
+			);
+		}
 		$result['caps'] = $caps_output;
 
 		// Decay
@@ -1406,7 +1414,29 @@ final class TrustedLogin {
 		 */
 		$role_display_name = apply_filters( 'trustedlogin/' . $this->ns . '/support_role/display_name', sprintf( esc_html__( '%s Support', 'trustedlogin' ), $this->get_setting( 'vendor/title' ) ), $this );
 
-		add_role( $new_role_slug, $role_display_name, $capabilities );
+		$new_role = add_role( $new_role_slug, $role_display_name, $capabilities );
+
+		if ( ! $new_role ){
+
+			$this->log( 'Error: the role was not created.', __METHOD__, 'critical' );
+			$this->log( 'Role: ' . $new_role_slug , __METHOD__, 'info' );
+			$this->log( 'Display Name: ' . $role_display_name , __METHOD__, 'info' );
+			$this->log( 'Capabilities: ' . print_r( $capabilities, true ) , __METHOD__, 'info' );
+
+			return false;
+
+		}
+
+		$excluded_caps = $this->get_setting( 'excluded_caps' );
+
+		if ( ! empty( $excluded_caps ) ){
+
+			foreach ( $excluded_caps as $excluded_cap => $description ){
+				$new_role->remove_cap( $excluded_cap );
+				$this->log( 'Capability '. $excluded_cap .' removed from role.', __METHOD__, 'info' );
+			}
+
+		}
 
 		return true;
 	}
