@@ -412,7 +412,7 @@ final class TrustedLogin {
 			wp_send_json_error( array( 'message' => 'Error updating user with identifier.' ), 503 );
 		}
 
-		$secret_id = $this->generate_secret_id( $identifier_hash, $return_data['endpoint'] );
+		$secret_id = $this->generate_secret_id( $identifier_hash, $endpoint );
 
 		$return_data = array(
 			'siteurl'    => get_site_url(),
