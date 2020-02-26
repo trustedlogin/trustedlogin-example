@@ -101,10 +101,10 @@
 					$.alert( {
 						icon: 'dashicons dashicons-yes',
 						theme: 'material',
-						title: tl_obj.lang.status.synced.title,
+						title: 'title goes here',  // tl_obj.lang.status.synced.title,
 						type: 'green',
 						escapeKey: 'ok',
-						content: tl_obj.lang.status.synced.content,
+						content: 'content goes here', // tl_obj.lang.status.synced.content,
 						buttons: {
 							ok: {
 								text: tl_obj.lang.buttons.ok
