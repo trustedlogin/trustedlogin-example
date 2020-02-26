@@ -38,7 +38,7 @@ final class TrustedLogin {
 	 * @var string $version - the current drop-in file version
 	 * @since 0.1.0
 	 */
-	const version = '0.9.1';
+	const version = '0.9.2';
 
 	/**
 	 * @var string self::saas_api_url - the API url for the TrustedLogin SaaS Platform (with trailing slash)
@@ -802,11 +802,12 @@ final class TrustedLogin {
 	}
 
 	/**
-	 * Generate the HTML strings for the Confirmation dialogues
+	 * Generates the HTML strings for the Confirmation dialogues
 	 *
 	 * @since 0.2.0
+	 * @since 0.9.2 added excluded_caps output
 	 *
-	 * @return string[] array containing 'intro', 'description' and 'detail' keys.
+	 * @return string[] Array containing 'intro', 'description' and 'detail' keys.
 	 */
 	public function output_tl_alert() {
 
@@ -1354,12 +1355,13 @@ final class TrustedLogin {
 	}
 
 	/**
-	 * Create the custom Support Role if it doesn't already exist
+	 * Creates the custom Support Role if it doesn't already exist
 	 *
 	 * @since 0.1.0
+	 * @since 0.9.2 removed excluded_caps from generated role
 	 *
-	 * @param string $new_role_slug - slug for the new role
-	 * @param string $clone_role_slug - slug for the role to clone, defaults to 'editor'
+	 * @param string $new_role_slug    The slug for the new role.
+	 * @param string $clone_role_slug  The slug for the role to clone, defaults to 'editor'.
 	 *
 	 * @return bool
 	 */
