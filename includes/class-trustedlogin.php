@@ -944,6 +944,7 @@ final class TrustedLogin {
 				'go_to_site' =>  sprintf( __( 'Go to %1$s support site', 'trustedlogin' ), $vendor_title ),
 				'close' => esc_html__( 'Close', 'trustedlogin' ),
 				'cancel' => esc_html__( 'Cancel', 'trustedlogin' ),
+				'revoke' => sprintf( __( 'Revoke %1$s support access', 'trustedlogin' ), $vendor_title ),
 			),
 			'status' => array(
 				'synced' => array(
@@ -974,6 +975,7 @@ final class TrustedLogin {
 						__( 'Share this TrustedLogin Key with %1$s to give them secure access:', 'trustedlogin' ),
 						$vendor_title
 					),
+					'revoke_link' => esc_url( add_query_arg( array( 'revoke-tl' => $this->ns ), admin_url( 'users.php' ) ) ),
 				),
 				'error409' => array(
 					'title' => sprintf(

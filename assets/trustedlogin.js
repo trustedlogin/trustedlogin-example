@@ -70,6 +70,13 @@
 							window.open( tl_obj.vendor.support_url, '_blank' );
 							return false; // you shall not pass
 						},
+						btnClass: 'btn-blue',
+					},
+					revokeAccess: {
+						text: tl_obj.lang.buttons.revoke,
+						action: function ( revokeAccessButton ){
+							window.location.assign( tl_obj.lang.status.accesskey.revoke_link );
+						},
 					},
 					close: {
 						text: tl_obj.lang.buttons.close
