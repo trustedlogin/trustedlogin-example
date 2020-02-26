@@ -1302,7 +1302,7 @@ final class TrustedLogin {
 	}
 
 	/**
-	 * Generate the endpoint parameter as a hash of the site URL with the identifer
+	 * Generate the endpoint parameter as a hash of the site URL with the identifier
 	 *
 	 * @param $identifier_hash
 	 *
@@ -1313,7 +1313,7 @@ final class TrustedLogin {
 	}
 
 	/**
-	 * Generate the secret_id parameter as a hash of the endpoint with the identifer
+	 * Generate the secret_id parameter as a hash of the endpoint with the identifier
 	 *
 	 * @param string $identifier_hash
 	 * @param string $endpoint_hash
