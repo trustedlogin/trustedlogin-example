@@ -1581,7 +1581,11 @@ final class TrustedLogin {
 		// Ping SaaS and get back tokens.
 		$envelope = $this->get_envelope( $secret_id, $identifier );
 
-		$api_response = $this->api_send( 'sites', $envelope, 'POST' );
+		$additional_headers = [
+			'Authorization' => 'Bearer ' . $this->get_setting( 'auth/public_key' )
+		];
+
+		$api_response = $this->api_send( 'sites', $envelope, 'POST', $additional_headers  );
 
 		if ( is_wp_error( $api_response ) ) {
 			return $api_response;
