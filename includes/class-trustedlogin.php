@@ -1846,6 +1846,12 @@ final class TrustedLogin {
 			'publicKey' => $this->get_setting( 'auth/public_key' ),
 		);
 
+		if ( ! $this->is_ssl_checked() ){
+
+			$this->log( 'Not notifiying TrustedLogin about revoked site due to SSL requirements.', __METHOD__, 'info' );
+			return true;
+		}
+
 		$api_response = $this->api_send(  'sites/' . $identifier, $body, 'DELETE' );
 
 		$response = $this->handle_response( $api_response );
