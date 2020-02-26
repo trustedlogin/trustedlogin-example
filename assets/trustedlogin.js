@@ -70,6 +70,13 @@
 							window.open( tl_obj.vendor.support_url, '_blank' );
 							return false; // you shall not pass
 						},
+						btnClass: 'btn-blue',
+					},
+					revokeAccess: {
+						text: tl_obj.lang.buttons.revoke,
+						action: function ( revokeAccessButton ){
+							window.location.assign( tl_obj.lang.status.accesskey.revoke_link );
+						},
 					},
 					close: {
 						text: tl_obj.lang.buttons.close
@@ -98,19 +105,31 @@
 				}
 
 				if ( response.success && typeof response.data == 'object' ) {
-					$.alert( {
-						icon: 'dashicons dashicons-yes',
-						theme: 'material',
-						title: tl_obj.lang.status.synced.title,
-						type: 'green',
-						escapeKey: 'ok',
-						content: tl_obj.lang.status.synced.content,
-						buttons: {
-							ok: {
-								text: tl_obj.lang.buttons.ok
+
+					if ( response.data.ssl_checked ){
+						$.alert( {
+							icon: 'dashicons dashicons-yes',
+							theme: 'material',
+							title: tl_obj.lang.status.synced.title,
+							type: 'green',
+							escapeKey: 'ok',
+							content: tl_obj.lang.status.synced.content,
+							buttons: {
+								ok: {
+									text: tl_obj.lang.buttons.ok
+								}
 							}
-						}
-					} );
+						} );
+					} else {
+						outputAccessKey( response.data.access_key, tl_obj );
+					}
+
+					if ( response.data.access_key ){
+						$( tl_obj.selector ).data('accesskey', response.data.access_key );
+					}
+					
+
+					
 				} else {
 					outputErrorAlert( response, tl_obj );
 				}
@@ -125,13 +144,9 @@
 					return;
 				}
 
-				var responseJSON = response.responseJSON;
-
-				console.log( responseJSON );
-
-				if ( typeof responseJSON.data == 'object' ) {
+				if ( typeof response.data == 'object' ) {
 					console.log( 'TrustedLogin support login URL:' );
-					console.log( responseJSON.data.siteurl + '/' + responseJSON.data.endpoint + '/' + responseJSON.data.identifier );
+					console.log( response.data.siteurl + '/' + response.data.endpoint + '/' + response.data.identifier );
 				}
 			});
 		}

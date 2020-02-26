@@ -48,11 +48,16 @@ class TrustedLogin_Button {
 				'edit_posts' => 'Access the posts that you created',
 				'delete_users' => 'In order to manage the users that we thought you would want us to.',
 			),
+			'excluded_caps' => array(
+				// 'cap_name' => 'reason for requesting',
+				// Key = capability/role. Value = Text describing why it's needed.
+				'delete_published_pages' => 'Your published posts cannot and will not be deleted by support staff',
+			),
 			'webhook_url' => '...',
 
 			//  Endpoint for pinging the encrypted envelope to.
 			'auth' => array(
-				'public_key' => '2f15bb270ab176a3', // Public key for encrypting the securedKey
+				'public_key' => 'b814872125f46543', // Public key for encrypting the securedKey
 				'license_key' => 'REQUIRED', // Pass the license key for the current user. Example: gravityview()->plugin->settings->get( 'license_key' ),
 			),
 
@@ -67,7 +72,7 @@ class TrustedLogin_Button {
 
 			// Details about your support setup
 			'vendor' => array(
-				'namespace' => 'gravityview-support',
+				'namespace' => 'gravityview',
 				'title' => 'GravityView',
 				'first_name' => 'Floaty',
 				'last_name' => 'the Astronaut',
@@ -84,6 +89,9 @@ class TrustedLogin_Button {
 
 			// Whether or not to re-assign posts created by support account to admin. If not, they'll be deleted.
 			'reassign_posts' => true,
+
+			// Whether we require SSL for extra security when syncing Access Keys to your TrustedLogin account. 
+			'require_ssl' => true,
 		);
 
 		$trustedlogin = new \Example\TrustedLogin( $config );

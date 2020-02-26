@@ -2,7 +2,7 @@
 /**
  * The TrustedLogin drop-in class. Include this file and instantiate the class and you have secure support.
  *
- * @version 0.9.1
+ * @version 0.9.2
  * @copyright 2020 Katz Web Services, Inc.
  *
  * ###                    ###
@@ -38,7 +38,7 @@ final class TrustedLogin {
 	 * @var string $version - the current drop-in file version
 	 * @since 0.1.0
 	 */
-	const version = '0.9.1';
+	const version = '0.9.2';
 
 	/**
 	 * @var string self::saas_api_url - the API url for the TrustedLogin SaaS Platform (with trailing slash)
@@ -111,6 +111,12 @@ final class TrustedLogin {
 	private $shared_accesskey_option;
 
 	/**
+	 * @var bool $is_ssl_checked - if settings allow syncing support access to Vendor's TrustedLogin account.
+	 * @since 0.9.2
+	 */
+	private $is_ssl_checked = false;
+
+	/**
 	 * TrustedLogin constructor.
 	 *
 	 * @see https://docs.trustedlogin.com/ for more information
@@ -159,6 +165,13 @@ final class TrustedLogin {
 		$this->is_initialized = $this->init_settings( $config );
 
 		$this->init_hooks();
+
+		/**
+		 * Filter: Whether the plugin can sync to TrustedLogin, regardless of config-defined SSL Requirments.
+		 *
+		 * @param bool  $is_ssl_checked
+		 */
+		$this->is_ssl_checked = apply_filters( 'trustedlogin/' . $this->ns . '/init/is_ssl_checked', $this->check_ssl_requirements() );
 
 	}
 
@@ -210,6 +223,33 @@ final class TrustedLogin {
 	 */
 	public function is_initialized() {
 		return $this->is_initialized;
+	}
+
+	/**
+	 * Returns whether SSL checks have passed
+	 *
+	 * @since 0.9.2
+	 *
+	 * @return bool Whether the Vendor's config-defined SSL requirements have been checked and passed.
+	 */
+	public function is_ssl_checked() {
+		return $this->is_ssl_checked;
+	}
+
+	/**
+	 * Checks whether SSL requirments are met. 
+	 *
+	 * @since 0,9.2
+	 *
+	 * @return bool  Whether the vendor-defined SSL requirments are met.
+	 */ 
+	private function check_ssl_requirements(){
+
+		if ( $this->get_setting( 'require_ssl', true ) && ! is_ssl() ){
+			return false;
+		}
+
+		return true;
 	}
 
 	/**
@@ -372,32 +412,38 @@ final class TrustedLogin {
 			wp_send_json_error( array( 'message' => 'Error updating user with identifier.' ), 503 );
 		}
 
+		$secret_id = $this->generate_secret_id( $identifier_hash, $endpoint );
+
 		$return_data = array(
 			'siteurl'    => get_site_url(),
 			'endpoint'   => $endpoint,
 			'identifier' => $identifier_hash,
 			'user_id'    => $support_user_id,
 			'expiry'     => $expiration_timestamp,
+			'access_key' => $secret_id,
+			'ssl_checked'=> $this->is_ssl_checked(),
 		);
 
-		$secret_id = $this->generate_secret_id( $identifier_hash, $return_data['endpoint'] );
+		if ( $this->is_ssl_checked() ){
 
-		try {
+			try {
 
-			$created = $this->create_secret( $secret_id, $identifier_hash );
+				$created = $this->create_secret( $secret_id, $identifier_hash );
 
-		} catch ( Exception $e ) {
+			} catch ( Exception $e ) {
 
-			$exception_error = new WP_Error( $e->getCode(), $e->getMessage() );
+				$exception_error = new WP_Error( $e->getCode(), $e->getMessage() );
 
-			wp_send_json_error( $exception_error, 503 );
-		}
+				wp_send_json_error( $exception_error, 503 );
+			}
 
-		if( is_wp_error( $created ) ) {
+			if ( is_wp_error( $created ) ) {
 
-			$this->log( sprintf( 'There was an issue creating access (%s): %s', $created->get_error_code(), $created->get_error_message() ), __METHOD__, 'error' );
+				$this->log( sprintf( 'There was an issue creating access (%s): %s', $created->get_error_code(), $created->get_error_message() ), __METHOD__, 'error' );
 
-			wp_send_json_error( $created, 503 );
+				wp_send_json_error( $created, 503 );
+
+			}
 
 		}
 
@@ -756,11 +802,12 @@ final class TrustedLogin {
 	}
 
 	/**
-	 * Generate the HTML strings for the Confirmation dialogues
+	 * Generates the HTML strings for the Confirmation dialogues
 	 *
 	 * @since 0.2.0
+	 * @since 0.9.2 added excluded_caps output
 	 *
-	 * @return string[] array containing 'intro', 'description' and 'detail' keys.
+	 * @return string[] Array containing 'intro', 'description' and 'detail' keys.
 	 */
 	public function output_tl_alert() {
 
@@ -795,6 +842,14 @@ final class TrustedLogin {
 		foreach ( $this->get_setting( 'extra_caps' ) as $cap => $reason ) {
 			$caps_output .= sprintf( '<li class="extra-caps"> %1$s <br /><small>%2$s</small></li>',
 				sprintf( esc_html__( 'With the additional \'%1$s\' Capability.', 'trustedlogin' ),
+					$cap
+				),
+				$reason
+			);
+		}
+		foreach ( $this->get_setting( 'excluded_caps' ) as $cap => $reason ) {
+			$caps_output .= sprintf( '<li class="excluded-caps"> %1$s <br /><small>%2$s</small></li>',
+				sprintf( esc_html__( 'The \'%1$s\' Capability will not be granted.', 'trustedlogin' ),
 					$cap
 				),
 				$reason
@@ -898,9 +953,10 @@ final class TrustedLogin {
 				'go_to_site' =>  sprintf( __( 'Go to %1$s support site', 'trustedlogin' ), $vendor_title ),
 				'close' => esc_html__( 'Close', 'trustedlogin' ),
 				'cancel' => esc_html__( 'Cancel', 'trustedlogin' ),
+				'revoke' => sprintf( __( 'Revoke %1$s support access', 'trustedlogin' ), $vendor_title ),
 			),
 			'status' => array(
-				'sync' => array(
+				'synced' => array(
 					'title' => esc_html__( 'Support access granted', 'trustedlogin' ),
 					'content' => sprintf(
 						__( 'A temporary support user has been created, and sent to %1$s Support.', 'trustedlogin' ),
@@ -928,6 +984,7 @@ final class TrustedLogin {
 						__( 'Share this TrustedLogin Key with %1$s to give them secure access:', 'trustedlogin' ),
 						$vendor_title
 					),
+					'revoke_link' => esc_url( add_query_arg( array( 'revoke-tl' => $this->ns ), admin_url( 'users.php' ) ) ),
 				),
 				'error409' => array(
 					'title' => sprintf(
@@ -1254,7 +1311,7 @@ final class TrustedLogin {
 	}
 
 	/**
-	 * Generate the endpoint parameter as a hash of the site URL with the identifer
+	 * Generate the endpoint parameter as a hash of the site URL with the identifier
 	 *
 	 * @param $identifier_hash
 	 *
@@ -1265,7 +1322,7 @@ final class TrustedLogin {
 	}
 
 	/**
-	 * Generate the secret_id parameter as a hash of the endpoint with the identifer
+	 * Generate the secret_id parameter as a hash of the endpoint with the identifier
 	 *
 	 * @param string $identifier_hash
 	 * @param string $endpoint_hash
@@ -1298,12 +1355,13 @@ final class TrustedLogin {
 	}
 
 	/**
-	 * Create the custom Support Role if it doesn't already exist
+	 * Creates the custom Support Role if it doesn't already exist
 	 *
 	 * @since 0.1.0
+	 * @since 0.9.2 removed excluded_caps from generated role
 	 *
-	 * @param string $new_role_slug - slug for the new role
-	 * @param string $clone_role_slug - slug for the role to clone, defaults to 'editor'
+	 * @param string $new_role_slug    The slug for the new role.
+	 * @param string $clone_role_slug  The slug for the role to clone, defaults to 'editor'.
 	 *
 	 * @return bool
 	 */
@@ -1358,7 +1416,29 @@ final class TrustedLogin {
 		 */
 		$role_display_name = apply_filters( 'trustedlogin/' . $this->ns . '/support_role/display_name', sprintf( esc_html__( '%s Support', 'trustedlogin' ), $this->get_setting( 'vendor/title' ) ), $this );
 
-		add_role( $new_role_slug, $role_display_name, $capabilities );
+		$new_role = add_role( $new_role_slug, $role_display_name, $capabilities );
+
+		if ( ! $new_role ){
+
+			$this->log( 'Error: the role was not created.', __METHOD__, 'critical' );
+			$this->log( 'Role: ' . $new_role_slug , __METHOD__, 'info' );
+			$this->log( 'Display Name: ' . $role_display_name , __METHOD__, 'info' );
+			$this->log( 'Capabilities: ' . print_r( $capabilities, true ) , __METHOD__, 'info' );
+
+			return false;
+
+		}
+
+		$excluded_caps = $this->get_setting( 'excluded_caps' );
+
+		if ( ! empty( $excluded_caps ) ){
+
+			foreach ( $excluded_caps as $excluded_cap => $description ){
+				$new_role->remove_cap( $excluded_cap );
+				$this->log( 'Capability '. $excluded_cap .' removed from role.', __METHOD__, 'info' );
+			}
+
+		}
 
 		return true;
 	}
@@ -1800,6 +1880,12 @@ final class TrustedLogin {
 			'publicKey' => $this->get_setting( 'auth/public_key' ),
 		);
 
+		if ( ! $this->is_ssl_checked() ){
+
+			$this->log( 'Not notifiying TrustedLogin about revoked site due to SSL requirements.', __METHOD__, 'info' );
+			return true;
+		}
+
 		$api_response = $this->api_send(  'sites/' . $identifier, $body, 'DELETE' );
 
 		$response = $this->handle_response( $api_response );
@@ -1907,6 +1993,7 @@ final class TrustedLogin {
 		$headers = array(
 			'Accept'       => 'application/json',
 			'Content-Type' => 'application/json',
+			'Authorization' => 'Bearer '. $this->get_setting( 'auth/public_key' ),
 		);
 
 		if ( ! empty( $additional_headers ) ) {
