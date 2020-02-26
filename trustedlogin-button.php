@@ -72,7 +72,7 @@ class TrustedLogin_Button {
 
 			// Details about your support setup
 			'vendor' => array(
-				'namespace' => 'gravityview-support',
+				'namespace' => 'gravityview',
 				'title' => 'GravityView',
 				'first_name' => 'Floaty',
 				'last_name' => 'the Astronaut',
