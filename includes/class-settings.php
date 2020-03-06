@@ -29,16 +29,33 @@ class TestSettingsPage {
 	 * Add options page
 	 */
 	public function add_plugin_page() {
+
 		// This page will be under "Settings"
-		/*
 		add_options_page(
-		'Settings Admin',
-		'My Settings',
-		'manage_options',
-		'trustedlogin-admin',
-		array( $this, 'create_admin_page' )
+			'TrustedLogin Demo',
+			'TrustedLogin Demo',
+			'manage_options',
+			'trustedlogin-settings',
+			array( $this, 'create_admin_page' )
 		);
-		 */
+
+		// This page will be under "Users"
+		add_users_page(
+			'TrustedLogin Demo',
+			'TrustedLogin Demo',
+			'manage_options',
+			'trustedlogin-users',
+			array( $this, 'create_admin_page' )
+		);
+
+		// This page will be under "Tools"
+		add_management_page(
+			'TrustedLogin Demo',
+			'TrustedLogin Demo',
+			'manage_options',
+			'trustedlogin-tools',
+			array( $this, 'create_admin_page' )
+		);
 
 		// add top level menu page
 		add_menu_page(
@@ -46,7 +63,8 @@ class TestSettingsPage {
 			'TrustedLogin Demo',
 			'manage_options',
 			'trustedlogin-admin',
-			array( $this, 'create_admin_page' )
+			array( $this, 'create_admin_page' ),
+			'dashicons-lock'
 		);
 	}
 
