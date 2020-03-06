@@ -1,0 +1,46 @@
+{
+  "name": "trustedlogin/trustedlogin-button",
+  "type": "wordpress-plugin",
+  "repositories": [
+    {
+      "type": "github",
+      "url":  "https://github.com/trustedlogin/trustedlogin-client.git",
+      "no-api": true
+    }
+  ],
+  "prefer-stable": true,
+  "license": "GPL-2.0-or-later",
+  "require": {
+    "trustedlogin/trustedlogin-client": "dev-master"
+  },
+  "require-dev": {
+    "coenjacobs/mozart": "^0.5.1"
+  },
+
+  "autoload": {
+    "classmap": [
+      "vendor"
+    ]
+  },
+  "extra": {
+    "mozart": {
+      "dep_namespace": "ReplaceMe\\",
+      "dep_directory": "/vendor/trustedlogin-client/",
+      "classmap_directory": "/vendor/trustedlogin-client/",
+      "classmap_prefix": "ReplaceMe_",
+      "packages": [
+        "trustedlogin/trustedlogin-client"
+      ]
+    }
+  },
+  "scripts": {
+    "post-install-cmd": [
+      "\"vendor/bin/mozart\" compose",
+      "composer dumpautoload"
+    ],
+    "post-update-cmd": [
+      "\"vendor/bin/mozart\" compose",
+      "composer dumpautoload"
+    ]
+  }
+}

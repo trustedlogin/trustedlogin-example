@@ -13,12 +13,15 @@
  * License URI: http://www.gnu.org/licenses/gpl-3.0.html
  */
 
+namespace ReplaceMe;
+
+
 if ( ! defined('ABSPATH') ) {
 	exit;
 }
 // Exit if accessed directly
 
-class TrustedLogin_Button {
+class Button {
 
 	public $trustedlogin;
 
@@ -63,6 +66,7 @@ class TrustedLogin_Button {
 
 			// How quickly to disable the generated users
 			'decay' => WEEK_IN_SECONDS,
+
 			// Settings regarding adding links to the admin sidebar. Leave blank to not add (a direct link will remain enabled)
 			'menu' => array(
 				'slug' => 'edit.php?post_type=gravityview', // Add "Grant Support Access" submenu.
@@ -90,24 +94,25 @@ class TrustedLogin_Button {
 			// Whether or not to re-assign posts created by support account to admin. If not, they'll be deleted.
 			'reassign_posts' => true,
 
-			// Whether we require SSL for extra security when syncing Access Keys to your TrustedLogin account. 
+			// Whether we require SSL for extra security when syncing Access Keys to your TrustedLogin account.
 			'require_ssl' => true,
 		);
 
-		$trustedlogin = new \Example\TrustedLogin( $config );
+		$trustedlogin = new \ReplaceMe\TrustedLogin\Client( $config );
 	}
 
 	public function load_includes() {
+
+		require plugin_dir_path( __FILE__ ) . 'vendor/autoload.php';
 
 		// Traits
 		require_once plugin_dir_path( __FILE__ ) . 'includes/trait-debug-logging.php';
 
 		// Classes
-		require_once plugin_dir_path( __FILE__ ) . 'includes/class-trustedlogin.php';
 		require_once plugin_dir_path( __FILE__ ) . 'includes/class-settings.php';
 
 	}
 
 }
 
-$example_tl = new TrustedLogin_Button();
+$example_tl = new Button();
