@@ -32,8 +32,8 @@ module.exports = function( grunt ) {
 				options: {
 					domainPath: '/languages',
 					exclude: [ '\.git/*', 'bin/*', 'node_modules/*', 'tests/*' ],
-					mainFile: 'trustedlogin-button.php',
-					potFilename: 'trustedlogin-button.pot',
+					mainFile: 'trustedlogin-example.php',
+					potFilename: 'trustedlogin-example.pot',
 					potHeaders: {
 						poedit: true,
 						'x-poedit-keywordslist': true

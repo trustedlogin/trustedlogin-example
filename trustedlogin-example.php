@@ -1,11 +1,11 @@
 <?php
 /**
- * Plugin Name: TrustedLogin Button
- * Plugin URI: https://trustedlogin.com
+ * Plugin Name: TrustedLogin Example Plugin
+ * Plugin URI: https://www.trustedlogin.com
  * Description: Proof-of-concept plugin to grant support wp-admin access in a click
  * Version: 0.4.2
- * Author: trustedlogin.io
- * Author URI: https://trustedlogin.com
+ * Author: TrustedLogin
+ * Author URI: https://www.trustedlogin.com
  * Text Domain: trustedlogin
  *
  * Copyright: © 2019 trustedlogin
@@ -86,9 +86,10 @@ class Button {
 				'logo_url' => 'https://static4.gravityview.co/wp-content/themes/Website/images/GravityView-262x80@2x.png', // Displayed in the authentication modal
 			),
 
+			// Override CSS styles or JavaScript files by providing your own URL to directory where CSS is hosted
 			'path' => array(
-				'css_dir_url' => plugin_dir_url( __FILE__ ) . 'assets/',
-				'js_dir_url'  => plugin_dir_url( __FILE__ ) . 'assets/',
+				'css_dir_url' => null, // plugin_dir_url( __FILE__ ) . 'assets/', // For example
+				'js_dir_url'  => null, // plugin_dir_url( __FILE__ ) . 'assets/', // For example
 			),
 
 			// Whether or not to re-assign posts created by support account to admin. If not, they'll be deleted.
