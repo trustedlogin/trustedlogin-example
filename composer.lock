@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "670db19bd9ef0ab69f0ebe638f37eda4",
+    "content-hash": "3edabdfbcf73b1252e46764e12baa41c",
     "packages": [
         {
             "name": "trustedlogin/trustedlogin-client",
