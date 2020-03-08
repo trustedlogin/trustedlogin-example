@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "3edabdfbcf73b1252e46764e12baa41c",
+    "content-hash": "1e6d0aaac79fe4b3f66de7543f5e0741",
     "packages": [
         {
             "name": "trustedlogin/trustedlogin-client",
@@ -12,12 +12,12 @@
             "source": {
                 "type": "git",
                 "url": "https://github.com/trustedlogin/trustedlogin-client.git",
-                "reference": "b3db9480ee402378a3bf6f8832f85e6f84dd5259"
+                "reference": "490781a7e56fc6eadd52afdfce8f6729fa2537ed"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/trustedlogin/trustedlogin-client/zipball/b3db9480ee402378a3bf6f8832f85e6f84dd5259",
-                "reference": "b3db9480ee402378a3bf6f8832f85e6f84dd5259",
+                "url": "https://api.github.com/repos/trustedlogin/trustedlogin-client/zipball/490781a7e56fc6eadd52afdfce8f6729fa2537ed",
+                "reference": "490781a7e56fc6eadd52afdfce8f6729fa2537ed",
                 "shasum": ""
             },
             "require": {
@@ -48,7 +48,7 @@
                 "security",
                 "support"
             ],
-            "time": "2020-03-06T04:21:54+00:00"
+            "time": "2020-03-08T04:10:28+00:00"
         }
     ],
     "packages-dev": [

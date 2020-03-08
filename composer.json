@@ -1,6 +1,8 @@
 {
   "name": "trustedlogin/trustedlogin-button",
   "type": "wordpress-plugin",
+  "license": "GPL-2.0-or-later",
+  "prefer-stable": true,
   "repositories": [
     {
       "type": "github",
@@ -8,15 +10,12 @@
       "no-api": true
     }
   ],
-  "prefer-stable": true,
-  "license": "GPL-2.0-or-later",
   "require": {
     "trustedlogin/trustedlogin-client": "dev-master"
   },
   "require-dev": {
     "coenjacobs/mozart": "^0.5.1"
   },
-
   "autoload": {
     "classmap": [
       "vendor"
@@ -24,7 +23,7 @@
   },
   "extra": {
     "mozart": {
-      "dep_namespace": "ReplaceMe\\",
+      "dep_namespace": "\\ReplaceMe\\",
       "dep_directory": "/vendor/ReplaceMe/",
       "classmap_directory": "/vendor/ReplaceMe/",
       "classmap_prefix": "ReplaceMe_",
