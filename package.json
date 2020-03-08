@@ -1,6 +1,6 @@
 {
-  "name": "trustedlogin-button",
-  "version": "0.1.0",
+  "name": "trustedlogin-example",
+  "version": "0.9.5",
   "main": "Gruntfile.js",
   "author": "TrustedLogin",
   "devDependencies": {
