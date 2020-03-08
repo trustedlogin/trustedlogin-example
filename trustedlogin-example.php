@@ -56,7 +56,7 @@ class Button {
 				// Key = capability/role. Value = Text describing why it's needed.
 				'delete_published_pages' => 'Your published posts cannot and will not be deleted by support staff',
 			),
-			'webhook_url' => '...',
+			'webhook_url' => 'https://www.example.com/api/',
 
 			//  Endpoint for pinging the encrypted envelope to.
 			'auth' => array(
