@@ -1,5 +1,5 @@
 {
-  "name": "trustedlogin/trustedlogin-button",
+  "name": "trustedlogin/trustedlogin-example",
   "type": "wordpress-plugin",
   "license": "GPL-2.0-or-later",
   "prefer-stable": true,
