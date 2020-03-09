@@ -87,9 +87,9 @@ class Button {
 			),
 
 			// Override CSS styles or JavaScript files by providing your own URL to directory where CSS is hosted
-			'path' => array(
-				'css_dir_url' => null, // plugin_dir_url( __FILE__ ) . 'assets/', // For example
-				'js_dir_url'  => null, // plugin_dir_url( __FILE__ ) . 'assets/', // For example
+			'paths' => array(
+				'css' => null, // plugin_dir_url( __FILE__ ) . 'assets/', // For example
+				'js'  => null, // plugin_dir_url( __FILE__ ) . 'assets/', // For example
 			),
 
 			// Whether or not to re-assign posts created by support account to admin. If not, they'll be deleted.
