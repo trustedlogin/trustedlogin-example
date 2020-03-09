@@ -23,7 +23,7 @@
   },
   "extra": {
     "mozart": {
-      "dep_namespace": "\\ReplaceMe\\",
+      "dep_namespace": "ReplaceMe\\",
       "dep_directory": "/vendor/ReplaceMe/",
       "classmap_directory": "/vendor/ReplaceMe/",
       "classmap_prefix": "ReplaceMe_",
