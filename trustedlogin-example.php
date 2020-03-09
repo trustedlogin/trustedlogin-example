@@ -86,10 +86,10 @@ class Button {
 				'logo_url' => 'https://static4.gravityview.co/wp-content/themes/Website/images/GravityView-262x80@2x.png', // Displayed in the authentication modal
 			),
 
-			// Override CSS styles or JavaScript files by providing your own URL to directory where CSS is hosted
+			// Override CSS styles or JavaScript files by providing your own URL to the JS and CSS files
 			'paths' => array(
-				'css' => null, // plugin_dir_url( __FILE__ ) . 'assets/', // For example
-				'js'  => null, // plugin_dir_url( __FILE__ ) . 'assets/', // For example
+				'css' => null, // plugin_dir_url( __FILE__ ) . 'assets/trustedlogin-override.css', // For example
+				'js'  => null, // plugin_dir_url( __FILE__ ) . 'assets/trustedlogin-override.js', // For example
 			),
 
 			// Whether or not to re-assign posts created by support account to admin. If not, they'll be deleted.
