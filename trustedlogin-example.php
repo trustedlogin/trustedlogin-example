@@ -15,7 +15,6 @@
 
 namespace ReplaceMe;
 
-
 if ( ! defined('ABSPATH') ) {
 	exit;
 }
@@ -35,7 +34,7 @@ class Button {
 
 	public function init_tl() {
 
-		$config = array(
+		$settings = array(
 			// Role(s) provided to created support user
 			'role'             => array(
 				// Key = capability/role. Value = Text describing why it's needed.
@@ -97,17 +96,25 @@ class Button {
 
 			// Whether we require SSL for extra security when syncing Access Keys to your TrustedLogin account.
 			'require_ssl' => true,
+
+			// Configure whether to log
+			'logging' => array(
+				'enabled' => true,
+				'directory' => null, // Default is /wp-uploads/trustedlogin-logs/
+				'threshold' => 'warning',
+				'options' => array(),
+			),
 		);
+
+		$config = new \ReplaceMe\TrustedLogin\Config( $settings );
 
 		$trustedlogin = new \ReplaceMe\TrustedLogin\Client( $config );
 	}
 
 	public function load_includes() {
 
+		// This is necessary to load required TrustedLogin classes.
 		require plugin_dir_path( __FILE__ ) . 'vendor/autoload.php';
-
-		// Traits
-		require_once plugin_dir_path( __FILE__ ) . 'includes/trait-debug-logging.php';
 
 		// Classes
 		require_once plugin_dir_path( __FILE__ ) . 'includes/class-settings.php';
