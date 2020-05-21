@@ -3,6 +3,7 @@
   "type": "wordpress-plugin",
   "license": "GPL-2.0-or-later",
   "prefer-stable": true,
+  "minimum-stability": "dev",
   "repositories": [
     {
       "type": "github",
@@ -11,10 +12,11 @@
     }
   ],
   "require": {
-    "trustedlogin/trustedlogin-client": "dev-master"
+    "trustedlogin/trustedlogin-client": "dev-develop"
   },
   "require-dev": {
-    "coenjacobs/mozart": "^0.5.1"
+    "coenjacobs/mozart": "*",
+    "cweagans/composer-patches": "~1.0"
   },
   "autoload": {
     "classmap": [
@@ -22,14 +24,28 @@
     ]
   },
   "extra": {
+    "patches": {
+      "coenjacobs/mozart": {
+        "Stop inserting duplicate namespace": "https://github.com/coenjacobs/mozart/pull/40.patch",
+        "Override autoload": "https://github.com/coenjacobs/mozart/pull/41.patch"
+      }
+    },
     "mozart": {
       "dep_namespace": "ReplaceMe\\",
       "dep_directory": "/vendor/ReplaceMe/",
-      "classmap_directory": "/vendor/ReplaceMe/",
+      "classmap_directory": "/vendor/ReplaceMe/classes/",
       "classmap_prefix": "ReplaceMe_",
       "packages": [
-        "trustedlogin/trustedlogin-client"
-      ]
+        "trustedlogin/trustedlogin-client",
+        "katzgrau/klogger"
+      ],
+      "override_autoload": {
+        "katzgrau/klogger": {
+          "psr-4": {
+            "Katzgrau\\KLogger\\": "src/"
+          }
+        }
+      }
     }
   },
   "scripts": {
