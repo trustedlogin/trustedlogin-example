@@ -97,10 +97,47 @@ class TrustedLogin_Example_Settings_Page {
 		);
 	}
 
-	/**
-	 * Options page callback
-	 */
-	public function create_admin_page() {
+	public function demo_landing_page() {
+		?>
+		<div class="about-wrap full-width-layout">
+			<h2>TrustedLogin has three customer-facing templates:</h2>
+
+			<ul class="ul-disc">
+				<li>Button</li>
+				<li>Auth Screen</li>
+				<li>Users Table</li>
+			</ul>
+		</div>
+		<?php
+	}
+
+	public function auth_demo_page() {
+		?>
+		<div class="about-wrap full-width-layout">
+			<h2>Output Auth Screen</h2>
+			<p class="description">To include a TrustedLogin-generated Auth screen:</p>
+			<pre lang="php">do_action( 'trustedlogin/<?php echo $this->config->ns(); ?>/auth_screen' );</pre>
+			<?php
+			do_action( 'trustedlogin/' . $this->config->ns() . '/auth_screen' );
+			?>
+		</div>
+		<?php
+	}
+
+	public function user_table_demo_page() {
+		?>
+		<div class="about-wrap full-width-layout">
+			<h2>Output a table of users</h2>
+			<p class="description">To include a table of your active support users created with TrustedLogin:</p>
+			<pre lang="php">do_action( 'trustedlogin/<?php echo $this->config->ns(); ?>/users_table' );</pre>
+			<?php
+			do_action( 'trustedlogin/' . $this->config->ns() . '/users_table' );
+			?>
+		</div>
+		<?php
+	}
+
+	public function button_demo_page() {
 		?>
 	<div class="wrap">
 		<h1>TrustedLogin Demo</h1>
@@ -174,24 +211,8 @@ echo $TL->get_button( 'size=normal&class=button-secondary' );
 			</div>
 		</div>
 
-		</div>
-
-        <hr>
-
-        <div class="about-wrap full-width-layout">
-            <h2>Output a table of users</h2>
-            <p class="description">To include a table of your active support users created with TrustedLogin:</p>
-            <pre lang="php">do_action( 'trustedlogin_users_table' );</pre>
-            <?php
-                do_action( 'trustedlogin/gravityview/users_table' );
-            ?>
-        </div>
 	</div>
 <?php
 	}
 
 }
-
-add_action( 'plugins_loaded', function() {
-	new TrustedLogin_Example_Settings_Page;
-});
