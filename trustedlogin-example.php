@@ -26,7 +26,8 @@ class Button {
 
 	public function __construct() {
 
-		$this->load_includes();
+		// This is necessary to load required TrustedLogin classes.
+		require plugin_dir_path( __FILE__ ) . 'vendor/autoload.php';
 
 		add_action( 'plugins_loaded', array( $this, 'init_tl' ) );
 
@@ -109,16 +110,11 @@ class Button {
 		$config = new \ReplaceMe\TrustedLogin\Config( $settings );
 
 		$trustedlogin = new \ReplaceMe\TrustedLogin\Client( $config );
-	}
-
-	public function load_includes() {
-
-		// This is necessary to load required TrustedLogin classes.
-		require plugin_dir_path( __FILE__ ) . 'vendor/autoload.php';
 
 		// Classes
 		require_once plugin_dir_path( __FILE__ ) . 'includes/class-settings.php';
 
+		new \TrustedLogin_Example_Settings_Page( $config );
 	}
 
 }
