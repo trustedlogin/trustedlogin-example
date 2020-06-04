@@ -30,41 +30,68 @@ class TrustedLogin_Example_Settings_Page {
 	 */
 	public function add_plugin_page() {
 
-		// This page will be under "Settings"
-		add_options_page(
-			'TrustedLogin Demo',
-			'TrustedLogin Demo',
-			'manage_options',
-			'trustedlogin-settings',
-			array( $this, 'create_admin_page' )
-		);
+##		// This page would be under "Settings"
+##		add_options_page(
+##			'TrustedLogin Demo',
+##			'TrustedLogin Demo',
+##			'manage_options',
+##			'trustedlogin-settings',
+##			array( $this, 'create_admin_page' )
+##		);
+##
+##		// This page would be under "Users"
+##		add_users_page(
+##			'TrustedLogin Demo',
+##			'TrustedLogin Users',
+##			'manage_options',
+##			'trustedlogin-users',
+##			array( $this, 'create_users_page' )
+##		);
+##
+##		// This page would be under "Tools"
+##		add_management_page(
+##			'TrustedLogin Demo',
+##			'TrustedLogin Demo',
+##			'manage_options',
+##			'trustedlogin-tools',
+##			array( $this, 'create_admin_page' )
+##		);
 
-		// This page will be under "Users"
-		add_users_page(
-			'TrustedLogin Demo',
-			'TrustedLogin Demo',
-			'manage_options',
-			'trustedlogin-users',
-			array( $this, 'create_admin_page' )
-		);
-
-		// This page will be under "Tools"
-		add_management_page(
-			'TrustedLogin Demo',
-			'TrustedLogin Demo',
-			'manage_options',
-			'trustedlogin-tools',
-			array( $this, 'create_admin_page' )
-		);
-
-		// add top level menu page
+		// Add top level menu page
 		add_menu_page(
 			'TrustedLogin Demo',
 			'TrustedLogin Demo',
 			'manage_options',
 			'trustedlogin-admin',
-			array( $this, 'create_admin_page' ),
+			array( $this, 'demo_landing_page' ),
 			'dashicons-lock'
+		);
+
+		add_submenu_page(
+			'trustedlogin-admin',
+			'TrustedLogin Auth Screen',
+			'TrustedLogin Auth',
+			'manage_options',
+			'trustedlogin-auth',
+			array( $this, 'auth_demo_page' )
+		);
+
+		add_submenu_page(
+			'trustedlogin-admin',
+			'TrustedLogin Button',
+			'TrustedLogin Button',
+			'manage_options',
+			'trustedlogin-button',
+			array( $this, 'button_demo_page' )
+		);
+
+		add_submenu_page(
+			'trustedlogin-admin',
+			'TrustedLogin Users',
+			'TrustedLogin Users',
+			'manage_options',
+			'trustedlogin-users',
+			array( $this, 'user_table_demo_page' )
 		);
 	}
 
