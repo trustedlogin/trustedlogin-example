@@ -15,21 +15,15 @@
     "trustedlogin/trustedlogin-client": "dev-develop"
   },
   "require-dev": {
-    "coenjacobs/mozart": "*",
-    "cweagans/composer-patches": "~1.0"
+    "coenjacobs/mozart": "*"
   },
   "autoload": {
+    "comments": "👇 This is required 👇",
     "classmap": [
       "vendor"
     ]
   },
   "extra": {
-    "patches": {
-      "coenjacobs/mozart": {
-        "Stop inserting duplicate namespace": "https://github.com/coenjacobs/mozart/pull/40.patch",
-        "Override autoload": "https://github.com/coenjacobs/mozart/pull/41.patch"
-      }
-    },
     "mozart": {
       "dep_namespace": "ReplaceMe\\",
       "dep_directory": "/vendor/ReplaceMe/",
