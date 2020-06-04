@@ -13,16 +13,18 @@
 class TrustedLogin_Example_Settings_Page {
 
 	/**
-	 * Holds the values to be used in the fields callbacks
+	 * @var \ReplaceMe\TrustedLogin\Config
 	 */
-	private $options;
+	private $config;
 
 	/**
 	 * Start up
 	 */
-	public function __construct() {
+	public function __construct( $config ) {
+
+		$this->config = $config;
+
 		add_action( 'admin_menu', array( $this, 'add_plugin_page' ) );
-		// add_action('admin_init', array($this, 'page_init'));
 	}
 
 	/**
