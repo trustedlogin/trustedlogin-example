@@ -139,8 +139,6 @@ class TrustedLogin_Example_Settings_Page {
 
 	public function button_demo_page() {
 		?>
-	<div class="wrap">
-		<h1>TrustedLogin Demo</h1>
 		<div class="about-wrap full-width-layout">
             <h2>Output a TrustedLogin button</h2>
 		<p class="description">Examples of using the TrustedLogin button generator:</p>
@@ -151,12 +149,12 @@ echo $TL->get_button( 'size=normal&class=button-secondary' );
 		<div class="has-2-columns is-fullwidth">
 			<div class="column">
 				<h3 style="font-weight: normal;">Attributes: <code>size=hero</code></h3>
-				<?php do_action( 'trustedlogin/gravityview/button', 'size=hero'); ?>
+				<?php do_action( 'trustedlogin/' . $this->config->ns() . '/button', 'size=hero'); ?>
 			</div>
 
 			<div class="column">
 				<h3 style="font-weight: normal;">Attributes: <code>size=hero&class=button-secondary</code></h3>
-				<?php do_action( 'trustedlogin/gravityview/button', 'size=hero&class=button-secondary'); ?>
+				<?php do_action( 'trustedlogin/' . $this->config->ns() . '/button', 'size=hero&class=button-secondary'); ?>
 			</div>
 		</div>
 
@@ -165,12 +163,12 @@ echo $TL->get_button( 'size=normal&class=button-secondary' );
 		<div class="has-2-columns is-fullwidth">
 			<div class="column">
 				<h3 style="font-weight: normal;">Attributes: <code>size=large</code></h3>
-				<?php do_action( 'trustedlogin/gravityview/button', 'size=large'); ?>
+				<?php do_action( 'trustedlogin/' . $this->config->ns() . '/button', 'size=large'); ?>
 			</div>
 
 			<div class="column">
 				<h3 style="font-weight: normal;">Attributes: <code>size=large&class=button-secondary</code></h3>
-				<?php do_action( 'trustedlogin/gravityview/button', 'size=large&class=button-secondary'); ?>
+				<?php do_action( 'trustedlogin/' . $this->config->ns() . '/button', 'size=large&class=button-secondary'); ?>
 			</div>
 		</div>
 
@@ -179,12 +177,12 @@ echo $TL->get_button( 'size=normal&class=button-secondary' );
 		<div class="has-2-columns is-fullwidth">
 			<div class="column">
 				<h3 style="font-weight: normal;">Attributes: <code>size=normal</code></h3>
-				<?php do_action( 'trustedlogin/gravityview/button', 'size=normal'); ?>
+				<?php do_action( 'trustedlogin/' . $this->config->ns() . '/button', 'size=normal'); ?>
 			</div>
 
 			<div class="column">
 				<h3 style="font-weight: normal;">Attributes: <code>size=normal&class=button-secondary</code></h3>
-				<?php do_action( 'trustedlogin/gravityview/button', 'size=normal&class=button-secondary'); ?>
+				<?php do_action( 'trustedlogin/' . $this->config->ns() . '/button', 'size=normal&class=button-secondary'); ?>
 			</div>
 		</div>
 
@@ -193,12 +191,12 @@ echo $TL->get_button( 'size=normal&class=button-secondary' );
 		<div class="has-2-columns is-fullwidth">
 			<div class="column">
 			<h3 style="font-weight: normal;">Attributes: <code>size=small</code></h3>
-				<?php do_action( 'trustedlogin/gravityview/button', 'size=small'); ?>
+				<?php do_action( 'trustedlogin/' . $this->config->ns() . '/button', 'size=small'); ?>
 			</div>
 
 			<div class="column">
 				<h3 style="font-weight: normal;">Attributes: <code>size=small&class=button-secondary</code></h3>
-				<?php do_action( 'trustedlogin/gravityview/button', 'size=small&class=button-secondary'); ?>
+				<?php do_action( 'trustedlogin/' . $this->config->ns() . '/button', 'size=small&class=button-secondary'); ?>
 			</div>
 		</div>
 
@@ -207,7 +205,7 @@ echo $TL->get_button( 'size=normal&class=button-secondary' );
 		<div class="has-2-columns is-fullwidth">
 			<div class="column">
 			<h3 style="font-weight: normal;">Attributes: <code>size=&class=&powered_by=</code></h3>
-				<?php do_action( 'trustedlogin/gravityview/button', 'size=&class=&powered_by=', false); ?>
+				<?php do_action( 'trustedlogin/' . $this->config->ns() . '/button', 'size=&class=&powered_by=', false); ?>
 			</div>
 		</div>
 
