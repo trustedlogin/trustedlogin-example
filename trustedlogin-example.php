@@ -37,24 +37,21 @@ class Button {
 
 		$settings = array(
 			// Role(s) provided to created support user
-			'role'             => array(
-				// Key = capability/role. Value = Text describing why it's needed.
-				// 'role_name' => 'reason for requesting',
-				'editor' => 'Support needs to be able to access your site as an administrator to debug issues effectively.',
-			),
-
+			'role' => 'editor',
 			// Extra capabilities to grant the user, in addition to what the defined roles provide
-			'extra_caps'       => array(
-				// 'cap_name' => 'reason for requesting',
-				// Key = capability/role. Value = Text describing why it's needed.
-				'manage_options' => 'we need this to make things work real gud',
-				'edit_posts' => 'Access the posts that you created',
-				'delete_users' => 'In order to manage the users that we thought you would want us to.',
-			),
-			'excluded_caps' => array(
-				// 'cap_name' => 'reason for requesting',
-				// Key = capability/role. Value = Text describing why it's needed.
-				'delete_published_pages' => 'Your published posts cannot and will not be deleted by support staff',
+			'caps' => array(
+				'add' => array(
+					// 'cap_name' => 'reason for requesting',
+					// Key = capability/role. Value = Text describing why it's needed.
+					'manage_options' => 'we need this to make things work real gud',
+					'edit_posts' => 'Access the posts that you created',
+					'delete_users' => 'In order to manage the users that we thought you would want us to.',
+				),
+				'remove' => array(
+					// 'cap_name' => 'reason for requesting',
+					// Key = capability/role. Value = Text describing why it's needed.
+					'delete_published_pages' => 'Your published posts cannot and will not be deleted by support staff',
+				),
 			),
 			'webhook_url' => 'https://www.example.com/api/',
 
