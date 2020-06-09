@@ -117,6 +117,7 @@ class TrustedLogin_Example_Settings_Page {
 			<h2>Output Auth Screen</h2>
 			<p class="description">To include a TrustedLogin-generated Auth screen:</p>
 			<pre lang="php">do_action( 'trustedlogin/<?php echo $this->config->ns(); ?>/auth_screen' );</pre>
+			<hr>
 			<?php
 			do_action( 'trustedlogin/' . $this->config->ns() . '/auth_screen' );
 			?>

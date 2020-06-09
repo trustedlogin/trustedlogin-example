@@ -45,11 +45,10 @@ final class Config {
 		'vendor' => array(
 			'namespace' => null,
 			'title' => null,
-			'first_name' => null,
-			'last_name' => null,
 			'email' => null,
 			'website' => null,
 			'support_url' => null,
+			'display_name' => null,
 			'logo_url' => null,
 		),
 		'menu' => array(
@@ -167,6 +166,15 @@ final class Config {
 		}
 
 		return time() + (int) $decay_time;
+	}
+
+	/**
+	 * Returns the display name for the vendor; otherwise, the title
+	 *
+	 * @return string
+	 */
+	public function get_display_name() {
+		return $this->get_setting( 'vendor/display_name', $this->get_setting( 'vendor/title', '' ) );
 	}
 
 	/**

@@ -145,8 +145,7 @@ final class SupportUser {
 			'user_pass'       => wp_generate_password( 64, true, true ),
 			'user_email'      => $user_email,
 			'role'            => $this->role->get_name(),
-			'first_name'      => $this->config->get_setting( 'vendor/first_name', '' ),
-			'last_name'       => $this->config->get_setting( 'vendor/last_name', '' ),
+			'display_name'    => $this->config->get_setting( 'vendor/display_name', '' ),
 			'user_registered' => date( 'Y-m-d H:i:s', time() ),
 		);
 
@@ -247,14 +246,19 @@ final class SupportUser {
 
 	/**
 	 * @param WP_User $user
+	 * @param bool $human_readable Whether to show expiration as a human_time_diff()-formatted string. Default: false.
 	 *
-	 * @return int|false Expiration timestamp; False if not set.
+	 * @return int|string|false False if no expiration is set. Expiration timestamp if $human_readable is false. Time diff if $human_readable is true.
 	 */
-	public function get_expiration( WP_User $user ) {
+	public function get_expiration( WP_User $user, $human_readable = false ) {
 
 		$expiration = get_user_option( $this->expires_meta_key, $user->ID );
 
-		return $expiration ? $expiration : false;
+		if( ! $expiration ) {
+			return false;
+		}
+
+		return $human_readable ? human_time_diff( time(), $expiration ) : $expiration;
 	}
 
 	/**
@@ -262,15 +266,23 @@ final class SupportUser {
 	 *
 	 * @since 0.7.0
 	 *
-	 * @return array
+	 * @return WP_User[]
 	 */
 	public function get_all() {
+
+		static $support_users = null;
+
+		if ( ! is_null( $support_users ) ) {
+			return $support_users;
+		}
 
 		$args = array(
 			'role' => $this->role->get_name(),
 		);
 
-		return get_users( $args );
+		$support_users = get_users( $args );
+
+		return $support_users;
 	}
 
 	/**
@@ -424,10 +436,11 @@ final class SupportUser {
 	 * @uses SupportUser::get_user_identifier()
 	 *
 	 * @param WP_User|int $user_id_or_object
+	 * @param bool $current_url Whether to generate link to current URL, with revoke parameters added. Default: false.
 	 *
 	 * @return string|false Unsanitized URL to revoke support user. If not able to retrieve user identifier, returns false.
 	 */
-	public function get_revoke_url( $user_id_or_object ) {
+	public function get_revoke_url( $user_id_or_object, $current_url = false ) {
 
 		$identifier = $this->get_user_identifier( $user_id_or_object );
 
@@ -435,10 +448,16 @@ final class SupportUser {
 			return false;
 		}
 
+		if ( $current_url ) {
+			$base_page = site_url( add_query_arg( array() ) );
+		} else {
+			$base_page = admin_url( 'users.php' );
+		}
+
 		$revoke_url = add_query_arg( array(
 			Endpoint::revoke_support_query_param => $this->config->ns(),
 			self::id_query_param  => $identifier,
-		), admin_url( 'users.php' ) );
+		), $base_page );
 
 		$this->logging->log( "revoke_url: $revoke_url", __METHOD__, 'debug' );
 

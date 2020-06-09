@@ -27,7 +27,7 @@
 			switch ( response.status ) {
 
 				case 409: /** user already exists */
-				settings.title = tl_obj.lang.status.error409.title;
+					settings.title = tl_obj.lang.status.error409.title;
 					settings.content = tl_obj.lang.status.error409.content;
 					break;
 
