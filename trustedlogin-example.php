@@ -66,9 +66,9 @@ class Example {
 
 			// Settings regarding adding links to the admin sidebar. Leave blank to not add (a direct link will remain enabled)
 			'menu' => array(
-				'slug' => 'edit.php?post_type=gravityview', // Add "Grant Support Access" submenu.
-				'title' => 'Provide Access',
-				'priority' => 1000,
+			#	'slug' => 'edit.php?post_type=gravityview', // Add "Grant Support Access" submenu.
+			#	'title' => 'Provide Access',
+			#	'priority' => 1000,
 			),
 
 			// Details about your support setup
