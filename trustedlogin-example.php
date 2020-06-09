@@ -73,7 +73,7 @@ class Example {
 
 			// Details about your support setup
 			'vendor' => array(
-				'namespace' => 'example',
+				'namespace' => 'test', // TODO: Replace this with `example` once live.
 				'title' => 'GravityView',
 				'display_name' => 'GravityView Support',
 				'email' => 'support@example.com',
