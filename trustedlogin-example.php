@@ -38,18 +38,18 @@ class Button {
 		$settings = array(
 			// Role(s) provided to created support user
 			'role' => 'editor',
-			// Extra capabilities to grant the user, in addition to what the defined roles provide
+			// Extra capabilities to grant the user, in addition to what the defined roles provide.
 			'caps' => array(
 				'add' => array(
-					// 'cap_name' => 'reason for requesting',
-					// Key = capability/role. Value = Text describing why it's needed.
-					'manage_options' => 'we need this to make things work real gud',
-					'edit_posts' => 'Access the posts that you created',
-					'delete_users' => 'In order to manage the users that we thought you would want us to.',
+					// capability => Text describing why it's needed.
+					'manage_options' => 'We need to confirm the settings you have for other plugins.',
+					'edit_posts' => 'This allows us to add or modify View shortcodes if we need to.',
+
+				/** @see SupportRole::$prevented_caps for a list of disallowed capabilities. */
+				//	'delete_users' => 'Uncomment this line to see what happens when configuration is not valid.',
 				),
 				'remove' => array(
-					// 'cap_name' => 'reason for requesting',
-					// Key = capability/role. Value = Text describing why it's needed.
+					// capability => Text describing why it's not needed.
 					'delete_published_pages' => 'Your published posts cannot and will not be deleted by support staff',
 				),
 			),
