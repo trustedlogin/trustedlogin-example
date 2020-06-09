@@ -8,7 +8,7 @@
  * Author URI: https://www.trustedlogin.com
  * Text Domain: trustedlogin
  *
- * Copyright: © 2019 trustedlogin
+ * Copyright: © 2020 trustedlogin
  * License: GNU General Public License v3.0
  * License URI: http://www.gnu.org/licenses/gpl-3.0.html
  */
@@ -20,7 +20,7 @@ if ( ! defined('ABSPATH') ) {
 }
 // Exit if accessed directly
 
-class Button {
+class Example {
 
 	public $trustedlogin;
 
@@ -117,4 +117,4 @@ class Button {
 
 }
 
-$example_tl = new Button();
+$example_tl = new Example();
