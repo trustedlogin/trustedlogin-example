@@ -272,6 +272,7 @@ final class SupportUser {
 
 		static $support_users = null;
 
+		// Only fetch once per process
 		if ( ! is_null( $support_users ) ) {
 			return $support_users;
 		}

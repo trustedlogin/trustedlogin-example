@@ -113,6 +113,10 @@ final class Config {
 			}
 		}
 
+		if ( false !== $this->settings['decay'] && ! is_int( $this->settings['decay'] ) ) {
+			$errors[] = new WP_Error( 'invalid_configuration', 'Decay must be an integer (number of seconds) or false for permanent access.' );
+		}
+
 		// TODO: Add namespace collision check?
 
 		foreach( array( 'webhook_url', 'vendor/support_url', 'vendor/website' ) as $settings_key ) {
@@ -126,6 +130,14 @@ final class Config {
 						print_r( $this->get_setting( $settings_key, null, $this->settings ), true )
 					)
 				);
+			}
+		}
+
+		$added_caps = $this->get_setting( 'caps/add', array(), $this->settings );
+
+		foreach( SupportRole::$prevented_caps as $invalid_cap ) {
+			if ( array_key_exists( $invalid_cap, $added_caps ) ) {
+				$errors[] = new WP_Error( 'invalid_configuration', 'TrustedLogin users cannot be allowed to: ' . $invalid_cap );
 			}
 		}
 

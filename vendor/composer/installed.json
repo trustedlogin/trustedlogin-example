@@ -1204,17 +1204,17 @@
     },
     {
         "name": "trustedlogin/trustedlogin-client",
-        "version": "dev-develop",
-        "version_normalized": "dev-develop",
+        "version": "dev-feature/auth-screen",
+        "version_normalized": "dev-feature/auth-screen",
         "source": {
             "type": "git",
             "url": "https://github.com/trustedlogin/trustedlogin-client.git",
-            "reference": "5ec315d02c73c1cdeb8b143586d3850ba55402b7"
+            "reference": "69b7bf9ede3c441ceb32158fd322521dc6e5e796"
         },
         "dist": {
             "type": "zip",
-            "url": "https://api.github.com/repos/trustedlogin/trustedlogin-client/zipball/5ec315d02c73c1cdeb8b143586d3850ba55402b7",
-            "reference": "5ec315d02c73c1cdeb8b143586d3850ba55402b7",
+            "url": "https://api.github.com/repos/trustedlogin/trustedlogin-client/zipball/69b7bf9ede3c441ceb32158fd322521dc6e5e796",
+            "reference": "69b7bf9ede3c441ceb32158fd322521dc6e5e796",
             "shasum": ""
         },
         "require": {
@@ -1225,7 +1225,7 @@
             "paragonie/sodium_compat": "^1.12",
             "php": ">=5.3.0"
         },
-        "time": "2020-06-02T22:18:18+00:00",
+        "time": "2020-06-09T22:57:27+00:00",
         "type": "library",
         "installation-source": "source",
         "autoload": {

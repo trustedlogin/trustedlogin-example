@@ -2,7 +2,7 @@
 /**
  * Class Admin
  *
- * @package TrustedLogin\Client
+ * @package ReplaceMe\TrustedLogin\Client
  *
  * @copyright 2020 Katz Web Services, Inc.
  */
@@ -233,7 +233,7 @@ final class Admin {
 		wp_enqueue_style( 'trustedlogin-' . $this->config->ns() );
 
 		$auth_form_template = '
-<div class="tl-{{ns}}-auth">
+<div class="tl-{{ns}}-auth tl-{{ns}}-{{has_access_class}}">
 	<header class="tl-{{ns}}-auth__header">
 		<div class="tl-{{ns}}-auth__logo">{{logo}}</div>
 		<h1>{{intro}}</h1>
@@ -261,6 +261,7 @@ final class Admin {
 
 		$content = array(
 			'ns' => $this->config->ns(),
+			'has_access_class' => $this->support_user->get_all() ? 'has-access' : 'grant-access',
 			'logo' => $this->get_logo_html(),
 			'intro' => $this->get_intro(),
 			'details' => $this->get_details_html(),
@@ -279,11 +280,15 @@ final class Admin {
 
 		if( $has_access ) {
 			foreach ( $has_access as $access ) {
+				// translators: %1$s is replaced with the name of the software developer (e.g. "Acme Widgets"). %2$s is the amount of time remaining for access ("1 week")
 				$intro = sprintf( esc_html__( '%1$s has site access that expires in %2$s.', 'trustedlogin' ), $this->config->get_display_name(), $this->support_user->get_expiration( $access, true ) );
 			}
 		} else {
+			// translators: %1$s is replaced with the name of the software developer (e.g. "Acme Widgets")
 			$intro = sprintf( esc_html__( 'Grant %1$s access to your site.', 'trustedlogin' ), $this->config->get_display_name() );
 		}
+
+		return $intro;
 	}
 
 	private function get_details_html() {
@@ -304,16 +309,17 @@ final class Admin {
 
 		$output_template = '
 			<div class="tl-{{ns}}-auth__roles">
-				<h2><span class="dashicons dashicons-admin-users dashicons--large"></span> {{roles_summary}}</h2>
+				<h2><span class="dashicons dashicons-admin-users dashicons--large"></span>{{roles_summary}}</h2>
 				{{caps}}
 			</div>
 			<div class="tl-{{ns}}-auth__expire">
-				<h2><span class="dashicons dashicons-clock dashicons--large"></span> {{expire_summary}}{{expire_tooltip}}</h2>
+				<h2><span class="dashicons dashicons-clock dashicons--large"></span>{{expire_summary}}{{expire_desc}}</h2>
 			</div>
 		';
 
-		// translators: The amount of time that the login will be active for.
+		// translators: %1$s and %3$s are replaced with HTML tags. %2$s is the amount of time that the login will be active for (e.g. "1 week")
 		$expire_summary = sprintf( esc_html__( 'Site access will %1$sauto-expire in %2$s%3$s.', 'trustedlogin' ), '<strong>', human_time_diff( 0, $this->config->get_setting( 'decay' ) ), '</strong>' );
+		$expire_desc = '<small>' . esc_html__( 'You may revoke access at any time.', 'trustedlogin' ) . '</small>';
 
 		$ns          = $this->config->ns();
 		$cloned_role = translate_user_role( ucfirst( $this->config->get_setting( 'role' ) ) );
@@ -328,9 +334,9 @@ final class Admin {
 		$content = array(
 			'ns'             => $ns,
 			'expire_summary' => $expire_summary,
+			'expire_desc'    => $expire_desc,
 			'roles_summary'  => $roles_summary,
 			'caps'           => $this->get_caps_html(),
-			'expire_tooltip' => sprintf( '<span class="dashicons dashicons-editor-help dashicons--small dashicons--help" title="%s"></span>', esc_html__( 'You may revoke access at any time.', 'trustedlogin' ) ),
 		);
 
 		return $this->prepare_output( $output_template, $content );
@@ -343,45 +349,52 @@ final class Admin {
 	 */
 	private function get_caps_html() {
 
-		$caps_config = $this->config->get_setting( 'caps' );
-
-		if ( ! array_filter( $caps_config ) ) {
-			return '';
-		}
-
 		$added   = $this->config->get_setting( 'caps/add' );
 		$removed = $this->config->get_setting( 'caps/remove' );
 
 		$caps = '';
+		$caps .= $this->get_caps_section( $added, __( 'Additional capabilities:', 'trustedlogin' ), 'dashicons-yes-alt' );
+		$caps .= $this->get_caps_section( $removed, __( 'Removed capabilities:', 'trustedlogin' ), 'dashicons-no' );
 
-		if ( ! empty( $added ) ) {
-			$caps .= '<div>';
-			$caps .= '<h3>' . esc_html__( 'Additional capabilities:', 'trustedlogin' ) . '</h3>';
-			$caps .= '<ul>';
-			foreach ( (array) $added as $cap => $reason ) {
-				$caps .= '<li><span class="dashicons dashicons-yes-alt dashicons--small"></span>' . esc_html( $cap ) . '<small>' . esc_html( $reason ) . '</small></li>';
-			}
-			$caps .= '</ul>';
-			$caps .= '</div>';
-		}
-
-		if ( ! empty( $removed ) ) {
-			$caps .= '<div>';
-			$caps .= '<h3>' . esc_html__( 'Removed capabilities:', 'trustedlogin' ) . '</h3>';
-			$caps .= '<ul>';
-			foreach ( (array) $removed as $cap => $reason ) {
-				$dashicon = '<span class="dashicons dashicons-no dashicons--small"></span>';
-				$caps     .= '<li>' . $dashicon . esc_html( $cap ) . '<small>' . esc_html( $reason ) . '</small></li>';
-			}
-			$caps .= '</ul>';
-			$caps .= '</div>';
-		}
-
-		if ( ! $caps ) {
+		if ( empty( $caps ) ) {
 			return $caps;
 		}
 
 		return '<div class="tl-' . $this->config->ns() . '-auth__role-container hidden">' . $caps . '</div>';
+	}
+
+	/**
+	 * Generate additional/removed capabilities sections
+	 *
+	 * @param array $caps_array Associative array of cap => reason why cap is set
+	 * @param string $heading Text to show for the heading of the caps section
+	 * @param string $dashicon CSS class for the specific dashicon
+	 *
+	 * @return string
+	 */
+	private function get_caps_section( $caps_array, $heading = '', $dashicon = '' ) {
+
+		$caps_array = array_filter( (array) $caps_array );
+
+		if ( empty( $caps_array ) ) {
+			return '';
+		}
+
+		$output = '';
+		$output .= '<div>';
+		$output .= '<h3>' . esc_html( $heading ) . '</h3>';
+		$output .= '<ul>';
+
+		foreach ( (array) $caps_array as $cap => $reason ) {
+			$dashicon = '<span class="dashicons ' . esc_attr( $dashicon ) . ' dashicons--small"></span>';
+			$reason = empty( $reason ) ? '' : '<small>' . esc_html( $reason ) . '</small>';
+			$output     .= sprintf( '<li>%s<span class="code">%s</span>%s</li>', $dashicon, esc_html( $cap ), $reason );
+		}
+
+		$output .= '</ul>';
+		$output .= '</div>';
+
+		return $output;
 	}
 
 	private function get_script() {
@@ -418,7 +431,8 @@ final class Admin {
 			$logo_output = sprintf(
 				'<a href="%1$s" title="%2$s" target="_blank" rel="noreferrer noopener"><img src="%4$s" alt="%5$s" /></a>',
 				esc_url( $this->config->get_setting( 'vendor/website' ) ),
-				esc_attr( sprintf( __( 'Grant %1$s Support access to your site.', 'trustedlogin' ), $this->config->get_setting( 'vendor/title' ) ) ),
+				// translators: %s is replaced with the name of the software developer (e.g. "Acme Widgets")
+				sprintf( 'Visit the %s website', $this->config->get_setting( 'vendor/title' ) ),
 				$this->config->ns(),
 				esc_attr( $this->config->get_setting( 'vendor/logo_url' ) ),
 				esc_attr( $this->config->get_setting( 'vendor/title' ) )
@@ -501,6 +515,9 @@ final class Admin {
 					'title' => array(),
 				),
 				'span'    => array( 'class' => array(), 'id' => array(), 'title' => array(), 'data-toggle' => array() ),
+				'code'	  => array( 'class' => array(), 'id' => array() ),
+				'tt'	  => array( 'class' => array(), 'id' => array() ),
+				'pre'	  => array( 'class' => array(), 'id' => array() ),
 				'table'   => array( 'class' => array(), 'id' => array() ),
 				'thead'	  => array(),
 				'tfoot'   => array(),
@@ -676,98 +693,6 @@ final class Admin {
 	}
 
 	/**
-	 * Generates the HTML strings for the Confirmation dialogues
-	 *
-	 * @deprecated
-	 * @TODO Deprecate this!
-	 *
-	 * @since 0.2.0
-	 * @since 0.9.2 added excluded_caps output
-	 *
-	 * @return string[] Array containing 'intro', 'description' and 'detail' keys.
-	 */
-	public function output_tl_alert() {
-
-		$result = array();
-
-
-
-		// Roles
-		$roles_output = '';
-		$roles_output .= sprintf( '<li class="tl-role"><p>%1$s</p></li>',
-			sprintf( esc_html__( 'A new user will be created with a custom role \'%1$s\' (with the same capabilities as %2$s).', 'trustedlogin' ),
-				$this->support_user->role->get_name(),
-				implode( ' &amp; ', (array) $this->config->get_setting( 'role' ) )
-			)
-		);
-
-		$result['roles'] = $roles_output;
-
-		// Extra Caps
-		$caps_output = '';
-		foreach ( (array) $this->config->get_setting( 'caps/add' ) as $cap => $reason ) {
-			$caps_output .= sprintf( '<li class="caps-added"> %1$s <br /><small>%2$s</small></li>',
-				sprintf( esc_html__( 'With the additional \'%1$s\' Capability.', 'trustedlogin' ),
-					$cap
-				),
-				$reason
-			);
-		}
-		foreach ( (array) $this->config->get_setting( 'caps/remove' ) as $cap => $reason ) {
-			$caps_output .= sprintf( '<li class="caps-removed"> %1$s <br /><small>%2$s</small></li>',
-				sprintf( esc_html__( 'The \'%1$s\' Capability will not be granted.', 'trustedlogin' ),
-					$cap
-				),
-				$reason
-			);
-		}
-		$result['caps'] = $caps_output;
-
-		// Decay
-		if ( $decay_time = $this->config->get_expiration_timestamp() ) {
-
-			$decay_diff = human_time_diff( $decay_time );
-
-			$decay_tag = apply_filters('trustedlogin/' . $this->config->ns() . '/template/tags/decay','h4');
-			$decay_output = '<'.$decay_tag.'>' . sprintf( esc_html__( 'Access will be granted for %1$s and can be revoked at any time.', 'trustedlogin' ), $decay_diff ) . '</'.$decay_tag.'>';
-		} else {
-			$decay_output = '';
-		}
-
-		$details_output = sprintf(
-			wp_kses(
-				apply_filters(
-					'trustedlogin/' . $this->config->ns() . '/template/details',
-					'<ul class="tl-details tl-roles">%1$s</ul><ul class="tl-details tl-caps">%2$s</ul>%3$s'
-				),
-				array(
-					'ul'    => array( 'class' => array(), 'id' => array() ),
-					'li'    => array( 'class' => array(), 'id' => array() ),
-					'p'     => array( 'class' => array(), 'id' => array() ),
-					'h1'    => array( 'class' => array(), 'id' => array() ),
-					'h2'    => array( 'class' => array(), 'id' => array() ),
-					'h3'    => array( 'class' => array(), 'id' => array() ),
-					'h4'    => array( 'class' => array(), 'id' => array() ),
-					'h5'    => array( 'class' => array(), 'id' => array() ),
-					'div'   => array( 'class' => array(), 'id' => array() ),
-					'br'    => array(),
-					'strong'=> array(),
-					'em'    => array(),
-				)
-			),
-			$roles_output,
-			$caps_output,
-			$decay_output
-		);
-
-
-		$result['details'] = $details_output;
-
-		return $result;
-
-	}
-
-	/**
 	 * Helper function: Build translate-able strings for alert messages
 	 *
 	 * @since 0.4.3
@@ -804,7 +729,7 @@ final class Admin {
 				$vendor_title
 			),
 			sprintf(
-				__( 'Please <a href="%1$s" target="_blank">click here</a> to go to the %2$s Support Site', 'trustedlogin' ),
+				__( 'Please <a href="%1$s" target="_blank">click here</a> to go to the %2$s support site', 'trustedlogin' ),
 				esc_url( add_query_arg( $query_args, $this->config->get_setting( 'vendor/support_url' ) ) ),
 				$vendor_title
 			)
@@ -849,6 +774,10 @@ final class Admin {
 						$vendor_title
 					),
 					'revoke_link' => esc_url( add_query_arg( array( 'revoke-tl' => $this->config->ns() ), admin_url( 'users.php' ) ) ),
+				),
+				'error404' => array(
+					'title' => esc_html__( 'The TrustedLogin vendor could not be found.', 'trustedlogin' ),
+					'content' => '',
 				),
 				'error409' => array(
 					'title' => sprintf(
