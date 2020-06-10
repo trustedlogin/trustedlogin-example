@@ -298,9 +298,13 @@ final class Admin {
 		// Has access
 		if ( $has_access ) {
 
-			$output_template = '{{users_table}}';
+			$output_template = '
+				{{access_key}}
+				{{users_table}}
+			';
 
 			$content = array(
+				'access_key'  => $this->get_access_key_html(),
 				'users_table' => $this->output_support_users( false, array( 'current_url' => true ) ),
 			);
 
@@ -340,6 +344,24 @@ final class Admin {
 		);
 
 		return $this->prepare_output( $output_template, $content );
+	}
+
+	/**
+	 * @return string
+	 */
+	private function get_access_key_html() {
+
+		// Check if access key exists
+
+		// If not, return empty string
+
+		// If yes, return <div>
+
+		$output = '<div class="tl-{{ns}}-auth__access_key">
+			<p>Example content here!</p>
+		</div>';
+
+		return $output;
 	}
 
 	/**
