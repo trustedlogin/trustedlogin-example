@@ -357,7 +357,7 @@ final class Admin {
 
 		// If yes, return <div>
 
-		$output = '<div class="tl-{{ns}}-auth__access_key">
+		$output = '<div class="tl-' . $this->config->ns() . '-auth__access_key">
 			<p>Example content here!</p>
 		</div>';
 
