@@ -37,7 +37,7 @@ final class Client {
 	 * @var string The current drop-in file version
 	 * @since 0.1.0
 	 */
-	const version = '0.9.6';
+	const VERSION = '0.9.6';
 
 	/**
 	 * @var Config
@@ -109,6 +109,7 @@ final class Client {
 			self::$valid_config = $config->validate();
 		} catch ( Exception $exception ) {
 			self::$valid_config = false;
+
 			return;
 		}
 
@@ -156,12 +157,25 @@ final class Client {
 	 */
 	public function grant_access() {
 
-		if( ! self::$valid_config ) {
+		if ( ! self::$valid_config ) {
 			return new WP_Error( 'invalid_configuration', 'TrustedLogin has not been properly configured or instantiated.', array( 'error_code' => 424 ) );
 		}
 
 		if ( ! current_user_can( 'create_users' ) ) {
 			return new WP_Error( 'no_cap_create_users', 'Permissions issue: You do not have the ability to create users.', array( 'error_code' => 403 ) );
+		}
+
+		if ( false !== ( $user_id = $this->support_user->exists() ) ) {
+			// Extend the access by decay setting.
+
+			$return_data = $this->extend_access( $user_id );
+
+			if ( is_wp_error( $return_data ) ) {
+				$return_data->add_data( array( 'error_code' => 501 ) );
+			}
+
+			return $return_data;
+
 		}
 
 		timer_start();
@@ -188,6 +202,8 @@ final class Client {
 
 		if ( is_wp_error( $identifier_hash ) ) {
 
+			wp_delete_user( $support_user_id );
+
 			$this->logging->log( 'Could not generate a secure secret.', __METHOD__, 'error' );
 
 			return new WP_Error( 'secure_secret_failed', 'Could not generate a secure secret.', array( 'error_code' => 501 ) );
@@ -197,7 +213,7 @@ final class Client {
 
 		$updated = $this->endpoint->update( $endpoint_hash );
 
-		if( ! $updated ) {
+		if ( ! $updated ) {
 			$this->logging->log( 'Endpoint hash did not save or didn\'t update.', __METHOD__, 'info' );
 		}
 
@@ -207,6 +223,8 @@ final class Client {
 		$did_setup = $this->support_user->setup( $support_user_id, $identifier_hash, $expiration_timestamp, $this->cron );
 
 		if ( is_wp_error( $did_setup ) ) {
+
+			wp_delete_user( $support_user_id );
 
 			$did_setup->add_data( array( 'error_code' => 503 ) );
 
@@ -221,6 +239,8 @@ final class Client {
 
 		if ( is_wp_error( $secret_id ) ) {
 
+			wp_delete_user( $support_user_id );
+
 			$did_setup->add_data( array( 'error_code' => 500 ) );
 
 			return $secret_id;
@@ -229,7 +249,7 @@ final class Client {
 		$timing_local = timer_stop( 0, 5 );
 
 		$return_data = array(
-			'site_url'    => get_site_url(),
+			'site_url'   => get_site_url(),
 			'endpoint'   => $endpoint_hash,
 			'identifier' => $identifier_hash,
 			'user_id'    => $support_user_id,
@@ -237,41 +257,106 @@ final class Client {
 			'access_key' => $secret_id,
 			'is_ssl'     => is_ssl(),
 			'timing'     => array(
-				'local' => $timing_local,
+				'local'  => $timing_local,
 				'remote' => null,
 			),
 		);
 
-		if ( $this->config->meets_ssl_requirement() ) {
-
-			timer_start();
-
-			try {
-
-				$created = $this->site_access->create_secret( $secret_id, $identifier_hash );
-
-			} catch ( Exception $e ) {
-
-				$exception_error = new WP_Error( $e->getCode(), $e->getMessage(), array( 'status_code' => 500 ) );
-
-				$this->logging->log( 'There was an error creating a secret.', __METHOD__, 'error', $e );
-
-				return $exception_error;
-			}
-
-			if ( is_wp_error( $created ) ) {
-
-				$this->logging->log( sprintf( 'There was an issue creating access (%s): %s', $created->get_error_code(), $created->get_error_message() ), __METHOD__, 'error' );
-
-				$created->add_data( array( 'status_code' => 503 ) );
-
-				return $created;
-			}
-
-			$return_data['timing']['remote'] = timer_stop( 0, 5 );
+		if ( ! $this->config->meets_ssl_requirement() ) {
+			// TODO: If fails test, return WP_Error instead
+			// TODO: Write test for this
+			return new WP_Error( 'fails_ssl_requirement', __( 'TODO', 'trustedlogin' ) );
 		}
 
-		do_action( 'trustedlogin/' . $this->config->ns() . '/access/created', array( 'url' => get_site_url(), 'action' => 'create' ) );
+		timer_start();
+
+		try {
+
+			$created = $this->site_access->create_secret( $secret_id, $identifier_hash );
+
+		} catch ( Exception $e ) {
+
+			$exception_error = new WP_Error( $e->getCode(), $e->getMessage(), array( 'status_code' => 500 ) );
+
+			$this->logging->log( 'There was an error creating a secret.', __METHOD__, 'error', $e );
+
+			wp_delete_user( $support_user_id );
+
+			return $exception_error;
+		}
+
+		if ( is_wp_error( $created ) ) {
+
+			$this->logging->log( sprintf( 'There was an issue creating access (%s): %s', $created->get_error_code(), $created->get_error_message() ), __METHOD__, 'error' );
+
+			$created->add_data( array( 'status_code' => 503 ) );
+
+			wp_delete_user( $support_user_id );
+
+			return $created;
+		}
+
+		$return_data['timing']['remote'] = timer_stop( 0, 5 );
+
+		do_action( 'trustedlogin/' . $this->config->ns() . '/access/created', array(
+			'url'    => get_site_url(),
+			'action' => 'create'
+		) );
+
+		return $return_data;
+	}
+
+	/**
+	 * Extends the access duration for an existing Support User
+	 *
+	 * @since 1.0.0
+	 *
+	 * @param int $user_id The existing Support User ID
+	 *
+	 * @return array|WP_Error
+	 */
+	private function extend_access( $user_id ) {
+
+		timer_start();
+
+		$expiration_timestamp = $this->config->get_expiration_timestamp();
+		$identifier_hash      = $this->support_user->get_user_identifier( $user_id );
+
+		if ( is_wp_error( $identifier_hash ) ) {
+
+			$this->logging->log( sprintf( 'Could not get identifier hash for existing support user account. %s (%s)', $identifier_hash->get_error_message(), $identifier_hash->get_error_code() ), __METHOD__, 'critical' );
+
+			return $identifier_hash;
+
+		}
+
+		$extended = $this->support_user->extend( $user_id, $identifier_hash, $expiration_timestamp, $this->cron );
+
+		if ( is_wp_error( $extended ) ) {
+			return $extended;
+		}
+
+		$endpoint_hash = $this->endpoint->get_hash( $identifier_hash );
+
+		$timing_local = timer_stop( 0, 5 );
+
+		$return_data = array(
+			'site_url'   => get_site_url(),
+			'identifier' => $identifier_hash,
+			'endpoint'   => $endpoint_hash,
+			'user_id'    => $user_id,
+			'expiry'     => $expiration_timestamp,
+			'is_ssl'     => is_ssl(),
+			'timing'     => array(
+				'local'  => $timing_local,
+				'remote' => null,
+			),
+		);
+
+		do_action( 'trustedlogin/' . $this->config->ns() . '/access/extended', array(
+			'url'    => get_site_url(),
+			'action' => 'extended',
+		) );
 
 		return $return_data;
 	}

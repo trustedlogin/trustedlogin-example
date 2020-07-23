@@ -133,7 +133,7 @@ final class Admin {
 			'trustedlogin-' . $this->config->ns(),
 			$this->config->get_setting( 'paths/js' ),
 			array( 'tl-jquery-confirm-' . $this->config->ns() ),
-			Client::version,
+			Client::VERSION,
 			true
 		);
 
@@ -141,7 +141,7 @@ final class Admin {
 			'trustedlogin-' . $this->config->ns(),
 			$this->config->get_setting( 'paths/css' ),
 			array( 'tl-jquery-confirm-' . $this->config->ns() ),
-			Client::version,
+			Client::VERSION,
 			'all'
 		);
 
@@ -173,7 +173,7 @@ final class Admin {
 		$admin_bar->add_menu( array(
 			'id'    => 'tl-' . $this->config->ns() . '-revoke',
 			'title' => esc_html__( 'Revoke TrustedLogin', 'trustedlogin' ),
-			'href'  => add_query_arg( array( Endpoint::revoke_support_query_param => $this->config->ns() ), admin_url( 'users.php' ) ),
+			'href'  => $this->support_user->get_revoke_url( 'all' ),
 			'meta'  => array(
 				'title' => esc_html__( 'Revoke TrustedLogin', 'trustedlogin' ),
 				'class' => 'tl-destroy-session',
@@ -242,6 +242,8 @@ final class Admin {
 		<div class="tl-{{ns}}-auth__details">
 			{{details}}
 		</div>
+		<div class="tl-{{ns}}-auth__response" aria-live="assertive">
+		</div>
 		<div class="tl-{{ns}}-auth__actions">
 			{{button}}
 		</div>
@@ -298,13 +300,9 @@ final class Admin {
 		// Has access
 		if ( $has_access ) {
 
-			$output_template = '
-				{{access_key}}
-				{{users_table}}
-			';
+			$output_template = '{{users_table}}';
 
 			$content = array(
-				'access_key'  => $this->get_access_key_html(),
 				'users_table' => $this->output_support_users( false, array( 'current_url' => true ) ),
 			);
 
@@ -344,24 +342,6 @@ final class Admin {
 		);
 
 		return $this->prepare_output( $output_template, $content );
-	}
-
-	/**
-	 * @return string
-	 */
-	private function get_access_key_html() {
-
-		// Check if access key exists
-
-		// If not, return empty string
-
-		// If yes, return <div>
-
-		$output = '<div class="tl-' . $this->config->ns() . '-auth__access_key">
-			<p>Example content here!</p>
-		</div>';
-
-		return $output;
 	}
 
 	/**
@@ -527,6 +507,7 @@ final class Admin {
 					'rel'    => array(),
 					'target' => array(),
 					'data-toggle' => array(),
+					'data-access' => array(),
 				),
 				'img'     => array(
 					'class' => array(),
@@ -537,6 +518,7 @@ final class Admin {
 					'title' => array(),
 				),
 				'span'    => array( 'class' => array(), 'id' => array(), 'title' => array(), 'data-toggle' => array() ),
+				'label'   => array( 'class' => array(), 'id' => array(), 'for' => array() ),
 				'code'	  => array( 'class' => array(), 'id' => array() ),
 				'tt'	  => array( 'class' => array(), 'id' => array() ),
 				'pre'	  => array( 'class' => array(), 'id' => array() ),
@@ -553,7 +535,7 @@ final class Admin {
 				'h3'      => array( 'class' => array(), 'id' => array() ),
 				'h4'      => array( 'class' => array(), 'id' => array() ),
 				'h5'      => array( 'class' => array(), 'id' => array() ),
-				'div'     => array( 'class' => array(), 'id' => array() ),
+				'div'     => array( 'class' => array(), 'id' => array(), 'aria-live' => array() ),
 				'small'   => array( 'class' => array(), 'id' => array(), 'data-toggle' => array() ),
 				'header'  => array( 'class' => array(), 'id' => array() ),
 				'footer'  => array( 'class' => array(), 'id' => array() ),
@@ -561,6 +543,15 @@ final class Admin {
 				'br'      => array(),
 				'strong'  => array(),
 				'em'      => array(),
+				'input'   => array(
+					'class' => array(),
+					'id'    => array(),
+					'type'  => array( 'text' ),
+					'value' => array(),
+					'size'  => array(),
+					'aria-live' => array(),
+				),
+				'button'   => array( 'class' => array(), 'id' => array(), 'aria-live' => array() ),
 			),
 				$allowed_protocols
 			);
@@ -680,10 +671,11 @@ final class Admin {
 		if ( $this->support_user->get_all() ) {
 			$text        			= '<span class="dashicons dashicons-update-alt"></span>' . esc_html( $atts['exists_text'] );
 			$href 	     			= admin_url( 'users.php?role=' . $this->support_user->role->get_name() );
-			$data_atts['accesskey'] = $this->site_access->get_access_key(); // Add the shareable accesskey as a data attribute
+			$data_atts['access']	= 'extend';
 		} else {
-			$text      = esc_html( $atts['text'] );
-			$href      = $atts['support_url'];
+			$text      				= esc_html( $atts['text'] );
+			$href      				= $atts['support_url'];
+			$data_atts['access']	= 'grant';
 		}
 
 		$css_class = implode( ' ', array( $css_class, $atts['class'] ) );
@@ -705,12 +697,12 @@ final class Admin {
 
 		return sprintf(
 			'<%1$s href="%2$s" class="%3$s button-trustedlogin-%4$s" aria-role="button" %5$s>%6$s</%1$s>',
-			$tag,
-			esc_url( $href ),
-			esc_attr( $css_class ),
-			$this->config->ns(),
-			$data_string,
-			$anchor_html
+			/* %1$s */ $tag,
+			/* %2$s */ esc_url( $href ),
+			/* %3$s */ esc_attr( $css_class ),
+			/* %4$s */ $this->config->ns(),
+			/* %5$s */ $data_string,
+			/* %6$s */ $anchor_html
 		);
 	}
 
@@ -762,9 +754,11 @@ final class Admin {
 				'confirm' => esc_html__( 'Confirm', 'trustedlogin' ),
 				'ok' => esc_html__( 'Ok', 'trustedlogin' ),
 				'go_to_site' =>  sprintf( __( 'Go to %1$s support site', 'trustedlogin' ), $vendor_title ),
-				'close' => esc_html__( 'Close', 'trustedlogin' ),
+				'close'  => esc_html__( 'Close', 'trustedlogin' ),
 				'cancel' => esc_html__( 'Cancel', 'trustedlogin' ),
 				'revoke' => sprintf( __( 'Revoke %1$s support access', 'trustedlogin' ), $vendor_title ),
+				'copy'   => __( 'Copy', 'trustedlogin' ),
+				'copied' => __( 'Copied!', 'trustedlogin' ),
 			),
 			'status' => array(
 				'synced' => array(
@@ -773,6 +767,15 @@ final class Admin {
 						__( 'A temporary support user has been created, and sent to %1$s Support.', 'trustedlogin' ),
 						$vendor_title
 					),
+				),
+				'pending' => array(
+					'content' => sprintf( __( 'Generating & encrypting secure support access for %1$s', 'trustedlogin'), $vendor_title ),
+				),
+				'extending' => array(
+					'content' => sprintf( __( 'Extending support access for %1$s by %2$s', 'trustedlogin'), $vendor_title, human_time_diff( time(), time() + $this->config->get_setting( 'decay' ) ) ),
+				),
+				'syncing' => array(
+					'content' => sprintf( __( 'Sending encrypted access to %1$s.', 'trustedlogin'), $vendor_title ),
 				),
 				'error' => array(
 					'title' => sprintf( __( 'Error syncing Support User to %1$s', 'trustedlogin' ), $vendor_title ),
@@ -865,8 +868,25 @@ final class Admin {
 
 		$return = '';
 
-		$return .= '<h3>' . sprintf( esc_html__( '%s users:', 'trustedlogin' ), $this->config->get_setting( 'vendor/title' ) ) . '</h3>';
+		$access_key_output = sprintf(
+			'<%6$s class="tl-%1$s-auth__accesskey">
+				<label>
+					<h2>%2$s</h2>
+					<input type="text" value="%4$s" size="33" class="tl-%1$s-auth__accesskey_field code" aria-label="%3$s">
+				</label>
+				<button id="tl-%1$s-copy" class="tl-%1$s-auth__accesskey_copy button button button-outline" aria-live="polite">%5$s</button>
+			</%6$s>',
+			/* %1$s */ sanitize_title( $this->config->ns() ),
+			/* %2$s */ esc_html__( ' Site access key:', 'trustedlogin'),
+			/* %3$s */ esc_html__( 'Access Key', 'trustedlogin' ),
+			/* %4$s */ esc_attr( $this->site_access->get_access_key() ),
+			/* %5$s */ esc_html__( 'Copy', 'trustedlogin' ),
+			/* %6$s */ 'div'
+		);
 
+		$return .= $access_key_output;
+
+		$return .= '<h2>' . sprintf( esc_html__( '%s users:', 'trustedlogin' ), $this->config->get_setting( 'vendor/title' ) ) . '</h2>';
 		$return .= '<table class="wp-list-table widefat plugins">';
 
 		$table_header =

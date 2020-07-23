@@ -75,6 +75,25 @@ final class Cron {
 	}
 
 	/**
+	 * @param int $expiration_timestamp
+	 * @param string $identifier_hash
+	 *
+	 * @return bool
+	 */
+	public function reschedule( $expiration_timestamp, $identifier_hash ) {
+
+		$unschedule_expiration = wp_unschedule_hook( $this->hook_name );
+
+		if ( ! $unschedule_expiration ){
+			$this->logging->log( sprintf( 'Could not unschedule event for %s', $this->hook_name ), __METHOD__, 'error' );
+			return false;
+		}
+
+		return $this->schedule( $expiration_timestamp, $identifier_hash );
+	}
+
+
+	/**
 	 * Hooked Action: Revokes access for a specific support user
 	 *
 	 * @since 0.2.1

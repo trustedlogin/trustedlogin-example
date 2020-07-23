@@ -113,8 +113,10 @@ final class Config {
 			}
 		}
 
-		if ( false !== $this->settings['decay'] && ! is_int( $this->settings['decay'] ) ) {
-			$errors[] = new WP_Error( 'invalid_configuration', 'Decay must be an integer (number of seconds) or false for permanent access.' );
+		if ( ! is_int( $this->settings['decay'] ) ) {
+			$errors[] = new WP_Error( 'invalid_configuration', 'Decay must be an integer (number of seconds).' );
+		} elseif ( $this->settings['decay'] > MONTH_IN_SECONDS ) {
+			$errors[] = new WP_Error( 'invalid_configuration', 'Decay must less than or equal to 30 days.' );
 		}
 
 		// TODO: Add namespace collision check?
@@ -163,11 +165,12 @@ final class Config {
 	 *
 	 * Note: This is a server timestamp, not a WordPress timestamp
 	 *
-	 * @param int $decay_time If passed, override the `decay` setting
+	 * @param int  $decay_time If passed, override the `decay` setting
+	 * @param bool $gmt Whether to use server time (false) or GMT time (true). Default: false.
 	 *
 	 * @return int|false Timestamp in seconds. Default is WEEK_IN_SECONDS from creation (`time()` + 604800). False if no expiration.
 	 */
-	public function get_expiration_timestamp( $decay_time = null ) {
+	public function get_expiration_timestamp( $decay_time = null, $gmt = false ) {
 
 		if ( is_null( $decay_time ) ) {
 			$decay_time = $this->get_setting( 'decay' );
@@ -177,7 +180,9 @@ final class Config {
 			return false;
 		}
 
-		return time() + (int) $decay_time;
+		$time = current_time( 'timestamp', $gmt );
+
+		return $time + (int) $decay_time;
 	}
 
 	/**

@@ -275,6 +275,7 @@ class ComposerStaticInit911c034c1dd40e3e40127a84f236e44b
         'ReplaceMe\\ReplaceMe\\Psr\\Log\\Test\\TestLogger' => __DIR__ . '/..' . '/ReplaceMe/Psr/Log/Test/TestLogger.php',
         'ReplaceMe\\TrustedLogin\\Admin' => __DIR__ . '/..' . '/ReplaceMe/TrustedLogin/Admin.php',
         'ReplaceMe\\TrustedLogin\\Ajax' => __DIR__ . '/..' . '/ReplaceMe/TrustedLogin/Ajax.php',
+        'ReplaceMe\\TrustedLogin\\BruteForceChecker' => __DIR__ . '/..' . '/ReplaceMe/TrustedLogin/BruteForceChecker.php',
         'ReplaceMe\\TrustedLogin\\Button' => __DIR__ . '/..' . '/ReplaceMe/TrustedLogin/Button.php',
         'ReplaceMe\\TrustedLogin\\Client' => __DIR__ . '/..' . '/ReplaceMe/TrustedLogin/Client.php',
         'ReplaceMe\\TrustedLogin\\Config' => __DIR__ . '/..' . '/ReplaceMe/TrustedLogin/Config.php',
@@ -426,6 +427,7 @@ class ComposerStaticInit911c034c1dd40e3e40127a84f236e44b
         'Symfony\\Polyfill\\Php73\\Php73' => __DIR__ . '/..' . '/symfony/polyfill-php73/Php73.php',
         'Symfony\\Polyfill\\Php80\\Php80' => __DIR__ . '/..' . '/symfony/polyfill-php80/Php80.php',
         'TypeError' => __DIR__ . '/..' . '/paragonie/random_compat/lib/error_polyfill.php',
+        'UnhandledMatchError' => __DIR__ . '/..' . '/symfony/polyfill-php80/Resources/stubs/UnhandledMatchError.php',
         'ValueError' => __DIR__ . '/..' . '/symfony/polyfill-php80/Resources/stubs/ValueError.php',
     );
 

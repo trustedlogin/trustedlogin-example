@@ -26,7 +26,7 @@ final class SupportUser {
 	/**
 	 * @var string The query parameter used to pass the unique user ID
 	 */
-	const id_query_param = 'tlid';
+	const ID_QUERY_PARAM = 'tlid';
 
 	/**
 	 * @var Config $config
@@ -98,6 +98,23 @@ final class SupportUser {
 	}
 
 	/**
+	 * Checks if a Support User for this vendor has already been created.
+	 *
+	 * @since 1.0.0
+	 *
+	 * @return int|false - WP User ID if support user exists, otherwise false.
+	 */
+	public function exists() {
+
+		$user_name = sprintf( esc_html__( '%s Support', 'trustedlogin' ), $this->config->get_setting( 'vendor/title' ) );
+
+		$user_id = username_exists( $user_name );
+
+		return $user_id;
+
+	}
+
+	/**
 	 * Create the Support User with custom role.
 	 *
 	 * @since 0.1.0
@@ -106,16 +123,16 @@ final class SupportUser {
 	 */
 	public function create() {
 
-		$user_name = sprintf( esc_html__( '%s Support', 'trustedlogin' ), $this->config->get_setting( 'vendor/title' ) );
+		$user_id = $this->exists();
 
-		$user_id = username_exists( $user_name );
-
+		// Double-check that a user doesn't exist before trying to create a new one.
 		if ( $user_id ) {
 			$this->logging->log( 'Support User not created; already exists: User #' . $user_id, __METHOD__, 'notice' );
 
 			return new WP_Error( 'username_exists', sprintf( 'A user with the username %s already exists', $user_name ) );
 		}
 
+		$user_name   = sprintf( esc_html__( '%s Support', 'trustedlogin' ), $this->config->get_setting( 'vendor/title' ) );
 		$role_exists = $this->role->create();
 
 		if ( is_wp_error( $role_exists ) ) {
@@ -163,7 +180,9 @@ final class SupportUser {
 	}
 
 	/**
-	 * @param $identifier
+	 * Logs in a support user, if any exist at $identifier and haven't expired yet
+	 *
+	 * @param string $identifier Unique Identifier for support user (stored in user meta)
 	 *
 	 * @return true|WP_Error
 	 */
@@ -175,7 +194,17 @@ final class SupportUser {
 
 			$this->logging->log( 'Support user not found at identifier ' . esc_attr( $identifier ), __METHOD__, 'notice' );
 
-			return new WP_Error( 'user_not_found', 'Support user not found at itentifier ' . esc_attr( $identifier ) );
+			$brute_force_checker = new BruteForceChecker( $this->config );
+
+			if ( $brute_force_checker->detect_attack( $identifier ) ){
+					$this->logging->log( 
+						'Potential Brute Force attack detected with identifer: ' . esc_attr( $identifier ),
+						__METHOD__, 
+						'notice' 
+					);
+			}
+
+			return new WP_Error( 'user_not_found', sprintf( 'Support user not found at identifier %s.', esc_attr( $identifier ) ) );
 		}
 
 		$expires = $this->get_expiration( $support_user );
@@ -185,10 +214,7 @@ final class SupportUser {
 
 			$this->logging->log( 'The user was supposed to expire on ' . $expires . '; revoking now.', __METHOD__, 'warning' );
 
-			$this->delete( $identifier, true );
-
-			// TODO
-			//$this->endpoint->delete();
+			$this->delete( $identifier, true, true );
 
 			return new WP_Error( 'access_expired', 'The user was supposed to expire on ' . $expires . '; revoking now.' );
 		}
@@ -291,10 +317,11 @@ final class SupportUser {
 	 *
 	 * @param string $identifier Unique Identifier of the user to delete, or 'all' to remove all support users.
 	 * @param bool   $delete_role Should the TrustedLogin-created user role be deleted also? Default: `true`
+	 * @param bool   $delete_endpoint Should the TrustedLogin endpoint for the site be deleted also? Default: `true`
 	 *
 	 * @return bool|WP_Error True: Successfully removed user and role; false: There are no support users; WP_Error: something went wrong.
 	 */
-	public function delete( $identifier = '', $delete_role = true ) {
+	public function delete( $identifier = '', $delete_role = true, $delete_endpoint = true ) {
 
 		if ( 'all' === $identifier ) {
 			$users = $this->get_all();
@@ -338,6 +365,12 @@ final class SupportUser {
 
 		if( $delete_role ) {
 			$this->role->delete();
+		}
+
+		if ( $delete_endpoint ) {
+			$Endpoint = new Endpoint( $this->config, $this->logging );
+
+			$Endpoint->delete();
 		}
 
 		return $this->delete( $identifier );
@@ -405,6 +438,31 @@ final class SupportUser {
 	}
 
 	/**
+	 * Updates the scheduled cron job to auto-revoke and updates the Support User's meta.
+	 *
+	 * @param int $user_id ID of generated support user
+	 * @param string $identifier_hash Unique ID used by
+	 * @param int $decay_timestamp Timestamp when user will be removed
+	 *
+	 * @return string|WP_Error Value of $identifier_meta_key if worked; empty string or WP_Error if not.
+	 */
+	public function extend( $user_id, $identifier_hash, $expiration_timestamp = null, Cron $cron = null ) {
+
+		if ( ! $expiration_timestamp ) {
+			return new WP_Error( 'no-action', 'Error extending Support User access' );
+		}
+
+		$rescheduled = $cron->reschedule( $expiration_timestamp, $identifier_hash );
+
+		if ( $rescheduled ) {
+			update_user_option( $user_id, $this->expires_meta_key, $expiration_timestamp );
+			return true;
+		}
+
+		// TODO: Return error if the rescheduled cron?
+	}
+
+	/**
 	 * @param WP_User|int $user_id_or_object User ID or User object
 	 *
 	 * @return string|WP_Error User unique identifier if success; WP_Error if $user is not int or WP_User.
@@ -436,14 +494,19 @@ final class SupportUser {
 	 *
 	 * @uses SupportUser::get_user_identifier()
 	 *
-	 * @param WP_User|int $user_id_or_object
-	 * @param bool $current_url Whether to generate link to current URL, with revoke parameters added. Default: false.
+	 * @param WP_User|int|string $user User object, user ID, or "all". If "all", will revoke all users.
+	 * @param bool $current_url Optional. Whether to generate link to current URL, with revoke parameters added. Default: false.
 	 *
-	 * @return string|false Unsanitized URL to revoke support user. If not able to retrieve user identifier, returns false.
+	 * @return string|false Unsanitized nonce URL to revoke support user. If not able to retrieve user identifier, returns false.
 	 */
-	public function get_revoke_url( $user_id_or_object, $current_url = false ) {
+	public function get_revoke_url( $user, $current_url = false ) {
 
-		$identifier = $this->get_user_identifier( $user_id_or_object );
+		// If "all", will revoke all support users.
+		if( 'all' === $user ) {
+			$identifier = 'all';
+		} else {
+			$identifier = $this->get_user_identifier( $user );
+		}
 
 		if ( ! $identifier || is_wp_error( $identifier ) ) {
 			return false;
@@ -456,8 +519,9 @@ final class SupportUser {
 		}
 
 		$revoke_url = add_query_arg( array(
-			Endpoint::revoke_support_query_param => $this->config->ns(),
-			self::id_query_param  => $identifier,
+			Endpoint::REVOKE_SUPPORT_QUERY_PARAM => $this->config->ns(),
+			self::ID_QUERY_PARAM                 => $identifier,
+			'_wpnonce'                           => Endpoint::REVOKE_SUPPORT_QUERY_PARAM,
 		), $base_page );
 
 		$this->logging->log( "revoke_url: $revoke_url", __METHOD__, 'debug' );

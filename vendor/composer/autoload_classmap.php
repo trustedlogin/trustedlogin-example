@@ -179,6 +179,7 @@ return array(
     'ReplaceMe\\ReplaceMe\\Psr\\Log\\Test\\TestLogger' => $vendorDir . '/ReplaceMe/Psr/Log/Test/TestLogger.php',
     'ReplaceMe\\TrustedLogin\\Admin' => $vendorDir . '/ReplaceMe/TrustedLogin/Admin.php',
     'ReplaceMe\\TrustedLogin\\Ajax' => $vendorDir . '/ReplaceMe/TrustedLogin/Ajax.php',
+    'ReplaceMe\\TrustedLogin\\BruteForceChecker' => $vendorDir . '/ReplaceMe/TrustedLogin/BruteForceChecker.php',
     'ReplaceMe\\TrustedLogin\\Button' => $vendorDir . '/ReplaceMe/TrustedLogin/Button.php',
     'ReplaceMe\\TrustedLogin\\Client' => $vendorDir . '/ReplaceMe/TrustedLogin/Client.php',
     'ReplaceMe\\TrustedLogin\\Config' => $vendorDir . '/ReplaceMe/TrustedLogin/Config.php',
@@ -330,5 +331,6 @@ return array(
     'Symfony\\Polyfill\\Php73\\Php73' => $vendorDir . '/symfony/polyfill-php73/Php73.php',
     'Symfony\\Polyfill\\Php80\\Php80' => $vendorDir . '/symfony/polyfill-php80/Php80.php',
     'TypeError' => $vendorDir . '/paragonie/random_compat/lib/error_polyfill.php',
+    'UnhandledMatchError' => $vendorDir . '/symfony/polyfill-php80/Resources/stubs/UnhandledMatchError.php',
     'ValueError' => $vendorDir . '/symfony/polyfill-php80/Resources/stubs/ValueError.php',
 );
