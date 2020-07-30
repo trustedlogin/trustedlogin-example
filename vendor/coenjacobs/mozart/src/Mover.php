@@ -2,12 +2,16 @@
 
 namespace CoenJacobs\Mozart;
 
+use CoenJacobs\Mozart\Composer\Autoload\Autoloader;
 use CoenJacobs\Mozart\Composer\Autoload\Classmap;
 use CoenJacobs\Mozart\Composer\Autoload\NamespaceAutoloader;
+use CoenJacobs\Mozart\Composer\Autoload\Psr0;
+use CoenJacobs\Mozart\Composer\Autoload\Psr4;
 use CoenJacobs\Mozart\Composer\Package;
 use League\Flysystem\Adapter\Local;
 use League\Flysystem\Filesystem;
 use Symfony\Component\Finder\Finder;
+use Symfony\Component\Finder\SplFileInfo;
 
 class Mover
 {
@@ -35,12 +39,52 @@ class Mover
         $this->filesystem = new Filesystem(new Local($this->workingDir));
     }
 
-    public function deleteTargetDirs()
+    /**
+     * Create the required `dep_directory` and `classmap_directory` and delete targetDirs of packages about to be moved.
+     *
+     * @param Package[] $packages The packages that, in the next step, will be moved.
+     */
+    public function deleteTargetDirs($packages)
     {
-        $this->filesystem->deleteDir($this->config->dep_directory);
         $this->filesystem->createDir($this->config->dep_directory);
-        $this->filesystem->deleteDir($this->config->classmap_directory);
+
         $this->filesystem->createDir($this->config->classmap_directory);
+
+        foreach ($packages as $package) {
+            $this->deleteDepTargetDirs($package);
+        }
+    }
+
+    /**
+     * Delete the directories about to be used for packages earmarked for Mozart namespacing.
+     *
+     * @visibility private to allow recursion through packages and subpackages.
+     *
+     * @param Package $package
+     */
+    private function deleteDepTargetDirs($package)
+    {
+        foreach ($package->autoloaders as $packageAutoloader) {
+            $autoloaderType = get_class($packageAutoloader);
+
+            switch ($autoloaderType) {
+                case Psr0::class:
+                case Psr4::class:
+                    $outputDir = $this->config->dep_directory . $packageAutoloader->namespace;
+                    $outputDir = str_replace('\\', DIRECTORY_SEPARATOR, $outputDir);
+                    $this->filesystem->deleteDir($outputDir);
+                    break;
+                case Classmap::class:
+                    $outputDir = $this->config->classmap_directory . $package->config->name;
+                    $outputDir = str_replace('\\', DIRECTORY_SEPARATOR, $outputDir);
+                    $this->filesystem->deleteDir($outputDir);
+                    break;
+            }
+        }
+
+        foreach ($package->dependencies as $subPackage) {
+            $this->deleteDepTargetDirs($subPackage);
+        }
     }
 
     public function movePackage(Package $package)
@@ -90,22 +134,24 @@ class Mover
             $this->movedPackages[] = $package->config->name;
         }
 
-        $this->deletePackageVendorDirectories();
+        if (!isset($this->config->delete_vendor_directories) || $this->config->delete_vendor_directories === true) {
+            $this->deletePackageVendorDirectories();
+        }
     }
 
     /**
      * @param Package $package
-     * @param $autoloader
-     * @param $file
-     * @param $path
-     * @return mixed
+     * @param Autoloader $autoloader
+     * @param SplFileInfo $file
+     * @param string $path
+     * @return string
      */
     public function moveFile(Package $package, $autoloader, $file, $path = '')
     {
         if ($autoloader instanceof NamespaceAutoloader) {
             $namespacePath = $autoloader->getNamespacePath();
             $replaceWith = $this->config->dep_directory . $namespacePath;
-            $targetFile = str_replace($this->workingDir, $replaceWith, $file->getRealPath());
+            $targetFile = str_replace($this->workingDir, $replaceWith, $file->getPathname());
 
             $packageVendorPath = '/vendor/' . $package->config->name . '/' . $path;
             $packageVendorPath = str_replace('/', DIRECTORY_SEPARATOR, $packageVendorPath);
@@ -113,7 +159,7 @@ class Mover
         } else {
             $namespacePath = $package->config->name;
             $replaceWith = $this->config->classmap_directory . '/' . $namespacePath;
-            $targetFile = str_replace($this->workingDir, $replaceWith, $file->getRealPath());
+            $targetFile = str_replace($this->workingDir, $replaceWith, $file->getPathname());
 
             $packageVendorPath = '/vendor/' . $package->config->name . '/';
             $packageVendorPath = str_replace('/', DIRECTORY_SEPARATOR, $packageVendorPath);
@@ -121,7 +167,7 @@ class Mover
         }
 
         $this->filesystem->copy(
-            str_replace($this->workingDir, '', $file->getRealPath()),
+            str_replace($this->workingDir, '', $file->getPathname()),
             $targetFile
         );
 
@@ -137,6 +183,9 @@ class Mover
     {
         foreach ($this->movedPackages as $movedPackage) {
             $packageDir = '/vendor/' . $movedPackage;
+            if (is_link($packageDir)) {
+                continue;
+            }
             $this->filesystem->deleteDir($packageDir);
         }
     }

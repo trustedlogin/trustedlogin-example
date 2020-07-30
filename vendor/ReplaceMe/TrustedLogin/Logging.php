@@ -8,6 +8,8 @@
  */
 namespace ReplaceMe\TrustedLogin;
 
+use ReplaceMe\Katzgrau\KLogger\Logger;
+
 class Logging {
 
 	/**
@@ -26,12 +28,12 @@ class Logging {
 	private $logging_enabled = false;
 
 	/**
-	 * @var \ReplaceMe\Katzgrau\KReplaceMe_ReplaceMe_Logger\ReplaceMe_ReplaceMe_Logger|null|false Null: not instantiated; False: failed to instantiate.
+	 * @var Logger|null|false Null: not instantiated; False: failed to instantiate.
 	 */
 	private $klogger = null;
 
 	/**
-	 * ReplaceMe_ReplaceMe_Logger constructor.
+	 * Logger constructor.
 	 */
 	public function __construct( Config $config ) {
 
@@ -43,17 +45,17 @@ class Logging {
 	}
 
 	/**
-	 * Attempts to initialize KReplaceMe_ReplaceMe_Logger logging
+	 * Attempts to initialize KLogger logging
 	 *
 	 * @param Config $config
 	 *
-	 * @return void
+	 * @return false|Logger
 	 */
 	private function setup_klogger( $config ) {
 
-		if ( ! class_exists( '\ReplaceMe\Katzgrau\KReplaceMe_ReplaceMe_Logger\ReplaceMe_ReplaceMe_Logger' ) ) {
+		if ( ! class_exists( '\ReplaceMe\Katzgrau\KLogger\Logger' ) ) {
 
-			$this->log( 'KReplaceMe_ReplaceMe_Logger not found.', __METHOD__, 'error' );
+			$this->log( 'KLogger not found.', __METHOD__, 'error' );
 
 			return false;
 		}
@@ -81,18 +83,28 @@ class Logging {
 			// Filename hash changes every day, make it harder to guess
 			$filename_hash_data = $this->ns . home_url( '/' ) . wp_date( 'z' );
 
-			$klogger = new \ReplaceMe\Katzgrau\KReplaceMe_ReplaceMe_Logger\ReplaceMe_ReplaceMe_Logger (
+			$default_options = array(
+				'extension'      => 'log',
+				'dateFormat'     => 'Y-m-d G:i:s.u',
+				'filename'       => sprintf( 'trustedlogin-debug-%s-%s', wp_date( 'Y-m-d' ), wp_hash( $filename_hash_data ) ),
+				'flushFrequency' => false,
+				'logFormat'      => false,
+				'appendContext'  => true,
+			);
+
+			$settings_options = $config->get_setting( 'logging/options', $default_options );
+
+			$options = wp_parse_args( $settings_options, $default_options );
+
+			$klogger = new Logger (
 				$logging_directory,
 				$config->get_setting( 'logging/threshold', 'notice' ),
-				$config->get_setting( 'logging/options', array(
-					'extension'      => 'log',
-					'prefix'         => sprintf( 'trustedlogin-debug-%s-', wp_hash( $filename_hash_data ) ),
-				) )
+				$options
 			);
 
 		} catch ( \RuntimeException $exception ) {
 
-			$this->log( 'Could not initialize KReplaceMe_ReplaceMe_Logger: ' . $exception->getMessage(), __METHOD__, 'error' );
+			$this->log( 'Could not initialize KLogger: ' . $exception->getMessage(), __METHOD__, 'error' );
 
 			return false;
 		}
@@ -148,7 +160,7 @@ class Logging {
 			return $log_dir;
 		}
 
-		// Create the folder using wp_mkdir_p() instead of relying on KReplaceMe_ReplaceMe_Logger
+		// Create the folder using wp_mkdir_p() instead of relying on KLogger
 		$folder_created = wp_mkdir_p( $log_dir );
 
 		// Something went wrong maping the directory

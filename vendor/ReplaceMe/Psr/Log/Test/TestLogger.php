@@ -1,8 +1,8 @@
 <?php
 
-namespace ReplaceMe\ReplaceMe\Psr\Log\Test;
+namespace ReplaceMe\Psr\Log\Test;
 
-use ReplaceMe\ReplaceMe\Psr\Log\AbstractLogger;
+use ReplaceMe\Psr\Log\AbstractLogger;
 
 /**
  * Used for testing purposes.

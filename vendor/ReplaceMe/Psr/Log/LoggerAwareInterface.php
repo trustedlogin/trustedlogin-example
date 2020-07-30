@@ -1,6 +1,6 @@
 <?php
 
-namespace ReplaceMe\ReplaceMe\Psr\Log;
+namespace ReplaceMe\Psr\Log;
 
 /**
  * Describes a logger-aware instance.

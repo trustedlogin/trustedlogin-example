@@ -44,7 +44,7 @@ class Endpoint {
 	private $logging;
 
 	/**
-	 * ReplaceMe_ReplaceMe_Logger constructor.
+	 * Logger constructor.
 	 */
 	public function __construct( Config $config, Logging $logging ) {
 

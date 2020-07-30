@@ -1,17 +1,17 @@
 [
     {
         "name": "coenjacobs/mozart",
-        "version": "0.5.1",
-        "version_normalized": "0.5.1.0",
+        "version": "dev-master",
+        "version_normalized": "9999999-dev",
         "source": {
             "type": "git",
             "url": "https://github.com/coenjacobs/mozart.git",
-            "reference": "4bdde231f3309d9299c87b2246166e87acc93653"
+            "reference": "00da9e0633655d405c417a6c9898ee9810971d98"
         },
         "dist": {
             "type": "zip",
-            "url": "https://api.github.com/repos/coenjacobs/mozart/zipball/4bdde231f3309d9299c87b2246166e87acc93653",
-            "reference": "4bdde231f3309d9299c87b2246166e87acc93653",
+            "url": "https://api.github.com/repos/coenjacobs/mozart/zipball/00da9e0633655d405c417a6c9898ee9810971d98",
+            "reference": "00da9e0633655d405c417a6c9898ee9810971d98",
             "shasum": ""
         },
         "require": {
@@ -21,14 +21,15 @@
             "symfony/finder": "^4|^5"
         },
         "require-dev": {
-            "phpunit/phpunit": "^8.5"
+            "phpunit/phpunit": "^8.5",
+            "squizlabs/php_codesniffer": "^3.5"
         },
-        "time": "2019-12-23T12:24:56+00:00",
+        "time": "2020-07-01T21:53:03+00:00",
         "bin": [
             "bin/mozart"
         ],
         "type": "library",
-        "installation-source": "dist",
+        "installation-source": "source",
         "autoload": {
             "psr-4": {
                 "CoenJacobs\\Mozart\\": "src/"
@@ -44,7 +45,13 @@
                 "email": "coenjacobs@gmail.com"
             }
         ],
-        "description": "Composes all dependencies as a package inside a WordPress plugin"
+        "description": "Composes all dependencies as a package inside a WordPress plugin",
+        "funding": [
+            {
+                "url": "https://github.com/coenjacobs",
+                "type": "github"
+            }
+        ]
     },
     {
         "name": "katzgrau/klogger",
@@ -100,17 +107,17 @@
     },
     {
         "name": "league/flysystem",
-        "version": "1.0.69",
-        "version_normalized": "1.0.69.0",
+        "version": "1.0.70",
+        "version_normalized": "1.0.70.0",
         "source": {
             "type": "git",
             "url": "https://github.com/thephpleague/flysystem.git",
-            "reference": "7106f78428a344bc4f643c233a94e48795f10967"
+            "reference": "585824702f534f8d3cf7fab7225e8466cc4b7493"
         },
         "dist": {
             "type": "zip",
-            "url": "https://api.github.com/repos/thephpleague/flysystem/zipball/7106f78428a344bc4f643c233a94e48795f10967",
-            "reference": "7106f78428a344bc4f643c233a94e48795f10967",
+            "url": "https://api.github.com/repos/thephpleague/flysystem/zipball/585824702f534f8d3cf7fab7225e8466cc4b7493",
+            "reference": "585824702f534f8d3cf7fab7225e8466cc4b7493",
             "shasum": ""
         },
         "require": {
@@ -121,7 +128,7 @@
             "league/flysystem-sftp": "<1.0.6"
         },
         "require-dev": {
-            "phpspec/phpspec": "^3.4",
+            "phpspec/phpspec": "^3.4 || ^4.0 || ^5.0 || ^6.0",
             "phpunit/phpunit": "^5.7.26"
         },
         "suggest": {
@@ -140,7 +147,7 @@
             "spatie/flysystem-dropbox": "Allows you to use Dropbox storage",
             "srmklive/flysystem-dropbox-v2": "Allows you to use Dropbox storage for PHP 5 applications"
         },
-        "time": "2020-05-18T15:13:39+00:00",
+        "time": "2020-07-26T07:20:36+00:00",
         "type": "library",
         "extra": {
             "branch-alias": {
@@ -427,17 +434,17 @@
     },
     {
         "name": "symfony/console",
-        "version": "v5.1.2",
-        "version_normalized": "5.1.2.0",
+        "version": "v5.1.3",
+        "version_normalized": "5.1.3.0",
         "source": {
             "type": "git",
             "url": "https://github.com/symfony/console.git",
-            "reference": "34ac555a3627e324b660e318daa07572e1140123"
+            "reference": "2226c68009627934b8cfc01260b4d287eab070df"
         },
         "dist": {
             "type": "zip",
-            "url": "https://api.github.com/repos/symfony/console/zipball/34ac555a3627e324b660e318daa07572e1140123",
-            "reference": "34ac555a3627e324b660e318daa07572e1140123",
+            "url": "https://api.github.com/repos/symfony/console/zipball/2226c68009627934b8cfc01260b4d287eab070df",
+            "reference": "2226c68009627934b8cfc01260b4d287eab070df",
             "shasum": ""
         },
         "require": {
@@ -473,7 +480,7 @@
             "symfony/lock": "",
             "symfony/process": ""
         },
-        "time": "2020-06-15T12:59:21+00:00",
+        "time": "2020-07-06T13:23:11+00:00",
         "type": "library",
         "extra": {
             "branch-alias": {
@@ -522,8 +529,8 @@
     },
     {
         "name": "symfony/finder",
-        "version": "v5.1.2",
-        "version_normalized": "5.1.2.0",
+        "version": "v5.1.3",
+        "version_normalized": "5.1.3.0",
         "source": {
             "type": "git",
             "url": "https://github.com/symfony/finder.git",
@@ -1145,17 +1152,17 @@
     },
     {
         "name": "symfony/string",
-        "version": "v5.1.2",
-        "version_normalized": "5.1.2.0",
+        "version": "v5.1.3",
+        "version_normalized": "5.1.3.0",
         "source": {
             "type": "git",
             "url": "https://github.com/symfony/string.git",
-            "reference": "ac70459db781108db7c6d8981dd31ce0e29e3298"
+            "reference": "f629ba9b611c76224feb21fe2bcbf0b6f992300b"
         },
         "dist": {
             "type": "zip",
-            "url": "https://api.github.com/repos/symfony/string/zipball/ac70459db781108db7c6d8981dd31ce0e29e3298",
-            "reference": "ac70459db781108db7c6d8981dd31ce0e29e3298",
+            "url": "https://api.github.com/repos/symfony/string/zipball/f629ba9b611c76224feb21fe2bcbf0b6f992300b",
+            "reference": "f629ba9b611c76224feb21fe2bcbf0b6f992300b",
             "shasum": ""
         },
         "require": {
@@ -1172,7 +1179,7 @@
             "symfony/translation-contracts": "^1.1|^2",
             "symfony/var-exporter": "^4.4|^5.0"
         },
-        "time": "2020-06-11T12:16:36+00:00",
+        "time": "2020-07-08T08:27:49+00:00",
         "type": "library",
         "extra": {
             "branch-alias": {
@@ -1237,12 +1244,12 @@
         "source": {
             "type": "git",
             "url": "https://github.com/trustedlogin/trustedlogin-client.git",
-            "reference": "a466dd257352ee2fc361a4bc681f56d57c501e41"
+            "reference": "b0672eb4a86a9e5f7c30e8f2decd0a91f60b4546"
         },
         "dist": {
             "type": "zip",
-            "url": "https://api.github.com/repos/trustedlogin/trustedlogin-client/zipball/a466dd257352ee2fc361a4bc681f56d57c501e41",
-            "reference": "a466dd257352ee2fc361a4bc681f56d57c501e41",
+            "url": "https://api.github.com/repos/trustedlogin/trustedlogin-client/zipball/b0672eb4a86a9e5f7c30e8f2decd0a91f60b4546",
+            "reference": "b0672eb4a86a9e5f7c30e8f2decd0a91f60b4546",
             "shasum": ""
         },
         "require": {
@@ -1253,7 +1260,7 @@
             "paragonie/sodium_compat": "^1.12",
             "php": ">=5.3.0"
         },
-        "time": "2020-07-23T00:05:14+00:00",
+        "time": "2020-07-30T22:14:19+00:00",
         "type": "library",
         "installation-source": "source",
         "autoload": {

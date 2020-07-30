@@ -1,10 +1,10 @@
 <?php
-namespace ReplaceMe\ReplaceMe\Katzgrau\KLogger;
+namespace ReplaceMe\Katzgrau\KLogger;
 
 use DateTime;
 use RuntimeException;
-use ReplaceMe\ReplaceMe\Psr\Log\AbstractLogger;
-use ReplaceMe\ReplaceMe\Psr\Log\LogLevel;
+use ReplaceMe\Psr\Log\AbstractLogger;
+use ReplaceMe\Psr\Log\LogLevel;
 
 /**
  * Finally, a light, permissions-checking logging class.
@@ -12,7 +12,7 @@ use ReplaceMe\ReplaceMe\Psr\Log\LogLevel;
  * Originally written for use with wpSearch
  *
  * Usage:
- * $log = new ReplaceMe\ReplaceMe\Katzgrau\KLogger\Logger('/var/log/', ReplaceMe\ReplaceMe\Psr\Log\LogLevel::INFO);
+ * $log = new ReplaceMe\Katzgrau\KLogger\Logger('/var/log/', ReplaceMe\Psr\Log\LogLevel::INFO);
  * $log->info('Returned a million search results'); //Prints to the log file
  * $log->error('Oh dear.'); //Prints to the log file
  * $log->debug('x = 5'); //Prints nothing due to current severity threshhold

@@ -1,6 +1,6 @@
 <?php
 
-namespace ReplaceMe\ReplaceMe\Psr\Log;
+namespace ReplaceMe\Psr\Log;
 
 /**
  * This is a simple Logger trait that classes unable to extend AbstractLogger
@@ -136,7 +136,7 @@ trait LoggerTrait
      *
      * @return void
      *
-     * @throws \ReplaceMe\ReplaceMe\Psr\Log\InvalidArgumentException
+     * @throws \ReplaceMe\Psr\Log\InvalidArgumentException
      */
     abstract public function log($level, $message, array $context = array());
 }

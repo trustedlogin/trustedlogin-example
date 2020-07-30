@@ -1,9 +1,9 @@
 <?php
 
-namespace ReplaceMe\ReplaceMe\Psr\Log\Test;
+namespace ReplaceMe\Psr\Log\Test;
 
-use ReplaceMe\ReplaceMe\Psr\Log\LoggerInterface;
-use ReplaceMe\ReplaceMe\Psr\Log\LogLevel;
+use ReplaceMe\Psr\Log\LoggerInterface;
+use ReplaceMe\Psr\Log\LogLevel;
 use PHPUnit\Framework\TestCase;
 
 /**
@@ -32,7 +32,7 @@ abstract class LoggerInterfaceTest extends TestCase
 
     public function testImplements()
     {
-        $this->assertInstanceOf('ReplaceMe\ReplaceMe\Psr\Log\LoggerInterface', $this->getLogger());
+        $this->assertInstanceOf('ReplaceMe\Psr\Log\LoggerInterface', $this->getLogger());
     }
 
     /**
@@ -66,7 +66,7 @@ abstract class LoggerInterfaceTest extends TestCase
     }
 
     /**
-     * @expectedException \ReplaceMe\ReplaceMe\Psr\Log\InvalidArgumentException
+     * @expectedException \ReplaceMe\Psr\Log\InvalidArgumentException
      */
     public function testThrowsOnInvalidLevel()
     {
@@ -86,9 +86,9 @@ abstract class LoggerInterfaceTest extends TestCase
     public function testObjectCastToString()
     {
         if (method_exists($this, 'createPartialMock')) {
-            $dummy = $this->createPartialMock('ReplaceMe\ReplaceMe\Psr\Log\Test\DummyTest', array('__toString'));
+            $dummy = $this->createPartialMock('ReplaceMe\Psr\Log\Test\DummyTest', array('__toString'));
         } else {
-            $dummy = $this->getMock('ReplaceMe\ReplaceMe\Psr\Log\Test\DummyTest', array('__toString'));
+            $dummy = $this->getMock('ReplaceMe\Psr\Log\Test\DummyTest', array('__toString'));
         }
         $dummy->expects($this->once())
             ->method('__toString')

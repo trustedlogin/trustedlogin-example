@@ -1,6 +1,6 @@
 <?php
 
-namespace ReplaceMe\ReplaceMe\Psr\Log;
+namespace ReplaceMe\Psr\Log;
 
 /**
  * Basic Implementation of LoggerAwareInterface.

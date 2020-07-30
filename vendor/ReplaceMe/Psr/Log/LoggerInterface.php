@@ -1,6 +1,6 @@
 <?php
 
-namespace ReplaceMe\ReplaceMe\Psr\Log;
+namespace ReplaceMe\Psr\Log;
 
 /**
  * Describes a logger instance.
@@ -119,7 +119,7 @@ interface LoggerInterface
      *
      * @return void
      *
-     * @throws \ReplaceMe\ReplaceMe\Psr\Log\InvalidArgumentException
+     * @throws \ReplaceMe\Psr\Log\InvalidArgumentException
      */
     public function log($level, $message, array $context = array());
 }

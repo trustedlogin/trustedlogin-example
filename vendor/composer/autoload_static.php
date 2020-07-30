@@ -4,7 +4,7 @@
 
 namespace Composer\Autoload;
 
-class ComposerStaticInit911c034c1dd40e3e40127a84f236e44b
+class ComposerStaticInit04d60e6641cb13948c67b6b4c9d50c65
 {
     public static $files = array (
         '0e6d7bf4a5811bfa5cf40c5ccd6fae6a' => __DIR__ . '/..' . '/symfony/polyfill-mbstring/bootstrap.php',
@@ -117,9 +117,10 @@ class ComposerStaticInit911c034c1dd40e3e40127a84f236e44b
         'CoenJacobs\\Mozart\\Replace\\NamespaceReplacer' => __DIR__ . '/..' . '/coenjacobs/mozart/src/Replace/NamespaceReplacer.php',
         'CoenJacobs\\Mozart\\Replace\\Replacer' => __DIR__ . '/..' . '/coenjacobs/mozart/src/Replace/Replacer.php',
         'CoenJacobs\\Mozart\\Replacer' => __DIR__ . '/..' . '/coenjacobs/mozart/src/Replacer.php',
-        'ComposerAutoloaderInit911c034c1dd40e3e40127a84f236e44b' => __DIR__ . '/..' . '/composer/autoload_real.php',
+        'ComposeTest' => __DIR__ . '/..' . '/coenjacobs/mozart/tests/Console/Commands/ComposeTest.php',
+        'ComposerAutoloaderInit04d60e6641cb13948c67b6b4c9d50c65' => __DIR__ . '/..' . '/composer/autoload_real.php',
         'Composer\\Autoload\\ClassLoader' => __DIR__ . '/..' . '/composer/ClassLoader.php',
-        'Composer\\Autoload\\ComposerStaticInit911c034c1dd40e3e40127a84f236e44b' => __DIR__ . '/..' . '/composer/autoload_static.php',
+        'Composer\\Autoload\\ComposerStaticInit04d60e6641cb13948c67b6b4c9d50c65' => __DIR__ . '/..' . '/composer/autoload_static.php',
         'Error' => __DIR__ . '/..' . '/paragonie/random_compat/lib/error_polyfill.php',
         'JsonException' => __DIR__ . '/..' . '/symfony/polyfill-php73/Resources/stubs/JsonException.php',
         'Katzgrau\\KLogger\\ReplaceMe_ReplaceMe_Logger' => __DIR__ . '/..' . '/ReplaceMe/classes/katzgrau/klogger/src/Logger.php',
@@ -173,6 +174,7 @@ class ComposerStaticInit911c034c1dd40e3e40127a84f236e44b
         'League\\Flysystem\\Util\\ContentListingFormatter' => __DIR__ . '/..' . '/league/flysystem/src/Util/ContentListingFormatter.php',
         'League\\Flysystem\\Util\\MimeType' => __DIR__ . '/..' . '/league/flysystem/src/Util/MimeType.php',
         'League\\Flysystem\\Util\\StreamHasher' => __DIR__ . '/..' . '/league/flysystem/src/Util/StreamHasher.php',
+        'MoverTest' => __DIR__ . '/..' . '/coenjacobs/mozart/tests/MoverTest.php',
         'NamespaceReplacerTest' => __DIR__ . '/..' . '/coenjacobs/mozart/tests/replacers/NamespaceReplacerTest.php',
         'Normalizer' => __DIR__ . '/..' . '/symfony/polyfill-intl-normalizer/Resources/stubs/Normalizer.php',
         'ParagonIE\\Sodium\\Compat' => __DIR__ . '/..' . '/paragonie/sodium_compat/namespaced/Compat.php',
@@ -261,18 +263,18 @@ class ComposerStaticInit911c034c1dd40e3e40127a84f236e44b
         'Psr\\Container\\ContainerExceptionInterface' => __DIR__ . '/..' . '/psr/container/src/ContainerExceptionInterface.php',
         'Psr\\Container\\ContainerInterface' => __DIR__ . '/..' . '/psr/container/src/ContainerInterface.php',
         'Psr\\Container\\NotFoundExceptionInterface' => __DIR__ . '/..' . '/psr/container/src/NotFoundExceptionInterface.php',
-        'ReplaceMe\\ReplaceMe\\Katzgrau\\KLogger\\Logger' => __DIR__ . '/..' . '/ReplaceMe/Katzgrau/KLogger/Logger.php',
-        'ReplaceMe\\ReplaceMe\\Psr\\Log\\AbstractLogger' => __DIR__ . '/..' . '/ReplaceMe/Psr/Log/AbstractLogger.php',
-        'ReplaceMe\\ReplaceMe\\Psr\\Log\\InvalidArgumentException' => __DIR__ . '/..' . '/ReplaceMe/Psr/Log/InvalidArgumentException.php',
-        'ReplaceMe\\ReplaceMe\\Psr\\Log\\LogLevel' => __DIR__ . '/..' . '/ReplaceMe/Psr/Log/LogLevel.php',
-        'ReplaceMe\\ReplaceMe\\Psr\\Log\\LoggerAwareInterface' => __DIR__ . '/..' . '/ReplaceMe/Psr/Log/LoggerAwareInterface.php',
-        'ReplaceMe\\ReplaceMe\\Psr\\Log\\LoggerAwareTrait' => __DIR__ . '/..' . '/ReplaceMe/Psr/Log/LoggerAwareTrait.php',
-        'ReplaceMe\\ReplaceMe\\Psr\\Log\\LoggerInterface' => __DIR__ . '/..' . '/ReplaceMe/Psr/Log/LoggerInterface.php',
-        'ReplaceMe\\ReplaceMe\\Psr\\Log\\LoggerTrait' => __DIR__ . '/..' . '/ReplaceMe/Psr/Log/LoggerTrait.php',
-        'ReplaceMe\\ReplaceMe\\Psr\\Log\\NullLogger' => __DIR__ . '/..' . '/ReplaceMe/Psr/Log/NullLogger.php',
-        'ReplaceMe\\ReplaceMe\\Psr\\Log\\Test\\DummyTest' => __DIR__ . '/..' . '/ReplaceMe/Psr/Log/Test/DummyTest.php',
-        'ReplaceMe\\ReplaceMe\\Psr\\Log\\Test\\LoggerInterfaceTest' => __DIR__ . '/..' . '/ReplaceMe/Psr/Log/Test/LoggerInterfaceTest.php',
-        'ReplaceMe\\ReplaceMe\\Psr\\Log\\Test\\TestLogger' => __DIR__ . '/..' . '/ReplaceMe/Psr/Log/Test/TestLogger.php',
+        'ReplaceMe\\Katzgrau\\KLogger\\Logger' => __DIR__ . '/..' . '/ReplaceMe/Katzgrau/KLogger/Logger.php',
+        'ReplaceMe\\Psr\\Log\\AbstractLogger' => __DIR__ . '/..' . '/ReplaceMe/Psr/Log/AbstractLogger.php',
+        'ReplaceMe\\Psr\\Log\\InvalidArgumentException' => __DIR__ . '/..' . '/ReplaceMe/Psr/Log/InvalidArgumentException.php',
+        'ReplaceMe\\Psr\\Log\\LogLevel' => __DIR__ . '/..' . '/ReplaceMe/Psr/Log/LogLevel.php',
+        'ReplaceMe\\Psr\\Log\\LoggerAwareInterface' => __DIR__ . '/..' . '/ReplaceMe/Psr/Log/LoggerAwareInterface.php',
+        'ReplaceMe\\Psr\\Log\\LoggerAwareTrait' => __DIR__ . '/..' . '/ReplaceMe/Psr/Log/LoggerAwareTrait.php',
+        'ReplaceMe\\Psr\\Log\\LoggerInterface' => __DIR__ . '/..' . '/ReplaceMe/Psr/Log/LoggerInterface.php',
+        'ReplaceMe\\Psr\\Log\\LoggerTrait' => __DIR__ . '/..' . '/ReplaceMe/Psr/Log/LoggerTrait.php',
+        'ReplaceMe\\Psr\\Log\\NullLogger' => __DIR__ . '/..' . '/ReplaceMe/Psr/Log/NullLogger.php',
+        'ReplaceMe\\Psr\\Log\\Test\\DummyTest' => __DIR__ . '/..' . '/ReplaceMe/Psr/Log/Test/DummyTest.php',
+        'ReplaceMe\\Psr\\Log\\Test\\LoggerInterfaceTest' => __DIR__ . '/..' . '/ReplaceMe/Psr/Log/Test/LoggerInterfaceTest.php',
+        'ReplaceMe\\Psr\\Log\\Test\\TestLogger' => __DIR__ . '/..' . '/ReplaceMe/Psr/Log/Test/TestLogger.php',
         'ReplaceMe\\TrustedLogin\\Admin' => __DIR__ . '/..' . '/ReplaceMe/TrustedLogin/Admin.php',
         'ReplaceMe\\TrustedLogin\\Ajax' => __DIR__ . '/..' . '/ReplaceMe/TrustedLogin/Ajax.php',
         'ReplaceMe\\TrustedLogin\\BruteForceChecker' => __DIR__ . '/..' . '/ReplaceMe/TrustedLogin/BruteForceChecker.php',
@@ -434,9 +436,9 @@ class ComposerStaticInit911c034c1dd40e3e40127a84f236e44b
     public static function getInitializer(ClassLoader $loader)
     {
         return \Closure::bind(function () use ($loader) {
-            $loader->prefixLengthsPsr4 = ComposerStaticInit911c034c1dd40e3e40127a84f236e44b::$prefixLengthsPsr4;
-            $loader->prefixDirsPsr4 = ComposerStaticInit911c034c1dd40e3e40127a84f236e44b::$prefixDirsPsr4;
-            $loader->classMap = ComposerStaticInit911c034c1dd40e3e40127a84f236e44b::$classMap;
+            $loader->prefixLengthsPsr4 = ComposerStaticInit04d60e6641cb13948c67b6b4c9d50c65::$prefixLengthsPsr4;
+            $loader->prefixDirsPsr4 = ComposerStaticInit04d60e6641cb13948c67b6b4c9d50c65::$prefixDirsPsr4;
+            $loader->classMap = ComposerStaticInit04d60e6641cb13948c67b6b4c9d50c65::$classMap;
 
         }, null, ClassLoader::class);
     }
