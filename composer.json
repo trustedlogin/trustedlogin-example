@@ -15,7 +15,7 @@
     "trustedlogin/trustedlogin-client": "dev-feature/auth-screen"
   },
   "require-dev": {
-    "coenjacobs/mozart": "*"
+    "coenjacobs/mozart": "dev-master"
   },
   "autoload": {
     "comments": "👇 This is required 👇",
@@ -39,7 +39,8 @@
             "Katzgrau\\KLogger\\": "src/"
           }
         }
-      }
+      },
+      "delete_vendor_directories": true
     }
   },
   "scripts": {
