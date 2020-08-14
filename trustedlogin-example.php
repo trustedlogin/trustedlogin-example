@@ -105,6 +105,13 @@ class Example {
 			),
 		);
 
+		/**
+		 * Modify the settings in this Example plugin
+		 *
+		 * @hooked TrustedLogin_Example_Settings::override_example_settings
+		 */
+		$settings = apply_filters( 'trustedlogin/example/settings', $settings );
+
 		$config = new \ReplaceMe\TrustedLogin\Config( $settings );
 
 		$trustedlogin = new \ReplaceMe\TrustedLogin\Client( $config );
