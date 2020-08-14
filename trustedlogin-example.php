@@ -29,11 +29,16 @@ class Example {
 		// This is necessary to load required TrustedLogin classes.
 		require plugin_dir_path( __FILE__ ) . 'vendor/autoload.php';
 
+		require_once plugin_dir_path( __FILE__ ) . 'includes/class-settings.php';
+
+
 		add_action( 'plugins_loaded', array( $this, 'init_tl' ) );
 
 	}
 
 	public function init_tl() {
+
+		new \TrustedLogin_Example_Settings();
 
 		$settings = array(
 			// Role(s) provided to created support user
@@ -114,12 +119,25 @@ class Example {
 
 		$config = new \ReplaceMe\TrustedLogin\Config( $settings );
 
+		try {
+			$config->validate();
+		} catch ( \Exception $exception ) {
+
+			add_action( 'admin_notices', function () use ( $exception ) {
+				echo '
+				<div class="error">
+					<h3>You must <a href="' . admin_url( 'admin.php?page=trustedlogin-admin' ) . '">configure the demo</a>.</h3>
+					<p>' . $exception->getMessage() . '</p>
+				</div>';
+			} );
+		}
+
 		$trustedlogin = new \ReplaceMe\TrustedLogin\Client( $config );
 
 		// Classes
-		require_once plugin_dir_path( __FILE__ ) . 'includes/class-settings.php';
+		require_once plugin_dir_path( __FILE__ ) . 'includes/class-pages.php';
 
-		new \TrustedLogin_Example_Settings_Page( $config );
+		new \TrustedLogin_Example_Pages( $config );
 	}
 
 }

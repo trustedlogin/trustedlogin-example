@@ -10,7 +10,9 @@
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
  * GNU General Public License for more details.
  */
-class TrustedLogin_Example_Settings_Page {
+class TrustedLogin_Example_Settings {
+
+	const demo_option_name = 'trustedlogin_example_plugin';
 
 	/**
 	 * @var \ReplaceMe\TrustedLogin\Config
@@ -20,198 +22,129 @@ class TrustedLogin_Example_Settings_Page {
 	/**
 	 * Start up
 	 */
-	public function __construct( $config ) {
+	public function __construct() {
 
-		$this->config = $config;
+		add_action( 'trustedlogin/example/settings_form', array( $this, 'settings_form' ) );
 
-		add_action( 'admin_menu', array( $this, 'add_plugin_page' ) );
+		add_action( 'admin_init', array( $this, 'register_demo_settings' ) );
+
+		add_filter( 'trustedlogin/example/settings', array( $this, 'get_settings' ) );
+	}
+
+	public function settings_form() {
+		?>
+		<form action="options.php" method="post">
+			<?php
+			settings_fields( self::demo_option_name );
+
+			do_settings_sections( self::demo_option_name );
+			?>
+			<input name="submit" class="button button-primary button-large" type="submit" value="<?php esc_attr_e( 'Save' ); ?>" />
+		</form>
+		<?php
 	}
 
 	/**
-	 * Add options page
+	 * This is just to make it easier to update DEMO TrustedLogin configurations IN THIS DEMO.
+	 *
+	 * TrustedLogin configurations should not be set like this! {@see \TrustedLogin\Config}
+	 *
+	 * @internal DO NOT
 	 */
-	public function add_plugin_page() {
+	public function register_demo_settings() {
 
-##		// This page would be under "Settings"
-##		add_options_page(
-##			'TrustedLogin Demo',
-##			'TrustedLogin Demo',
-##			'manage_options',
-##			'trustedlogin-settings',
-##			array( $this, 'create_admin_page' )
-##		);
-##
-##		// This page would be under "Users"
-##		add_users_page(
-##			'TrustedLogin Demo',
-##			'TrustedLogin Users',
-##			'manage_options',
-##			'trustedlogin-users',
-##			array( $this, 'create_users_page' )
-##		);
-##
-##		// This page would be under "Tools"
-##		add_management_page(
-##			'TrustedLogin Demo',
-##			'TrustedLogin Demo',
-##			'manage_options',
-##			'trustedlogin-tools',
-##			array( $this, 'create_admin_page' )
-##		);
+		$page = 'trustedlogin-example';
 
-		// Add top level menu page
-		add_menu_page(
-			'TrustedLogin Demo',
-			'TrustedLogin Demo',
-			'manage_options',
-			'trustedlogin-admin',
-			array( $this, 'demo_landing_page' ),
-			'dashicons-lock'
-		);
+		register_setting( self::demo_option_name, self::demo_option_name, array(
+			'sanitize_callback' => array( $this, 'sanitize_settings' ),
+		) );
 
-		add_submenu_page(
-			'trustedlogin-admin',
-			'TrustedLogin Auth Screen',
-			'TrustedLogin Auth',
-			'manage_options',
-			'trustedlogin-auth',
-			array( $this, 'auth_demo_page' )
-		);
+		add_settings_section( 'trustedlogin_example_settings', 'Configure the Demo Settings', array( $this, 'settings_description' ), self::demo_option_name );
 
-		add_submenu_page(
-			'trustedlogin-admin',
-			'TrustedLogin Button',
-			'TrustedLogin Button',
-			'manage_options',
-			'trustedlogin-button',
-			array( $this, 'button_demo_page' )
-		);
-
-		add_submenu_page(
-			'trustedlogin-admin',
-			'TrustedLogin Users',
-			'TrustedLogin Users',
-			'manage_options',
-			'trustedlogin-users',
-			array( $this, 'user_table_demo_page' )
-		);
+		add_settings_field( 'auth[public_key]', 'API Key', array( $this, 'input_public_key' ), self::demo_option_name, 'trustedlogin_example_settings' );
+		add_settings_field( 'vendor[website]', 'Website Running Vendor Plugin', array( $this, 'input_vendor_website' ), self::demo_option_name, 'trustedlogin_example_settings' );
+		add_settings_field( 'require_ssl', 'Require SSL', array( $this, 'input_require_ssl' ), self::demo_option_name, 'trustedlogin_example_settings' );
 	}
 
-	public function demo_landing_page() {
-		?>
-		<div class="about-wrap full-width-layout">
-			<h2>TrustedLogin has three customer-facing templates:</h2>
-
-			<ul class="ul-disc">
-				<li>Button</li>
-				<li>Auth Screen</li>
-				<li>Users Table</li>
-			</ul>
-		</div>
-		<?php
+	public function settings_description() {
+		echo '<p>This is designed to make it easy to test out TrustedLogin with your own API key without having to generate a Config object.';
 	}
 
-	public function auth_demo_page() {
-		?>
-		<div class="about-wrap full-width-layout">
-			<h2>Output Auth Screen</h2>
-			<p class="description">To include a TrustedLogin-generated Auth screen:</p>
-			<pre lang="php">do_action( 'trustedlogin/<?php echo $this->config->ns(); ?>/auth_screen' );</pre>
-			<hr>
+	public function sanitize_settings( $settings ) {
+
+		if ( isset( $settings['require_ssl'] ) ) {
+			$settings['require_ssl'] = (int) $settings['require_ssl']; // Saves in the DB, as opposed to FALSE
+		}
+
+		if ( empty( $settings['vendor']['website'] ) ) {
+			unset( $settings['vendor']['website'] );
+		}
+
+		return array_filter( $settings );
+
+		return $settings;
+	}
+
+	function input_public_key() {
+
+		$options = get_option( self::demo_option_name );
+
+		$public_key = isset( $options['auth']['public_key'] ) ? $options['auth']['public_key'] : '';
+
+		echo '<input name="' . self::demo_option_name . '[auth][public_key]" type="text" size="55" placeholder="b814872125f46543" value="' . esc_attr( $public_key ) . '" />';
+	}
+
+	function input_vendor_website() {
+
+		$options = get_option( self::demo_option_name );
+
+		$website = isset( $options['vendor']['website'] ) ? $options['vendor']['website'] : '';
+
+		echo '<input name="' . self::demo_option_name . '[vendor][website]" type="text" size="55" placeholder="https://www.example.com" value="' . esc_attr( $website ) . '" />';
+	}
+
+	public function input_require_ssl() {
+
+		$options = get_option( self::demo_option_name );
+
+		$checked = isset( $options['require_ssl'] ) ? $options['require_ssl'] : '';
+
+		echo '<label><input name="' . self::demo_option_name . '[require_ssl]" type="checkbox" value="1" ' . checked( true, ! empty( $checked ), false ) . ' /></label>';
+	}
+
+	function get_settings( $config_settings = array() ) {
+
+		$settings = array();
+
+		$options = get_option( self::demo_option_name );
+
+		foreach ( $config_settings as $key => $config_setting ) {
+
+			if ( ! isset( $options[ $key ] ) || ! is_array( $config_setting ) ) {
+				$settings[ $key ] = $config_setting;
+				continue;
+			}
+
+			$settings[ $key ] = wp_parse_args( $options[ $key ], $config_setting );
+		}
+
+		return $settings;
+	}
+
+
+	function render_settings_page() { ?>
+
+		<div class="wrap">
+		<form action="options.php" method="post">
 			<?php
-			do_action( 'trustedlogin/' . $this->config->ns() . '/auth_screen' );
+
+			settings_fields( self::demo_option_name );
+
+			do_settings_sections( self::demo_option_name );
 			?>
+			<input name="submit" class="button button-primary button-large" type="submit" value="<?php esc_attr_e( 'Save' ); ?>" />
+		</form>
 		</div>
 		<?php
 	}
-
-	public function user_table_demo_page() {
-		?>
-		<div class="about-wrap full-width-layout">
-			<h2>Output a table of users</h2>
-			<p class="description">To include a table of your active support users created with TrustedLogin:</p>
-			<pre lang="php">do_action( 'trustedlogin/<?php echo $this->config->ns(); ?>/users_table' );</pre>
-			<?php
-			do_action( 'trustedlogin/' . $this->config->ns() . '/users_table' );
-			?>
-		</div>
-		<?php
-	}
-
-	public function button_demo_page() {
-		?>
-		<div class="about-wrap full-width-layout">
-            <h2>Output a TrustedLogin button</h2>
-		<p class="description">Examples of using the TrustedLogin button generator:</p>
-		<pre lang="php">$TL = new TrustedLogin;
-echo $TL->get_button( 'size=normal&class=button-secondary' );
-</pre>
-
-		<div class="has-2-columns is-fullwidth">
-			<div class="column">
-				<h3 style="font-weight: normal;">Attributes: <code>size=hero</code></h3>
-				<?php do_action( 'trustedlogin/' . $this->config->ns() . '/button', 'size=hero'); ?>
-			</div>
-
-			<div class="column">
-				<h3 style="font-weight: normal;">Attributes: <code>size=hero&class=button-secondary</code></h3>
-				<?php do_action( 'trustedlogin/' . $this->config->ns() . '/button', 'size=hero&class=button-secondary'); ?>
-			</div>
-		</div>
-
-		<hr />
-
-		<div class="has-2-columns is-fullwidth">
-			<div class="column">
-				<h3 style="font-weight: normal;">Attributes: <code>size=large</code></h3>
-				<?php do_action( 'trustedlogin/' . $this->config->ns() . '/button', 'size=large'); ?>
-			</div>
-
-			<div class="column">
-				<h3 style="font-weight: normal;">Attributes: <code>size=large&class=button-secondary</code></h3>
-				<?php do_action( 'trustedlogin/' . $this->config->ns() . '/button', 'size=large&class=button-secondary'); ?>
-			</div>
-		</div>
-
-		<hr />
-
-		<div class="has-2-columns is-fullwidth">
-			<div class="column">
-				<h3 style="font-weight: normal;">Attributes: <code>size=normal</code></h3>
-				<?php do_action( 'trustedlogin/' . $this->config->ns() . '/button', 'size=normal'); ?>
-			</div>
-
-			<div class="column">
-				<h3 style="font-weight: normal;">Attributes: <code>size=normal&class=button-secondary</code></h3>
-				<?php do_action( 'trustedlogin/' . $this->config->ns() . '/button', 'size=normal&class=button-secondary'); ?>
-			</div>
-		</div>
-
-		<hr />
-
-		<div class="has-2-columns is-fullwidth">
-			<div class="column">
-			<h3 style="font-weight: normal;">Attributes: <code>size=small</code></h3>
-				<?php do_action( 'trustedlogin/' . $this->config->ns() . '/button', 'size=small'); ?>
-			</div>
-
-			<div class="column">
-				<h3 style="font-weight: normal;">Attributes: <code>size=small&class=button-secondary</code></h3>
-				<?php do_action( 'trustedlogin/' . $this->config->ns() . '/button', 'size=small&class=button-secondary'); ?>
-			</div>
-		</div>
-
-		<hr />
-
-		<div class="has-2-columns is-fullwidth">
-			<div class="column">
-			<h3 style="font-weight: normal;">Attributes: <code>size=&class=&powered_by=</code></h3>
-				<?php do_action( 'trustedlogin/' . $this->config->ns() . '/button', 'size=&class=&powered_by=', false); ?>
-			</div>
-		</div>
-
-	</div>
-<?php
-	}
-
 }
