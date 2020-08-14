@@ -44,6 +44,11 @@ final class Encryption {
 	private $public_key_option;
 
 	/**
+	 * @var string Endpoint path to Vendor public key.
+	 */
+	private $vendor_public_key_endpoint = 'wp-json/trustedlogin/v1/public_key';
+
+	/**
 	 * Encryption constructor.
 	 *
 	 * @param Config $config
@@ -109,8 +114,8 @@ final class Encryption {
 	 */
 	public function get_public_key() {
 
-		// Already stored locally in options table
-		$public_key = get_site_option( $this->public_key_option, false );
+		// Already stored as transient
+		$public_key = get_site_transient( $this->public_key_option );
 
 		if ( $public_key ) {
 			// Documented below
@@ -127,8 +132,8 @@ final class Encryption {
 			return $remote_key;
 		}
 
-		// Store it in the DB
-		$saved = update_site_option( $this->public_key_option, $remote_key );
+		// Store it in the DB for ten minutes
+		$saved = set_site_transient( $this->public_key_option, $remote_key, 60 * 10 );
 
 		if ( ! $saved ) {
 			$this->logging->log( 'Public key not saved after being fetched remotely.', __METHOD__, 'notice' );
@@ -142,7 +147,7 @@ final class Encryption {
 		 * @param string $public_key
 		 * @param Config $config
 		 */
-		return apply_filters( 'trustedlogin/' . $this->config->ns() . '/public_key', $remote_key, $this->config );;
+		return apply_filters( 'trustedlogin/' . $this->config->ns() . '/public_key', $remote_key, $this->config );
 	}
 
 	/**
@@ -159,7 +164,7 @@ final class Encryption {
 		/**
 		 * @param string $key_endpoint Endpoint path on vendor (software vendor's) site
 		 */
-		$key_endpoint = apply_filters( 'trustedlogin/' . $this->config->ns() . '/vendor/public_key/endpoint', 'wp-json/trustedlogin/v1/public_key' );
+		$key_endpoint = apply_filters( 'trustedlogin/' . $this->config->ns() . '/vendor/public_key/endpoint', $this->vendor_public_key_endpoint );
 
 		$url = trailingslashit( $vendor_url ) . $key_endpoint;
 
@@ -190,12 +195,12 @@ final class Encryption {
 	 * Encrypts a string using the Public Key provided by the plugin/theme developers' server.
 	 *
 	 * @since 0.5.0
-	 * @uses `sodium_crypto_box_keypair_from_secretkey_and_publickey()` to generate key.
-	 * @uses `sodium_crypto_secretbox()` to encrypt.
+	 * @uses \sodium_crypto_box_keypair_from_secretkey_and_publickey() to generate key.
+	 * @uses \sodium_crypto_secretbox() to encrypt.
 	 *
 	 * @param string $data Data to encrypt.
 	 * @param string $nonce The nonce generated for this encryption.
-	 * @param string $client_secret_key The key to use when generating the encryption key.
+	 * @param string $alice_secret_key The key to use when generating the encryption key.
 	 *
 	 * @return string|WP_Error  Encrypted envelope or WP_Error on failure.
 	 */

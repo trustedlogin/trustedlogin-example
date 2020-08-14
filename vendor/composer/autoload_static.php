@@ -38,6 +38,7 @@ class ComposerStaticInit04d60e6641cb13948c67b6b4c9d50c65
         ),
         'L' => 
         array (
+            'League\\MimeTypeDetection\\' => 25,
             'League\\Flysystem\\' => 17,
         ),
         'C' => 
@@ -90,6 +91,10 @@ class ComposerStaticInit04d60e6641cb13948c67b6b4c9d50c65
         'Psr\\Container\\' => 
         array (
             0 => __DIR__ . '/..' . '/psr/container/src',
+        ),
+        'League\\MimeTypeDetection\\' => 
+        array (
+            0 => __DIR__ . '/..' . '/league/mime-type-detection/src',
         ),
         'League\\Flysystem\\' => 
         array (
@@ -174,6 +179,12 @@ class ComposerStaticInit04d60e6641cb13948c67b6b4c9d50c65
         'League\\Flysystem\\Util\\ContentListingFormatter' => __DIR__ . '/..' . '/league/flysystem/src/Util/ContentListingFormatter.php',
         'League\\Flysystem\\Util\\MimeType' => __DIR__ . '/..' . '/league/flysystem/src/Util/MimeType.php',
         'League\\Flysystem\\Util\\StreamHasher' => __DIR__ . '/..' . '/league/flysystem/src/Util/StreamHasher.php',
+        'League\\MimeTypeDetection\\EmptyExtensionToMimeTypeMap' => __DIR__ . '/..' . '/league/mime-type-detection/src/EmptyExtensionToMimeTypeMap.php',
+        'League\\MimeTypeDetection\\ExtensionMimeTypeDetector' => __DIR__ . '/..' . '/league/mime-type-detection/src/ExtensionMimeTypeDetector.php',
+        'League\\MimeTypeDetection\\ExtensionToMimeTypeMap' => __DIR__ . '/..' . '/league/mime-type-detection/src/ExtensionToMimeTypeMap.php',
+        'League\\MimeTypeDetection\\FinfoMimeTypeDetector' => __DIR__ . '/..' . '/league/mime-type-detection/src/FinfoMimeTypeDetector.php',
+        'League\\MimeTypeDetection\\GeneratedExtensionToMimeTypeMap' => __DIR__ . '/..' . '/league/mime-type-detection/src/GeneratedExtensionToMimeTypeMap.php',
+        'League\\MimeTypeDetection\\MimeTypeDetector' => __DIR__ . '/..' . '/league/mime-type-detection/src/MimeTypeDetector.php',
         'MoverTest' => __DIR__ . '/..' . '/coenjacobs/mozart/tests/MoverTest.php',
         'NamespaceReplacerTest' => __DIR__ . '/..' . '/coenjacobs/mozart/tests/replacers/NamespaceReplacerTest.php',
         'Normalizer' => __DIR__ . '/..' . '/symfony/polyfill-intl-normalizer/Resources/stubs/Normalizer.php',
@@ -277,7 +288,6 @@ class ComposerStaticInit04d60e6641cb13948c67b6b4c9d50c65
         'ReplaceMe\\Psr\\Log\\Test\\TestLogger' => __DIR__ . '/..' . '/ReplaceMe/Psr/Log/Test/TestLogger.php',
         'ReplaceMe\\TrustedLogin\\Admin' => __DIR__ . '/..' . '/ReplaceMe/TrustedLogin/Admin.php',
         'ReplaceMe\\TrustedLogin\\Ajax' => __DIR__ . '/..' . '/ReplaceMe/TrustedLogin/Ajax.php',
-        'ReplaceMe\\TrustedLogin\\BruteForceChecker' => __DIR__ . '/..' . '/ReplaceMe/TrustedLogin/BruteForceChecker.php',
         'ReplaceMe\\TrustedLogin\\Button' => __DIR__ . '/..' . '/ReplaceMe/TrustedLogin/Button.php',
         'ReplaceMe\\TrustedLogin\\Client' => __DIR__ . '/..' . '/ReplaceMe/TrustedLogin/Client.php',
         'ReplaceMe\\TrustedLogin\\Config' => __DIR__ . '/..' . '/ReplaceMe/TrustedLogin/Config.php',
@@ -288,7 +298,7 @@ class ComposerStaticInit04d60e6641cb13948c67b6b4c9d50c65
         'ReplaceMe\\TrustedLogin\\Logging' => __DIR__ . '/..' . '/ReplaceMe/TrustedLogin/Logging.php',
         'ReplaceMe\\TrustedLogin\\OptionKeys' => __DIR__ . '/..' . '/ReplaceMe/TrustedLogin/OptionKeys.php',
         'ReplaceMe\\TrustedLogin\\Remote' => __DIR__ . '/..' . '/ReplaceMe/TrustedLogin/Remote.php',
-        'ReplaceMe\\TrustedLogin\\Revokable' => __DIR__ . '/..' . '/ReplaceMe/TrustedLogin/AccessHandler.php',
+        'ReplaceMe\\TrustedLogin\\SecurityChecks' => __DIR__ . '/..' . '/ReplaceMe/TrustedLogin/SecurityChecks.php',
         'ReplaceMe\\TrustedLogin\\SiteAccess' => __DIR__ . '/..' . '/ReplaceMe/TrustedLogin/SiteAccess.php',
         'ReplaceMe\\TrustedLogin\\SupportRole' => __DIR__ . '/..' . '/ReplaceMe/TrustedLogin/SupportRole.php',
         'ReplaceMe\\TrustedLogin\\SupportUser' => __DIR__ . '/..' . '/ReplaceMe/TrustedLogin/SupportUser.php',

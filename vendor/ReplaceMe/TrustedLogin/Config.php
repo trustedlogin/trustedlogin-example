@@ -13,10 +13,9 @@ if ( ! defined('ABSPATH') ) {
 	exit;
 }
 
+use ArrayAccess;
 use \Exception;
 use \WP_Error;
-use \WP_User;
-use \WP_Admin_Bar;
 
 final class Config {
 
@@ -29,36 +28,11 @@ final class Config {
 			'public_key' => null, // @todo Rename to `api_key` again, since we're fetching an encryption public key from the Vendor site…
 			'private_key' => null,
 		),
-		'decay' => WEEK_IN_SECONDS,
-		'role' => 'editor',
-		'paths' => array(
-			'css' => null,
-			'js'  => null, // Default is defined in get_default_settings()
-		),
 		'caps' => array(
-			'add' => array(
-			),
-			'remove' => array(
-			),
+			'add' => array(),
+			'remove' => array(),
 		),
-		'webhook_url' => null,
-		'vendor' => array(
-			'namespace' => null,
-			'title' => null,
-			'email' => null,
-			'website' => null,
-			'support_url' => null,
-			'display_name' => null,
-			'logo_url' => null,
-		),
-		'menu' => array(
-			'slug' => null,
-			'title' => null,
-			'priority' => null,
-		),
-		'reassign_posts' => true,
-		'registers_assets' => true,
-		'require_ssl' => true,
+		'decay' => WEEK_IN_SECONDS,
 		'logging' => array(
 			'enabled' => false,
 			'directory' => null,
@@ -71,7 +45,30 @@ final class Config {
 				'logFormat'      => false,
 				'appendContext'  => true,
 			),
-		)
+		),
+		'menu' => array(
+			'slug' => null,
+			'title' => null,
+			'priority' => null,
+		),
+		'paths' => array(
+			'css' => null,
+			'js'  => null, // Default is defined in get_default_settings()
+		),
+		'reassign_posts' => true,
+		'registers_assets' => true,
+		'require_ssl' => true,
+		'role' => 'editor',
+		'vendor' => array(
+			'namespace' => null,
+			'title' => null,
+			'email' => null,
+			'website' => null,
+			'support_url' => null,
+			'display_name' => null,
+			'logo_url' => null,
+		),
+		'webhook_url' => null,
 	);
 
 	/**
@@ -90,7 +87,7 @@ final class Config {
 	public function __construct( array $settings = array() ) {
 
 		if ( empty( $settings ) ) {
-			throw new \Exception( 'Developer: TrustedLogin requires a configuration array. See https://trustedlogin.com/configuration/ for more information.', 1 );
+			throw new Exception( 'Developer: TrustedLogin requires a configuration array. See https://trustedlogin.com/configuration/ for more information.', 1 );
 		}
 
 		$this->settings = $settings;
@@ -105,7 +102,7 @@ final class Config {
 	public function validate() {
 
 		if ( in_array( __NAMESPACE__, array( 'ReplaceMe', 'ReplaceMe\TrustedLogin' ) ) && ! defined('TL_DOING_TESTS') ) {
-			throw new \Exception( 'Developer: make sure to change the namespace for the TrustedLogin class. See https://trustedlogin.com/configuration/ for more information.', 2 );
+			throw new Exception( 'Developer: make sure to change the namespace for the TrustedLogin class. See https://trustedlogin.com/configuration/ for more information.', 2 );
 		}
 
 		$errors = array();
@@ -124,6 +121,12 @@ final class Config {
 			$errors[] = new WP_Error( 'invalid_configuration', 'Decay must be an integer (number of seconds).' );
 		} elseif ( $this->settings['decay'] > MONTH_IN_SECONDS ) {
 			$errors[] = new WP_Error( 'invalid_configuration', 'Decay must less than or equal to 30 days.' );
+		}
+
+		// This seems like a reasonable max limit on namespace length.
+		// @see https://developer.wordpress.org/reference/functions/set_transient/#more-information
+		if ( strlen( $this->settings['vendor']['namespace'] ) > 96 ) {
+			$errors[] = new WP_Error( 'invalid_configuration', 'Namespace length must be shorter than 96 characters.' );
 		}
 
 		// TODO: Add namespace collision check?
@@ -161,7 +164,7 @@ final class Config {
 			$exception_text = 'Invalid TrustedLogin Configuration. Learn more at https://www.trustedlogin.com/configuration/';
 			$exception_text .= "\n- " . implode( "\n- ", $error_text );
 
-			throw new \Exception( $exception_text, 3 );
+			throw new Exception( $exception_text, 3 );
 		}
 
 		return true;
@@ -335,7 +338,7 @@ final class Config {
 	 * @return null|string|mixed The value
 	 */
 	private function get_array_value( $array, $prop, $default = null ) {
-		if ( ! is_array( $array ) && ! ( is_object( $array ) && $array instanceof \ArrayAccess ) ) {
+		if ( ! is_array( $array ) && ! ( is_object( $array ) && $array instanceof ArrayAccess ) ) {
 			return $default;
 		}
 

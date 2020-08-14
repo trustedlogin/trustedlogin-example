@@ -107,29 +107,30 @@
     },
     {
         "name": "league/flysystem",
-        "version": "1.0.70",
-        "version_normalized": "1.0.70.0",
+        "version": "1.1.1",
+        "version_normalized": "1.1.1.0",
         "source": {
             "type": "git",
             "url": "https://github.com/thephpleague/flysystem.git",
-            "reference": "585824702f534f8d3cf7fab7225e8466cc4b7493"
+            "reference": "6e96f54d82e71f71c4108da33ee96a7f57083710"
         },
         "dist": {
             "type": "zip",
-            "url": "https://api.github.com/repos/thephpleague/flysystem/zipball/585824702f534f8d3cf7fab7225e8466cc4b7493",
-            "reference": "585824702f534f8d3cf7fab7225e8466cc4b7493",
+            "url": "https://api.github.com/repos/thephpleague/flysystem/zipball/6e96f54d82e71f71c4108da33ee96a7f57083710",
+            "reference": "6e96f54d82e71f71c4108da33ee96a7f57083710",
             "shasum": ""
         },
         "require": {
             "ext-fileinfo": "*",
-            "php": ">=5.5.9"
+            "league/mime-type-detection": "^1.3",
+            "php": "^7.2.5 || ^8.0"
         },
         "conflict": {
             "league/flysystem-sftp": "<1.0.6"
         },
         "require-dev": {
-            "phpspec/phpspec": "^3.4 || ^4.0 || ^5.0 || ^6.0",
-            "phpunit/phpunit": "^5.7.26"
+            "phpspec/prophecy": "^1.11.1",
+            "phpunit/phpunit": "^8.5.8"
         },
         "suggest": {
             "ext-fileinfo": "Required for MimeType",
@@ -147,7 +148,7 @@
             "spatie/flysystem-dropbox": "Allows you to use Dropbox storage",
             "srmklive/flysystem-dropbox-v2": "Allows you to use Dropbox storage for PHP 5 applications"
         },
-        "time": "2020-07-26T07:20:36+00:00",
+        "time": "2020-08-12T14:23:41+00:00",
         "type": "library",
         "extra": {
             "branch-alias": {
@@ -194,6 +195,59 @@
             {
                 "url": "https://offset.earth/frankdejonge",
                 "type": "other"
+            }
+        ]
+    },
+    {
+        "name": "league/mime-type-detection",
+        "version": "1.4.0",
+        "version_normalized": "1.4.0.0",
+        "source": {
+            "type": "git",
+            "url": "https://github.com/thephpleague/mime-type-detection.git",
+            "reference": "fda190b62b962d96a069fcc414d781db66d65b69"
+        },
+        "dist": {
+            "type": "zip",
+            "url": "https://api.github.com/repos/thephpleague/mime-type-detection/zipball/fda190b62b962d96a069fcc414d781db66d65b69",
+            "reference": "fda190b62b962d96a069fcc414d781db66d65b69",
+            "shasum": ""
+        },
+        "require": {
+            "ext-fileinfo": "*",
+            "php": "^7.2 || ^8.0"
+        },
+        "require-dev": {
+            "phpstan/phpstan": "^0.12.36",
+            "phpunit/phpunit": "^8.5.8"
+        },
+        "time": "2020-08-09T10:34:01+00:00",
+        "type": "library",
+        "installation-source": "dist",
+        "autoload": {
+            "psr-4": {
+                "League\\MimeTypeDetection\\": "src"
+            }
+        },
+        "notification-url": "https://packagist.org/downloads/",
+        "license": [
+            "MIT"
+        ],
+        "authors": [
+            {
+                "name": "Frank de Jonge",
+                "email": "info@frankdejonge.nl"
+            }
+        ],
+        "description": "Mime-type detection for Flysystem",
+        "funding": [
+            {
+                "url": "https://github.com/frankdejonge",
+                "type": "github"
+            },
+            {
+                "url": "https://tidelift.com/funding/github/packagist/league/flysystem",
+                "type": "tidelift"
             }
         ]
     },
@@ -594,8 +648,8 @@
     },
     {
         "name": "symfony/polyfill-ctype",
-        "version": "v1.18.0",
-        "version_normalized": "1.18.0.0",
+        "version": "v1.18.1",
+        "version_normalized": "1.18.1.0",
         "source": {
             "type": "git",
             "url": "https://github.com/symfony/polyfill-ctype.git",
@@ -672,8 +726,8 @@
     },
     {
         "name": "symfony/polyfill-intl-grapheme",
-        "version": "v1.18.0",
-        "version_normalized": "1.18.0.0",
+        "version": "v1.18.1",
+        "version_normalized": "1.18.1.0",
         "source": {
             "type": "git",
             "url": "https://github.com/symfony/polyfill-intl-grapheme.git",
@@ -752,8 +806,8 @@
     },
     {
         "name": "symfony/polyfill-intl-normalizer",
-        "version": "v1.18.0",
-        "version_normalized": "1.18.0.0",
+        "version": "v1.18.1",
+        "version_normalized": "1.18.1.0",
         "source": {
             "type": "git",
             "url": "https://github.com/symfony/polyfill-intl-normalizer.git",
@@ -835,8 +889,8 @@
     },
     {
         "name": "symfony/polyfill-mbstring",
-        "version": "v1.18.0",
-        "version_normalized": "1.18.0.0",
+        "version": "v1.18.1",
+        "version_normalized": "1.18.1.0",
         "source": {
             "type": "git",
             "url": "https://github.com/symfony/polyfill-mbstring.git",
@@ -914,8 +968,8 @@
     },
     {
         "name": "symfony/polyfill-php73",
-        "version": "v1.18.0",
-        "version_normalized": "1.18.0.0",
+        "version": "v1.18.1",
+        "version_normalized": "1.18.1.0",
         "source": {
             "type": "git",
             "url": "https://github.com/symfony/polyfill-php73.git",
@@ -992,8 +1046,8 @@
     },
     {
         "name": "symfony/polyfill-php80",
-        "version": "v1.18.0",
-        "version_normalized": "1.18.0.0",
+        "version": "v1.18.1",
+        "version_normalized": "1.18.1.0",
         "source": {
             "type": "git",
             "url": "https://github.com/symfony/polyfill-php80.git",
@@ -1244,12 +1298,12 @@
         "source": {
             "type": "git",
             "url": "https://github.com/trustedlogin/trustedlogin-client.git",
-            "reference": "b0672eb4a86a9e5f7c30e8f2decd0a91f60b4546"
+            "reference": "a4fb65a31b0a3dd758e09b786192cdeeacc823b6"
         },
         "dist": {
             "type": "zip",
-            "url": "https://api.github.com/repos/trustedlogin/trustedlogin-client/zipball/b0672eb4a86a9e5f7c30e8f2decd0a91f60b4546",
-            "reference": "b0672eb4a86a9e5f7c30e8f2decd0a91f60b4546",
+            "url": "https://api.github.com/repos/trustedlogin/trustedlogin-client/zipball/a4fb65a31b0a3dd758e09b786192cdeeacc823b6",
+            "reference": "a4fb65a31b0a3dd758e09b786192cdeeacc823b6",
             "shasum": ""
         },
         "require": {
@@ -1260,7 +1314,7 @@
             "paragonie/sodium_compat": "^1.12",
             "php": ">=5.3.0"
         },
-        "time": "2020-07-30T22:14:19+00:00",
+        "time": "2020-08-11T20:00:12+00:00",
         "type": "library",
         "installation-source": "source",
         "autoload": {
