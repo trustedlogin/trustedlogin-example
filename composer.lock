@@ -240,12 +240,12 @@
             "source": {
                 "type": "git",
                 "url": "https://github.com/trustedlogin/trustedlogin-client.git",
-                "reference": "0c03795479c9376e837a0e1ed35e3142824e424b"
+                "reference": "dd169f3c23933eb318871f4b3f0dc9a108b5dc26"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/trustedlogin/trustedlogin-client/zipball/0c03795479c9376e837a0e1ed35e3142824e424b",
-                "reference": "0c03795479c9376e837a0e1ed35e3142824e424b",
+                "url": "https://api.github.com/repos/trustedlogin/trustedlogin-client/zipball/dd169f3c23933eb318871f4b3f0dc9a108b5dc26",
+                "reference": "dd169f3c23933eb318871f4b3f0dc9a108b5dc26",
                 "shasum": ""
             },
             "require": {
@@ -279,7 +279,7 @@
                 "security",
                 "support"
             ],
-            "time": "2020-08-14T19:56:48+00:00"
+            "time": "2020-08-18T18:59:31+00:00"
         }
     ],
     "packages-dev": [
@@ -337,16 +337,16 @@
         },
         {
             "name": "league/flysystem",
-            "version": "1.1.1",
+            "version": "1.1.2",
             "source": {
                 "type": "git",
                 "url": "https://github.com/thephpleague/flysystem.git",
-                "reference": "6e96f54d82e71f71c4108da33ee96a7f57083710"
+                "reference": "63cd8c14708b9544d3f61d3c15b747fda1c95c6e"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/thephpleague/flysystem/zipball/6e96f54d82e71f71c4108da33ee96a7f57083710",
-                "reference": "6e96f54d82e71f71c4108da33ee96a7f57083710",
+                "url": "https://api.github.com/repos/thephpleague/flysystem/zipball/63cd8c14708b9544d3f61d3c15b747fda1c95c6e",
+                "reference": "63cd8c14708b9544d3f61d3c15b747fda1c95c6e",
                 "shasum": ""
             },
             "require": {
@@ -424,7 +424,7 @@
                     "type": "other"
                 }
             ],
-            "time": "2020-08-12T14:23:41+00:00"
+            "time": "2020-08-18T10:57:55+00:00"
         },
         {
             "name": "league/mime-type-detection",
