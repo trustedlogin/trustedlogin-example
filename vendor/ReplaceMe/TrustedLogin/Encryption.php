@@ -4,7 +4,7 @@
  *
  * @package ReplaceMe\TrustedLogin\Client
  *
- * @copyright 2020 Katz Web Services, Inc.
+ * @copyright 2021 Katz Web Services, Inc.
  */
 namespace ReplaceMe\TrustedLogin;
 
@@ -17,9 +17,6 @@ use \Exception;
 use \WP_Error;
 use \Sodium;
 
-/**
- * The TrustedLogin all-in-one drop-in class.
- */
 final class Encryption {
 
 	/**
@@ -38,10 +35,10 @@ final class Encryption {
 	private $logging;
 
 	/**
-	 * @var string $public_key_option Where the plugin should store the public key for encrypting data
-	 * @since 0.5.0
+	 * @var string $vendor_public_key_option Where the plugin should store the public key for encrypting data
+	 * @since 1.0.0
 	 */
-	private $public_key_option;
+	private $vendor_public_key_option;
 
 	/**
 	 * @var string Endpoint path to Vendor public key.
@@ -64,16 +61,70 @@ final class Encryption {
 		/**
 		 * Filter: Sets the site option name for the Public Key for encryption functions
 		 *
-		 * @since 0.5.0
+		 * @since 1.0.0
 		 *
-		 * @param string $public_key_option
+		 * @param string $vendor_public_key_option
 		 * @param Config $config
 		 */
-		$this->public_key_option = apply_filters(
-			'trustedlogin/' . $this->config->ns() . '/options/public_key',
-			'tl_' . $this->config->ns() . '_public_key',
+		$this->vendor_public_key_option = apply_filters(
+			'trustedlogin/' . $this->config->ns() . '/options/vendor_public_key',
+			'tl_' . $this->config->ns() . '_vendor_public_key',
 			$this->config
 		);
+	}
+
+	/**
+	 * Generates a random hash 64 characters long.
+	 *
+	 * If random_bytes() and openssl_random_pseudo_bytes() don't exist, returns WP_Error with code generate_hash_failed.
+	 *
+	 * If random_bytes() does not exist and openssl_random_pseudo_bytes() is unable to return a strong result,
+	 * returns a WP_Error with code `openssl_not_strong_crypto`.
+	 *
+	 * @uses random_bytes
+	 * @uses openssl_random_pseudo_bytes Only used if random_bytes() does not exist.
+	 *
+	 * @param Logging The logging object to use
+	 *
+	 * @return string|WP_Error 64-character random hash or a WP_Error object explaining what went wrong. See docblock.
+	 */
+	static public function get_random_hash( $logging ) {
+
+		$byte_length = 64;
+
+		$hash = false;
+
+		if ( function_exists( 'random_bytes' ) ) {
+			try {
+				$bytes = random_bytes( $byte_length );
+				$hash  = bin2hex( $bytes );
+			} catch ( \TypeError $e ) {
+				$logging->log( $e->getMessage(), __METHOD__, 'error' );
+			} catch ( \Error $e ) {
+				$logging->log( $e->getMessage(), __METHOD__, 'error' );
+			} catch ( \Exception $e ) {
+				$logging->log( $e->getMessage(), __METHOD__, 'error' );
+			}
+		} else {
+			$logging->log( 'This site does not have the random_bytes() function.', __METHOD__, 'debug' );
+		}
+
+		if ( $hash ) {
+			return $hash;
+		}
+
+		if ( ! function_exists( 'openssl_random_pseudo_bytes' ) ) {
+			return new WP_Error( 'generate_hash_failed', 'Could not generate a secure hash with random_bytes or openssl.' );
+		}
+
+		$crypto_strong = false;
+		$hash          = openssl_random_pseudo_bytes( $byte_length, $crypto_strong );
+
+		if ( ! $crypto_strong ) {
+			return new WP_Error( 'openssl_not_strong_crypto', 'Site could not generate a secure hash with OpenSSL.' );
+		}
+
+		return $hash;
 	}
 
 	/**
@@ -81,23 +132,33 @@ final class Encryption {
 	 *
 	 * @return string|WP_Error
 	 */
-	static public function hash( $string ) {
+	static public function hash( $string, $length = 16 ) {
 
 		if ( ! function_exists( 'sodium_crypto_generichash' ) ) {
 			return new WP_Error( 'sodium_crypto_generichash_not_available', 'sodium_crypto_generichash not available' );
 		}
 
 		try {
-			$hash_bin = sodium_crypto_generichash( $string, '', 16 );
+			$hash_bin = sodium_crypto_generichash( $string, '', (int) $length );
 			$hash     = sodium_bin2hex( $hash_bin );
-		} catch ( \SodiumException $exception ) {
-			return new WP_Error(
-				'encryption_failed_generichash',
-				sprintf( 'Error while generating hash: %s (%s)', $e->getMessage(), $e->getCode() )
-			);
-		} catch ( \TypeError $exception ) {
+		} catch ( \TypeError $e ) {
 			return new WP_Error(
 				'encryption_failed_generichash_typeerror',
+				sprintf( 'Error while generating hash: %s (%s)', $e->getMessage(), $e->getCode() )
+			);
+		} catch ( \Error $e ) {
+			return new WP_Error(
+				'encryption_failed_generichash_error',
+				sprintf( 'Error while generating hash: %s (%s)', $e->getMessage(), $e->getCode() )
+			);
+		} catch ( \SodiumException $e ) {
+			return new WP_Error(
+				'encryption_failed_generichash_sodium',
+				sprintf( 'Error while generating hash: %s (%s)', $e->getMessage(), $e->getCode() )
+			);
+		} catch ( \Exception $e ) {
+			return new WP_Error(
+				'encryption_failed_generichash',
 				sprintf( 'Error while generating hash: %s (%s)', $e->getMessage(), $e->getCode() )
 			);
 		}
@@ -108,18 +169,18 @@ final class Encryption {
 	/**
 	 * Fetches the Public Key from local or db
 	 *
-	 * @since 0.5.0
+	 * @since 1.0.0
 	 *
 	 * @return string|WP_Error  If found, it returns the publicKey, if not a WP_Error
 	 */
-	public function get_public_key() {
+	public function get_vendor_public_key() {
 
 		// Already stored as transient
-		$public_key = get_site_transient( $this->public_key_option );
+		$public_key = get_site_transient( $this->vendor_public_key_option );
 
 		if ( $public_key ) {
 			// Documented below
-			return apply_filters( 'trustedlogin/' . $this->config->ns() . '/public_key', $public_key, $this->config );
+			return apply_filters( 'trustedlogin/' . $this->config->ns() . '/vendor_public_key', $public_key, $this->config );
 		}
 
 		// Fetch a key from Vendor site
@@ -127,46 +188,52 @@ final class Encryption {
 
 		if ( is_wp_error( $remote_key ) ) {
 
-			$this->logging->log( sprintf( '(%s) %s', $remote_key->get_error_code(), $remote_key->get_error_message() ), __METHOD__, 'notice' );
+			$this->logging->log( sprintf( '(%s) %s', $remote_key->get_error_code(), $remote_key->get_error_message() ), __METHOD__, 'error' );
 
 			return $remote_key;
 		}
 
-		// Store it in the DB for ten minutes
-		$saved = set_site_transient( $this->public_key_option, $remote_key, 60 * 10 );
+		// Attempt to store Vendor public key in the DB for ten minutes (may be overridden by caching plugins)
+		$saved = set_site_transient( $this->vendor_public_key_option, $remote_key, 60 * 10 );
 
 		if ( ! $saved ) {
-			$this->logging->log( 'Public key not saved after being fetched remotely.', __METHOD__, 'notice' );
+			$this->logging->log( 'Public key not saved after being fetched remotely.', __METHOD__, 'warning' );
 		}
 
 		/**
 		 * Filter: Override the public key functions.
 		 *
-		 * @since 0.5.0
+		 * @since 1.0.0
 		 *
-		 * @param string $public_key
+		 * @param string $vendor_public_key
 		 * @param Config $config
 		 */
-		return apply_filters( 'trustedlogin/' . $this->config->ns() . '/public_key', $remote_key, $this->config );
+		return apply_filters( 'trustedlogin/' . $this->config->ns() . '/vendor_public_key', $remote_key, $this->config );
 	}
 
 	/**
 	 * Fetches the Public Key from the `TrustedLogin-vendor` plugin on support website.
 	 *
-	 * @since 0.5.0
+	 * @since 1.0.0
 	 *
 	 * @return string|WP_Error  If successful, will return the Public Key string. Otherwise WP_Error on failure.
 	 */
 	private function get_remote_encryption_key() {
 
-		$vendor_url = $this->config->get_setting( 'vendor/website' );
+		$vendor_website = $this->config->get_setting( 'vendor/website', '' );
+
+		/**
+		 * @param string $public_key_website Root URL of the website from where the vendor's public key is fetched. May be different than the vendor/website configuration setting.
+		 * @since 1.3.2
+		 */
+		$public_key_website = apply_filters( 'trustedlogin/' . $this->config->ns() . '/vendor/public_key/website', $vendor_website );
 
 		/**
 		 * @param string $key_endpoint Endpoint path on vendor (software vendor's) site
 		 */
-		$key_endpoint = apply_filters( 'trustedlogin/' . $this->config->ns() . '/vendor/public_key/endpoint', $this->vendor_public_key_endpoint );
+		$public_key_endpoint = apply_filters( 'trustedlogin/' . $this->config->ns() . '/vendor/public_key/endpoint', $this->vendor_public_key_endpoint );
 
-		$url = trailingslashit( $vendor_url ) . $key_endpoint;
+		$url = trailingslashit( $public_key_website ) . $public_key_endpoint;
 
 		$headers = array(
 			'Accept'       => 'application/json',
@@ -185,6 +252,11 @@ final class Encryption {
 		$response_json = $this->remote->handle_response( $response, array( 'publicKey' ) );
 
 		if ( is_wp_error( $response_json ) ) {
+
+			if ( 'not_found' == $response_json->get_error_code() ){
+				return new WP_Error( 'not_found', __( 'Encryption key could not be fetched, Vendor site returned 404.', 'trustedlogin' ) );
+			}
+
 			return $response_json;
 		}
 
@@ -194,7 +266,7 @@ final class Encryption {
 	/**
 	 * Encrypts a string using the Public Key provided by the plugin/theme developers' server.
 	 *
-	 * @since 0.5.0
+	 * @since 1.0.0
 	 * @uses \sodium_crypto_box_keypair_from_secretkey_and_publickey() to generate key.
 	 * @uses \sodium_crypto_secretbox() to encrypt.
 	 *
@@ -214,7 +286,7 @@ final class Encryption {
 			return new WP_Error( 'sodium_crypto_secretbox_not_available', 'lib_sodium not available' );
 		}
 
-		$bob_public_key = $this->get_public_key();
+		$bob_public_key = $this->get_vendor_public_key();
 
 		if ( is_wp_error( $bob_public_key ) ) {
 			return $bob_public_key;
@@ -248,7 +320,7 @@ final class Encryption {
 	/**
 	 * Gets and returns a random nonce.
 	 *
-	 * @since 0.5.0
+	 * @since 1.0.0
 	 *
 	 * @return string|WP_Error  Nonce if created, otherwise WP_Error
 	 */
@@ -270,7 +342,7 @@ final class Encryption {
 	/**
 	 * Generate unique Client encryption keys.
 	 *
-	 * @since 0.5.0
+	 * @since 1.0.0
 	 *
 	 * @uses sodium_crypto_box_keypair()
 	 * @uses sodium_crypto_box_publickey()
@@ -279,7 +351,7 @@ final class Encryption {
 	 * @return object|WP_Error $alice_keys or WP_Error if there's any issues.
 	 *   $alice_keys = [
 	 *      'publicKey'  =>  (string)  The public key.
-	 *      'privatekey' =>  (string)  The private key.
+	 *      'privateKey' =>  (string)  The private key.
 	 *   ]
 	 */
 	public function generate_keys() {

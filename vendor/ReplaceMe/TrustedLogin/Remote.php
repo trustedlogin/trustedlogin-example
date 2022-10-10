@@ -4,7 +4,7 @@
  *
  * @package ReplaceMe\TrustedLogin\Client
  *
- * @copyright 2020 Katz Web Services, Inc.
+ * @copyright 2021 Katz Web Services, Inc.
  */
 namespace ReplaceMe\TrustedLogin;
 
@@ -19,13 +19,13 @@ use \WP_User;
 use \WP_Admin_Bar;
 
 /**
- * The TrustedLogin all-in-one drop-in class.
+ * The ReplaceMe\TrustedLogin all-in-one drop-in class.
  */
 final class Remote {
 
 	/**
-	 * @var string The API url for the TrustedLogin SaaS Platform (with trailing slash)
-	 * @since 0.4.0
+	 * @var string The API url for the ReplaceMe\TrustedLogin SaaS Platform (with trailing slash)
+	 * @since 1.0.0
 	 */
 	const API_URL = 'https://app.trustedlogin.com/api/v1/';
 
@@ -49,17 +49,22 @@ final class Remote {
 
 	public function init() {
 		add_action( 'trustedlogin/' . $this->config->ns() . '/access/created', array( $this, 'maybe_send_webhook' ) );
+		add_action( 'trustedlogin/' . $this->config->ns() . '/access/extended', array( $this, 'maybe_send_webhook' ) );
 		add_action( 'trustedlogin/' . $this->config->ns() . '/access/revoked', array( $this, 'maybe_send_webhook' ) );
+		add_action( 'trustedlogin/' . $this->config->ns() . '/logged_in', array( $this, 'maybe_send_webhook' ) );
 	}
 
 	/**
 	 * POSTs to `webhook_url`, if defined in the configuration array
 	 *
-	 * @since 0.3.1
+	 * @since 1.0.0
 	 *
 	 * @param array $data {
+	 *
 	 *   @type string $url The site URL as returned by get_site_url()
-	 *   @type string $action "create" or "revoke"
+	 *   @type string $ns Namespace of the plugin
+	 *   @type string $action "created", "extended", "logged_in", or "revoked"
+	 *   @type string $ref (Optional) Support ticket Reference ID
 	 * }
 	 *
 	 * @return bool|WP_Error False: webhook setting not defined; True: success; WP_Error: error!
@@ -74,7 +79,7 @@ final class Remote {
 
 		if ( ! wp_http_validate_url( $webhook_url ) ) {
 
-			$error = new WP_Error( 'invalid_webhook_url', 'An invalid `webhook_url` setting was passed to the TrustedLogin Client: ' . esc_attr( $webhook_url ) );
+			$error = new WP_Error( 'invalid_webhook_url', 'An invalid `webhook_url` setting was passed to the ReplaceMe\TrustedLogin Client: ' . esc_attr( $webhook_url ) );
 
 			$this->logging->log( $error, __METHOD__, 'error' );
 
@@ -83,7 +88,7 @@ final class Remote {
 
 		try {
 
-			$posted = wp_remote_post( $webhook_url, $data );
+			$posted = wp_remote_post( $webhook_url, array( 'body' => $data ) );
 
 			if ( is_wp_error( $posted ) ) {
 				$this->logging->log( 'An error encountered while sending a webhook to ' . esc_attr( $webhook_url ), __METHOD__, 'error', $posted );
@@ -105,7 +110,7 @@ final class Remote {
 	/**
 	 * API Function: send the API request
 	 *
-	 * @since 0.4.0
+	 * @since 1.0.0
 	 *
 	 * @param string $path - the path for the REST API request (no initial or trailing slash needed)
 	 * @param array $data Data passed as JSON-encoded body for
@@ -127,7 +132,7 @@ final class Remote {
 		$headers = array(
 			'Accept'        => 'application/json',
 			'Content-Type'  => 'application/json',
-			'Authorization' => 'Bearer ' . $this->config->get_setting( 'auth/public_key' ),
+			'Authorization' => 'Bearer ' . $this->config->get_setting( 'auth/api_key' ),
 		);
 
 		if ( ! empty( $additional_headers ) ) {
@@ -136,7 +141,7 @@ final class Remote {
 
 		$request_options = array(
 			'method'      => $method,
-			'timeout'     => 45,
+			'timeout'     => 15,
 			'httpversion' => '1.1',
 			'headers'     => $headers,
 		);
@@ -169,7 +174,7 @@ final class Remote {
 	/**
 	 * Builds URL to API endpoints
 	 *
-	 * @since 0.9.3
+	 * @since 1.0.0
 	 *
 	 * @param string $endpoint Endpoint to hit on the API; example "sites" or "sites/{$site_identifier}"
 	 *
@@ -178,9 +183,9 @@ final class Remote {
 	private function build_api_url( $endpoint = '' ) {
 
 		/**
-		 * Modifies the endpoint URL for the TrustedLogin service.
+		 * Modifies the endpoint URL for the ReplaceMe\TrustedLogin service.
 		 *
-		 * @param string $url URL to TrustedLogin API
+		 * @param string $url URL to ReplaceMe\TrustedLogin API
 		 *
 		 * @internal This allows pointing requests to testing servers
 		 */
@@ -196,70 +201,105 @@ final class Remote {
 	}
 
 	/**
+	 * Translates response codes to more nuanced error descriptions specific to TrustedLogin.
+	 *
+	 * @param array|WP_Error $api_response Response from HTTP API
+	 *
+	 * @return int|WP_Error|null If valid response, the response code ID or null. If error, a WP_Error with a message description.
+	 */
+	static public function check_response_code( $api_response ) {
+
+		if ( is_wp_error( $api_response ) ) {
+			$response_code = $api_response->get_error_code();
+		} else {
+			$response_code = wp_remote_retrieve_response_code( $api_response );
+		}
+
+		switch ( $response_code ) {
+
+			// Successful response, but no sites found.
+			case 204:
+				return null;
+
+			case 400:
+			case 423:
+				return new WP_Error( 'unable_to_verify', esc_html__( 'Unable to verify Pause Mode.', 'trustedlogin' ), $api_response );
+
+			case 401:
+				return new WP_Error( 'unauthenticated', esc_html__( 'Authentication failed.', 'trustedlogin' ), $api_response );
+
+			case 402:
+				return new WP_Error( 'account_error', esc_html__( 'ReplaceMe\TrustedLogin account issue.', 'trustedlogin' ), $api_response );
+
+			case 403:
+				return new WP_Error( 'invalid_token', esc_html__( 'Invalid tokens.', 'trustedlogin' ), $api_response );
+
+			// the KV store was not found, possible issue with endpoint
+			case 404:
+				return new WP_Error( 'not_found', esc_html__( 'The ReplaceMe\TrustedLogin vendor was not found.', 'trustedlogin' ), $api_response );
+
+			// The site is a teapot.
+			case 418:
+				return new WP_Error( 'teapot', '🫖', $api_response );
+
+			// Server offline
+			case 500:
+			case 503:
+			case 'http_request_failed':
+				return new WP_Error( 'unavailable', esc_html__( 'The ReplaceMe\TrustedLogin site is not currently online.', 'trustedlogin' ), $api_response );
+
+			// Server error
+			case 501:
+			case 502:
+			case 522:
+				return new WP_Error( 'server_error', esc_html__( 'The ReplaceMe\TrustedLogin site is not currently available.', 'trustedlogin' ), $api_response );
+
+			// wp_remote_retrieve_response_code() couldn't parse the $api_response
+			case '':
+				return new WP_Error( 'invalid_response', esc_html__( 'Invalid response.', 'trustedlogin' ), $api_response );
+
+			default:
+				return (int) $response_code;
+		}
+	}
+
+	/**
 	 * API Response Handler
 	 *
-	 * @since 0.4.1
+	 * @since 1.0.0
 	 *
 	 * @param array|WP_Error $api_response - the response from HTTP API
 	 * @param array $required_keys If the response JSON must have specific keys in it, pass them here
 	 *
-	 * @return array|WP_Error If successful response, returns array of JSON data. If failed, returns WP_Error.
+	 * @return array|WP_Error|null If successful response, returns array of JSON data. If failed, returns WP_Error. If
 	 */
 	public function handle_response( $api_response, $required_keys = array() ) {
 
-		if ( is_wp_error( $api_response ) ) {
+		$response_code = self::check_response_code( $api_response );
 
-			$this->logging->log( sprintf( 'Request error (Code %s): %s', $api_response->get_error_code(), $api_response->get_error_message() ), __METHOD__, 'error' );
-
-			return $api_response;
+		// Null means a successful response, but does not return any body content (204). We can return early.
+		if ( null === $response_code ) {
+			return null;
 		}
 
-		$this->logging->log( "Response: " . print_r( $api_response, true ), __METHOD__, 'debug' );
+		if ( is_wp_error( $response_code ) ) {
+			$this->logging->log( "Response code check failed: " . print_r( $response_code, true ), __METHOD__, 'error' );
+
+			return $response_code;
+		}
 
 		$response_body = wp_remote_retrieve_body( $api_response );
 
 		if ( empty( $response_body ) ) {
 			$this->logging->log( "Response body not set: " . print_r( $response_body, true ), __METHOD__, 'error' );
 
-			return new WP_Error( 'missing_response_body', __( 'The response was invalid.', 'trustedlogin' ), $api_response );
-		}
-
-		switch ( wp_remote_retrieve_response_code( $api_response ) ) {
-
-			// Unauthenticated
-			case 401:
-				return new WP_Error( 'unauthenticated', __( 'Authentication failed.', 'trustedlogin' ), $response_body );
-				break;
-
-			// Problem with Token
-			case 403:
-				return new WP_Error( 'invalid_token', __( 'Invalid tokens.', 'trustedlogin' ), $response_body );
-				break;
-
-			// the KV store was not found, possible issue with endpoint
-			case 404:
-				return new WP_Error( 'not_found', __( 'The TrustedLogin vendor was not found.', 'trustedlogin' ), $response_body );
-				break;
-
-			// Server issue
-			case 500:
-				return new WP_Error( 'unavailable', __( 'The TrustedLogin site is not currently available.', 'trustedlogin' ), $response_body );
-				break;
-
-			case 501:
-				return new WP_Error( 'server_error', __( 'The TrustedLogin site is not currently available.', 'trustedlogin' ), $response_body );
-				break;
-
-			// wp_remote_retrieve_response_code() couldn't parse the $api_response
-			case '':
-				return new WP_Error( 'invalid_response', __( 'Invalid response.', 'trustedlogin' ), $response_body );
-				break;
+			return new WP_Error( 'missing_response_body', esc_html__( 'The response was invalid.', 'trustedlogin' ), $api_response );
 		}
 
 		$response_json = json_decode( $response_body, true );
 
 		if ( empty( $response_json ) ) {
-			return new WP_Error( 'invalid_response', __( 'Invalid response.', 'trustedlogin' ), $response_body );
+			return new WP_Error( 'invalid_response', esc_html__( 'Invalid response.', 'trustedlogin' ), $response_body );
 		}
 
 		if ( isset( $response_json['errors'] ) ) {
@@ -277,7 +317,7 @@ final class Remote {
 
 		foreach ( (array) $required_keys as $required_key ) {
 			if ( ! isset( $response_json[ $required_key ] ) ) {
-				return new WP_Error( 'missing_required_key', sprintf( __( 'Invalid response. Missing key: %s', 'trustedlogin' ), $required_key ), $response_body );
+				return new WP_Error( 'missing_required_key', sprintf( esc_html__( 'Invalid response. Missing key: %s', 'trustedlogin' ), $required_key ), $response_body );
 			}
 		}
 

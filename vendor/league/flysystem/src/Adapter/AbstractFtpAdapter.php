@@ -539,7 +539,7 @@ abstract class AbstractFtpAdapter extends AbstractAdapter
      */
     protected function detectSystemType($item)
     {
-        return preg_match('/^[0-9]{2,4}-[0-9]{2}-[0-9]{2}/', $item) ? 'windows' : 'unix';
+        return preg_match('/^[0-9]{2,4}-[0-9]{2}-[0-9]{2}/', trim($item)) ? 'windows' : 'unix';
     }
 
     /**
@@ -645,10 +645,7 @@ abstract class AbstractFtpAdapter extends AbstractAdapter
      */
     public function getConnection()
     {
-        $tries = 0;
-
-        while ( ! $this->isConnected() && $tries < 3) {
-            $tries++;
+        if ( ! $this->isConnected()) {
             $this->disconnect();
             $this->connect();
         }
@@ -700,4 +697,9 @@ abstract class AbstractFtpAdapter extends AbstractAdapter
      * @return bool
      */
     abstract public function isConnected();
+
+    protected function escapePath($path)
+    {
+        return str_replace(['*', '[', ']'], ['\\*', '\\[', '\\]'], $path);
+    }
 }

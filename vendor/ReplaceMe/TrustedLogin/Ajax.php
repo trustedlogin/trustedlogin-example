@@ -45,7 +45,7 @@ final class Ajax {
 	/**
 	 * AJAX handler for maybe generating a Support User
 	 *
-	 * @since 0.2.0
+	 * @since 1.0.0
 	 *
 	 * @return void Sends a JSON success or error message based on what happens
 	 */
@@ -53,16 +53,16 @@ final class Ajax {
 
 		if ( empty( $_POST['vendor'] ) ) {
 
-			$this->logging->log( 'Vendor not defined in TrustedLogin configuration.', __METHOD__, 'critical' );
+			$this->logging->log( 'Vendor not defined in ReplaceMe\TrustedLogin configuration.', __METHOD__, 'critical' );
 
-			wp_send_json_error( array( 'message' => 'Vendor not defined in TrustedLogin configuration.' ) );
+			wp_send_json_error( array( 'message' => 'Vendor not defined in ReplaceMe\TrustedLogin configuration.' ) );
 		}
 
-		// There are multiple TrustedLogin instances, and this is not the one being called.
+		// There are multiple ReplaceMe\TrustedLogin instances, and this is not the one being called.
 		// This should not occur, since the AJAX action is namespaced.
 		if ( $this->config->ns() !== $_POST['vendor'] ) {
 
-			$this->logging->log( 'Vendor does not match TrustedLogin configuration.', __METHOD__, 'critical' );
+			$this->logging->log( 'Vendor does not match ReplaceMe\TrustedLogin configuration.', __METHOD__, 'critical' );
 
 			wp_send_json_error( array( 'message' => 'Vendor does not match.' ) );
 			return;
@@ -76,7 +76,14 @@ final class Ajax {
 			wp_send_json_error( array( 'message' => 'Verification issue: Request could not be verified. Please reload the page.' ) );
 		}
 
-		$client = new Client( $this->config );
+		if ( ! current_user_can( 'create_users' ) ) {
+
+			$this->logging->log( 'Current user does not have `create_users` capability when trying to grant access.', __METHOD__, 'error' );
+
+			wp_send_json_error( array( 'message' => 'You do not have the ability to create users.' ) );
+		}
+
+		$client = new Client( $this->config, false );
 
 		$response = $client->grant_access();
 

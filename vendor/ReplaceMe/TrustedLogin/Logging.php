@@ -4,7 +4,7 @@
  *
  * @package ReplaceMe\TrustedLogin\Client
  *
- * @copyright 2020 Katz Web Services, Inc.
+ * @copyright 2021 Katz Web Services, Inc.
  */
 namespace ReplaceMe\TrustedLogin;
 
@@ -53,20 +53,29 @@ class Logging {
 	 */
 	private function setup_klogger( $config ) {
 
-		if ( ! class_exists( '\ReplaceMe\Katzgrau\KLogger\Logger' ) ) {
+		if ( ! class_exists( 'ReplaceMe\Katzgrau\KLogger\Logger' ) ) {
 
 			$this->log( 'KLogger not found.', __METHOD__, 'error' );
 
 			return false;
 		}
 
+		$logging_directory = null;
+
 		$configured_logging_dir = $config->get_setting( 'logging/directory', '' );
 
-		if( $configured_logging_dir ) {
-			return $this->check_directory( $configured_logging_dir );
+		if( ! empty( $configured_logging_dir ) ) {
+
+			$logging_directory = $this->check_directory( $configured_logging_dir );
+
+			if ( ! $logging_directory ) {
+				return false;
+			}
 		}
 
-		$logging_directory = $this->maybe_make_logging_directory();
+		if ( ! $logging_directory ) {
+			$logging_directory = $this->maybe_make_logging_directory();
+		}
 
 		// Directory cannot be found or created. Cannot log.
 		if( ! $logging_directory ) {
@@ -80,13 +89,15 @@ class Logging {
 
 		try {
 
+			$DateTime = new \DateTime( '@' . time() );
+
 			// Filename hash changes every day, make it harder to guess
-			$filename_hash_data = $this->ns . home_url( '/' ) . wp_date( 'z' );
+			$filename_hash_data = $this->ns . home_url( '/' ) . $DateTime->format( 'z' );
 
 			$default_options = array(
 				'extension'      => 'log',
 				'dateFormat'     => 'Y-m-d G:i:s.u',
-				'filename'       => sprintf( 'trustedlogin-debug-%s-%s', wp_date( 'Y-m-d' ), wp_hash( $filename_hash_data ) ),
+				'filename'       => sprintf( 'trustedlogin-client-debug-%s-%s', $DateTime->format( 'Y-m-d' ), wp_hash( $filename_hash_data ) ),
 				'flushFrequency' => false,
 				'logFormat'      => false,
 				'appendContext'  => true,
@@ -107,6 +118,12 @@ class Logging {
 			$this->log( 'Could not initialize KLogger: ' . $exception->getMessage(), __METHOD__, 'error' );
 
 			return false;
+
+		} catch ( \Exception $exception ) {
+
+			$this->log( 'DateTime could not be created: ' . $exception->getMessage(), __METHOD__, 'error' );
+
+			return false;
 		}
 
 		return $klogger;
@@ -121,6 +138,7 @@ class Logging {
 	 */
 	private function check_directory( $dirpath ) {
 
+		$dirpath = (string) $dirpath;
 		$file_exists = file_exists( $dirpath );
 		$is_writable = wp_is_writable( $dirpath );
 
@@ -138,7 +156,6 @@ class Logging {
 			$this->log( 'The defined logging directory exists but could not be written to: ' . $dirpath, __METHOD__, 'error' );
 		}
 
-		// Then return early; respect the setting
 		return false;
 	}
 
@@ -157,6 +174,9 @@ class Logging {
 
 		// Directory exists; return early
 		if( file_exists( $log_dir ) ) {
+
+			$this->prevent_directory_browsing( $log_dir );
+
 			return $log_dir;
 		}
 
@@ -201,7 +221,7 @@ class Logging {
 			return false;
 		}
 
-		fwrite( $file, '<!-- Silence is golden. TrustedLogin is also pretty great. -->' );
+		fwrite( $file, '<!-- Silence is golden. ReplaceMe\TrustedLogin is also pretty great. -->' );
 		fclose( $file );
 
 		return true;
@@ -217,9 +237,9 @@ class Logging {
 		$is_enabled = ! empty( $this->logging_enabled );
 
 		/**
-		 * Filter: Whether debug logging is enabled in TrustedLogin Client
+		 * Filter: Whether debug logging is enabled in ReplaceMe\TrustedLogin Client
 		 *
-		 * @since 0.4.2
+		 * @since 1.0.0
 		 *
 		 * @param bool $debug_mode Default: false
 		 */
@@ -252,14 +272,6 @@ class Logging {
 			$level = 'debug'; // Continue processing original log
 		}
 
-		do_action( 'trustedlogin/' . $this->ns . '/logging/log', $message, $method, $level, $data );
-		do_action( 'trustedlogin/' . $this->ns . '/logging/log_' . $level, $message, $method, $data );
-
-		// If logging is in place, don't use the error_log
-		if ( has_action( 'trustedlogin/' . $this->ns . '/logging/log' ) || has_action( 'trustedlogin/' . $this->ns . '/logging/log_' . $level ) ) {
-			return;
-		}
-
 		$log_message = $message;
 
 		if ( is_wp_error( $log_message ) ) {
@@ -269,6 +281,27 @@ class Logging {
 
 		if ( ! is_string( $log_message ) ) {
 			$log_message = print_r( $log_message, true );
+		}
+
+		if ( is_wp_error( $data ) ) {
+			$log_message .= sprintf( '[%s] %s', $data->get_error_code(), $data->get_error_message() );
+		}
+
+		if ( $data instanceof \Exception ) {
+			$log_message .= sprintf( '[%s] %s', $data->getCode(), $data->getMessage() );
+		}
+
+		// Keep PSR-4 compatible
+		if ( $data && ! is_array( $data ) ) {
+			$data = array( $data );
+		}
+
+		do_action( 'trustedlogin/' . $this->ns . '/logging/log', $message, $method, $level, $data );
+		do_action( 'trustedlogin/' . $this->ns . '/logging/log_' . $level, $message, $method, $data );
+
+		// If logging is in place, don't use the error_log
+		if ( has_action( 'trustedlogin/' . $this->ns . '/logging/log' ) || has_action( 'trustedlogin/' . $this->ns . '/logging/log_' . $level ) ) {
+			return;
 		}
 
 		// The logger class didn't load for some reason
@@ -290,20 +323,7 @@ class Logging {
 			return;
 		}
 
-		if ( is_wp_error( $data ) ) {
-			$log_message .= sprintf( '[%s] %s', $data->get_error_code(), $data->get_error_message() );
-		}
-
-		if ( $data instanceof \Exception ) {
-			$log_message .= sprintf( '[%s] %s', $data->getCode(), $data->getMessage() );
-		}
-
-		// Keep PSR-4 compatible
-		if ( $data && ! is_array( $data ) ) {
-			$data = array( $data );
-		}
-
-		$this->klogger->{$level}( $log_message, $data );
+		$this->klogger->{$level}( $log_message, (array) $data );
 	}
 
 }

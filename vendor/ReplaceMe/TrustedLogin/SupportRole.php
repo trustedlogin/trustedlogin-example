@@ -4,7 +4,7 @@
  *
  * @package ReplaceMe\TrustedLogin\SupportRole
  *
- * @copyright 2020 Katz Web Services, Inc.
+ * @copyright 2021 Katz Web Services, Inc.
  */
 namespace ReplaceMe\TrustedLogin;
 
@@ -13,10 +13,7 @@ if ( ! defined('ABSPATH') ) {
 	exit;
 }
 
-use \Exception;
-use \WP_Error;
-use \WP_User;
-use \WP_Admin_Bar;
+use WP_Error;
 
 final class SupportRole {
 
@@ -37,22 +34,18 @@ final class SupportRole {
 	private $role_name;
 
 	/**
-	 * @var array These capabilities will never be allowed for users created by TrustedLogin
-	 * @since 0.9.6
+	 * @var array These capabilities will never be allowed for users created by ReplaceMe\TrustedLogin
+	 * @since 1.0.0
 	 */
 	static $prevented_caps = array(
 		'create_users',
 		'delete_users',
 		'edit_users',
+		'list_users',
 		'promote_users',
 		'delete_site',
 		'remove_users',
 	);
-
-	/**
-	 * @var string
-	 */
-	private $cloned_name;
 
 	/**
 	 * SupportUser constructor.
@@ -61,7 +54,6 @@ final class SupportRole {
 		$this->config = $config;
 		$this->logging = $logging;
 		$this->role_name = $this->set_name();
-		$this->cloned_name = $this->get_cloned_name();
 	}
 
 	/**
@@ -109,8 +101,8 @@ final class SupportRole {
 	/**
 	 * Creates the custom Support Role if it doesn't already exist
 	 *
-	 * @since 0.1.0
-	 * @since 0.9.2 removed excluded_caps from generated role
+	 * @since 1.0.0
+	 * @since 1.0.0 removed excluded_caps from generated role
 	 *
 	 * @param string $new_role_slug    The slug for the new role (optional). Default: {@see SupportRole::get_name()}
 	 * @param string $clone_role_slug  The slug for the role to clone (optional). Default: {@see SupportRole::get_cloned_name()}.
@@ -158,7 +150,7 @@ final class SupportRole {
 			$capabilities[ $add_cap ] = true;
 		}
 
-		// These roles should never be assigned to TrustedLogin roles.
+		// These roles should never be assigned to ReplaceMe\TrustedLogin roles.
 		foreach ( self::$prevented_caps as $prevented_cap ) {
 			unset( $capabilities[ $prevented_cap ] );
 		}

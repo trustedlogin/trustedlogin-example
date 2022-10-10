@@ -4,7 +4,7 @@
  *
  * @package ReplaceMe\TrustedLogin\Client
  *
- * @copyright 2020 Katz Web Services, Inc.
+ * @copyright 2021 Katz Web Services, Inc.
  */
 namespace ReplaceMe\TrustedLogin;
 
@@ -20,13 +20,18 @@ use \WP_Error;
 final class Config {
 
 	/**
+	 * @var string[] These namespaces cannot be used, lest they result in confusion.
+	 */
+	private static $reserved_namespaces = array( 'trustedlogin', 'client', 'vendor', 'admin', 'wordpress' );
+
+	/**
 	 * @var array Default settings values
-	 * @since 0.9.6
+	 * @link https://www.trustedlogin.com/configuration/ Read the configuration settings documentation
+	 * @since 1.0.0
 	 */
 	private $default_settings = array(
 		'auth' => array(
-			'public_key' => null, // @todo Rename to `api_key` again, since we're fetching an encryption public key from the Vendor site…
-			'private_key' => null,
+			'api_key' => null,
 			'license_key' => null,
 		),
 		'caps' => array(
@@ -37,7 +42,7 @@ final class Config {
 		'logging' => array(
 			'enabled' => false,
 			'directory' => null,
-			'threshold' => 'debug',
+			'threshold' => 'notice',
 			'options' => array(
 				'extension'      => 'log',
 				'dateFormat'     => 'Y-m-d G:i:s.u',
@@ -51,13 +56,14 @@ final class Config {
 			'slug' => null,
 			'title' => null,
 			'priority' => null,
+			'icon_url' => '',
+			'position' => null,
 		),
 		'paths' => array(
 			'css' => null,
 			'js'  => null, // Default is defined in get_default_settings()
 		),
 		'reassign_posts' => true,
-		'registers_assets' => true,
 		'require_ssl' => true,
 		'role' => 'editor',
 		'vendor' => array(
@@ -68,13 +74,14 @@ final class Config {
 			'support_url' => null,
 			'display_name' => null,
 			'logo_url' => null,
+			'about_live_access_url' => null,
 		),
 		'webhook_url' => null,
 	);
 
 	/**
 	 * @var array $settings Configuration array after parsed and validated
-	 * @since 0.1.0
+	 * @since 1.0.0
 	 */
 	private $settings = array();
 
@@ -88,7 +95,7 @@ final class Config {
 	public function __construct( array $settings = array() ) {
 
 		if ( empty( $settings ) ) {
-			throw new Exception( 'Developer: TrustedLogin requires a configuration array. See https://trustedlogin.com/configuration/ for more information.', 1 );
+			throw new Exception( 'Developer: ReplaceMe\TrustedLogin requires a configuration array. See https://trustedlogin.com/configuration/ for more information.', 400 );
 		}
 
 		$this->settings = $settings;
@@ -102,17 +109,17 @@ final class Config {
 	 */
 	public function validate() {
 
-		if ( in_array( __NAMESPACE__, array( 'ReplaceMe', 'ReplaceMe\TrustedLogin' ) ) && ! defined('TL_DOING_TESTS') ) {
-			throw new Exception( 'Developer: make sure to change the namespace for the TrustedLogin class. See https://trustedlogin.com/configuration/ for more information.', 2 );
+		if ( in_array( __NAMESPACE__, array( 'ReplaceMe', 'ReplaceMe\GravityView\TrustedLogin' ) ) && ! defined('TL_DOING_TESTS') ) {
+			throw new Exception( 'Developer: make sure to change the namespace for the ReplaceMe\TrustedLogin class. See https://trustedlogin.com/configuration/ for more information.', 501 );
 		}
 
 		$errors = array();
 
-		if ( ! isset( $this->settings['auth']['public_key'] ) ) {
-			$errors[] = new WP_Error( 'missing_configuration', 'You need to set a public key. Get yours at https://app.trustedlogin.com' );
+		if ( ! isset( $this->settings['auth']['api_key'] ) ) {
+			$errors[] = new WP_Error( 'missing_configuration', 'You need to set an API key. Get yours at https://app.trustedlogin.com' );
 		}
 
-		if ( 'https://www.example.com' === $this->settings['vendor']['website'] ) {
+		if ( isset( $this->settings['vendor']['website'] ) && 'https://www.example.com' === $this->settings['vendor']['website'] && ! defined('TL_DOING_TESTS') ) {
 			$errors[] = new WP_Error( 'missing_configuration', 'You need to configure the "website" URL to point to the URL where the Vendor plugin is installed.' );
 		}
 
@@ -122,27 +129,41 @@ final class Config {
 			}
 		}
 
-		if ( ! is_int( $this->settings['decay'] ) ) {
-			$errors[] = new WP_Error( 'invalid_configuration', 'Decay must be an integer (number of seconds).' );
-		} elseif ( $this->settings['decay'] > MONTH_IN_SECONDS ) {
-			$errors[] = new WP_Error( 'invalid_configuration', 'Decay must less than or equal to 30 days.' );
+		if ( isset( $this->settings['decay'] ) ) {
+			if ( ! is_int( $this->settings['decay'] ) ) {
+				$errors[] = new WP_Error( 'invalid_configuration', 'Decay must be an integer (number of seconds).' );
+			} elseif ( $this->settings['decay'] > MONTH_IN_SECONDS ) {
+				$errors[] = new WP_Error( 'invalid_configuration', 'Decay must be less than or equal to 30 days.' );
+			} elseif ( $this->settings['decay'] < DAY_IN_SECONDS ) {
+				$errors[] = new WP_Error( 'invalid_configuration', 'Decay must be greater than 1 day.' );
+			}
 		}
 
-		// This seems like a reasonable max limit on namespace length.
-		// @see https://developer.wordpress.org/reference/functions/set_transient/#more-information
-		if ( strlen( $this->settings['vendor']['namespace'] ) > 96 ) {
-			$errors[] = new WP_Error( 'invalid_configuration', 'Namespace length must be shorter than 96 characters.' );
+		if ( isset( $this->settings['vendor']['namespace'] ) ) {
+
+			// This seems like a reasonable max limit on namespace length.
+			// @see https://developer.wordpress.org/reference/functions/set_transient/#more-information
+			if ( strlen( $this->settings['vendor']['namespace'] ) > 96 ) {
+				$errors[] = new WP_Error( 'invalid_configuration', 'Namespace length must be shorter than 96 characters.' );
+			}
+
+			if ( in_array( strtolower( $this->settings['vendor']['namespace'] ), self::$reserved_namespaces, true ) ) {
+				$errors[] = new WP_Error( 'invalid_configuration', 'The defined namespace is reserved.' );
+			}
+		}
+
+		if ( isset( $this->settings['vendor'][ 'email' ] ) && ! filter_var( $this->settings['vendor'][ 'email' ], FILTER_VALIDATE_EMAIL ) ) {
+			$errors[] = new WP_Error( 'invalid_configuration', 'An invalid `vendor/email` setting was passed to the ReplaceMe\TrustedLogin Client.' );
 		}
 
 		// TODO: Add namespace collision check?
-
 		foreach ( array( 'webhook_url', 'vendor/support_url', 'vendor/website' ) as $settings_key ) {
-			$value = $this->get_setting( $settings_key, null, $this->settings );
+			$value = $this->get_setting( $settings_key, '', $this->settings );
 			$url   = wp_kses_bad_protocol( $value, array( 'http', 'https' ) );
 			if ( $value && ! filter_var( $url, FILTER_VALIDATE_URL ) ) {
 				$errors[] = new WP_Error(
 					'invalid_configuration',
-					sprintf( 'An invalid `%s` setting was passed to the TrustedLogin Client: %s',
+					sprintf( 'An invalid `%s` setting was passed to the ReplaceMe\TrustedLogin Client: %s',
 						$settings_key,
 						print_r( $this->get_setting( $settings_key, null, $this->settings ), true )
 					)
@@ -154,7 +175,7 @@ final class Config {
 
 		foreach ( SupportRole::$prevented_caps as $invalid_cap ) {
 			if ( array_key_exists( $invalid_cap, $added_caps ) ) {
-				$errors[] = new WP_Error( 'invalid_configuration', 'TrustedLogin users cannot be allowed to: ' . $invalid_cap );
+				$errors[] = new WP_Error( 'invalid_configuration', 'ReplaceMe\TrustedLogin users cannot be allowed to: ' . $invalid_cap );
 			}
 		}
 
@@ -166,10 +187,10 @@ final class Config {
 				}
 			}
 
-			$exception_text = 'Invalid TrustedLogin Configuration. Learn more at https://www.trustedlogin.com/configuration/';
+			$exception_text = 'Invalid ReplaceMe\TrustedLogin Configuration. Learn more at https://www.trustedlogin.com/configuration/';
 			$exception_text .= "\n- " . implode( "\n- ", $error_text );
 
-			throw new Exception( $exception_text, 3 );
+			throw new Exception( $exception_text, 406 );
 		}
 
 		return true;
@@ -242,14 +263,14 @@ final class Config {
 	 *
 	 * @return bool True: not null. False: null
 	 */
-	protected function is_not_null( $input ) {
+	public function is_not_null( $input ) {
 		return ! is_null( $input );
 	}
 
 	/**
 	 * Gets the default settings for the Client and define dynamic defaults (like paths/css and paths/js)
 	 *
-	 * @since 0.9.6
+	 * @since 1.0.0
 	 *
 	 * @return array Array of default settings.
 	 */
@@ -282,7 +303,7 @@ final class Config {
 	/**
 	 * Helper Function: Get a specific setting or return a default value.
 	 *
-	 * @since 0.1.0
+	 * @since 1.0.0
 	 *
 	 * @param string $key The setting to fetch, nested results are delimited with forward slashes (eg vendor/name => settings['vendor']['name'])
 	 * @param mixed $default - if no setting found or settings not init, return this value.
@@ -296,12 +317,12 @@ final class Config {
 			$settings = $this->settings;
 		}
 
-		if ( empty( $settings ) || ! is_array( $settings ) ) {
-			return $default;
-		}
-
 		if ( is_null( $default ) ) {
 			$default = $this->get_multi_array_value( $this->get_default_settings(), $key );
+		}
+
+		if ( empty( $settings ) || ! is_array( $settings ) ) {
+			return $default;
 		}
 
 		return $this->get_multi_array_value( $settings, $key, $default );
@@ -350,7 +371,7 @@ final class Config {
 		if ( isset( $array[ $prop ] ) ) {
 			$value = $array[ $prop ];
 		} else {
-			$value = '';
+			$value = $default;
 		}
 
 		$value_is_zero = 0 === $value;
@@ -361,7 +382,7 @@ final class Config {
 	/**
 	 * Checks whether SSL requirements are met.
 	 *
-	 * @since 0.9.2
+	 * @since 1.0.0
 	 *
 	 * @return bool  Whether the vendor-defined SSL requirements are met.
 	 */

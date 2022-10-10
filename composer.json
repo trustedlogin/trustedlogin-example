@@ -3,16 +3,16 @@
   "type": "wordpress-plugin",
   "license": "GPL-2.0-or-later",
   "prefer-stable": true,
-  "minimum-stability": "dev",
+  "minimum-stability": "stable",
   "repositories": [
     {
       "type": "github",
-      "url":  "https://github.com/trustedlogin/trustedlogin-client.git",
+      "url":  "https://github.com/trustedlogin/client.git",
       "no-api": true
     }
   ],
   "require": {
-    "trustedlogin/trustedlogin-client": "dev-feature/auth-screen"
+    "trustedlogin/client": "dev-main"
   },
   "require-dev": {
     "coenjacobs/mozart": "dev-master"
@@ -30,7 +30,7 @@
       "classmap_directory": "/vendor/ReplaceMe/classes/",
       "classmap_prefix": "ReplaceMe_",
       "packages": [
-        "trustedlogin/trustedlogin-client",
+        "trustedlogin/client",
         "katzgrau/klogger"
       ],
       "override_autoload": {
