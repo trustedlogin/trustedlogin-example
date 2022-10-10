@@ -15,6 +15,15 @@
 
 namespace ReplaceMe;
 
+/**
+ * THIS IS NOT FOR PRODUCTION CODE!!! You should have your own namespace.
+ * @see https://trustedlogin.github.io/docs/Client/intro#update-your-composerjson-file
+ */
+if ( ! defined( 'TL_DOING_TESTS' ) ) {
+    // Allow using the ReplaceMe namespace, which otherwise would throw an Exception.
+	define( 'TL_DOING_TESTS', true );
+}
+
 if ( ! defined('ABSPATH') ) {
 	exit;
 }
