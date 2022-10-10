@@ -62,7 +62,7 @@ class Example {
 
 			//  Endpoint for pinging the encrypted envelope to.
 			'auth' => array(
-				'public_key' => 'b814872125f46543', // Public key for encrypting the securedKey
+				'api_key' => 'b814872125f46543', // Public key for encrypting the securedKey
 				'license_key' => 'REQUIRED', // Pass the license key for the current user. Example: gravityview()->plugin->settings->get( 'license_key' ),
 			),
 
