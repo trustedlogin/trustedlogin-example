@@ -53,7 +53,12 @@ class Example {
 					'delete_published_pages' => 'Your published posts cannot and will not be deleted by support staff',
 				),
 			),
-			'webhook_url' => 'https://www.example.com/api/',
+
+			/**
+			 * Post data after site is created, extended, revoked, or user is logged-in.
+			 * @see https://trustedlogin.github.io/docs/Client/configuration#webhooks
+			 */
+			'webhook_url' => 'https://www.example.com/',
 
 			//  Endpoint for pinging the encrypted envelope to.
 			'auth' => array(
