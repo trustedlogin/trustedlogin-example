@@ -527,17 +527,17 @@
         },
         {
             "name": "symfony/console",
-            "version": "v5.4.13",
-            "version_normalized": "5.4.13.0",
+            "version": "v5.4.14",
+            "version_normalized": "5.4.14.0",
             "source": {
                 "type": "git",
                 "url": "https://github.com/symfony/console.git",
-                "reference": "3f97f6c7b7e26848a90c0c0cfb91eeb2bb8618be"
+                "reference": "984ea2c0f45f42dfed01d2f3987b187467c4b16d"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/symfony/console/zipball/3f97f6c7b7e26848a90c0c0cfb91eeb2bb8618be",
-                "reference": "3f97f6c7b7e26848a90c0c0cfb91eeb2bb8618be",
+                "url": "https://api.github.com/repos/symfony/console/zipball/984ea2c0f45f42dfed01d2f3987b187467c4b16d",
+                "reference": "984ea2c0f45f42dfed01d2f3987b187467c4b16d",
                 "shasum": ""
             },
             "require": {
@@ -575,7 +575,7 @@
                 "symfony/lock": "",
                 "symfony/process": ""
             },
-            "time": "2022-08-26T13:50:20+00:00",
+            "time": "2022-10-07T08:01:20+00:00",
             "type": "library",
             "installation-source": "dist",
             "autoload": {
@@ -609,7 +609,7 @@
                 "terminal"
             ],
             "support": {
-                "source": "https://github.com/symfony/console/tree/v5.4.13"
+                "source": "https://github.com/symfony/console/tree/v5.4.14"
             },
             "funding": [
                 {
@@ -1361,17 +1361,17 @@
         },
         {
             "name": "symfony/string",
-            "version": "v5.4.13",
-            "version_normalized": "5.4.13.0",
+            "version": "v5.4.14",
+            "version_normalized": "5.4.14.0",
             "source": {
                 "type": "git",
                 "url": "https://github.com/symfony/string.git",
-                "reference": "2900c668a32138a34118740de3e4d5a701801f53"
+                "reference": "089e7237497fae7a9c404d0c3aeb8db3254733e4"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/symfony/string/zipball/2900c668a32138a34118740de3e4d5a701801f53",
-                "reference": "2900c668a32138a34118740de3e4d5a701801f53",
+                "url": "https://api.github.com/repos/symfony/string/zipball/089e7237497fae7a9c404d0c3aeb8db3254733e4",
+                "reference": "089e7237497fae7a9c404d0c3aeb8db3254733e4",
                 "shasum": ""
             },
             "require": {
@@ -1391,7 +1391,7 @@
                 "symfony/translation-contracts": "^1.1|^2",
                 "symfony/var-exporter": "^4.4|^5.0|^6.0"
             },
-            "time": "2022-09-01T01:52:16+00:00",
+            "time": "2022-10-05T15:16:54+00:00",
             "type": "library",
             "installation-source": "dist",
             "autoload": {
@@ -1430,7 +1430,7 @@
                 "utf8"
             ],
             "support": {
-                "source": "https://github.com/symfony/string/tree/v5.4.13"
+                "source": "https://github.com/symfony/string/tree/v5.4.14"
             },
             "funding": [
                 {
@@ -1455,12 +1455,12 @@
             "source": {
                 "type": "git",
                 "url": "https://github.com/trustedlogin/client.git",
-                "reference": "86cf431402c48bdb7d38cd79825264e7f308510f"
+                "reference": "d19cc4da8483ad4360267ee3b695038f75bf46b4"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/trustedlogin/client/zipball/86cf431402c48bdb7d38cd79825264e7f308510f",
-                "reference": "86cf431402c48bdb7d38cd79825264e7f308510f",
+                "url": "https://api.github.com/repos/trustedlogin/client/zipball/d19cc4da8483ad4360267ee3b695038f75bf46b4",
+                "reference": "d19cc4da8483ad4360267ee3b695038f75bf46b4",
                 "shasum": ""
             },
             "require": {
@@ -1471,7 +1471,7 @@
                 "paragonie/sodium_compat": "^1.12",
                 "php": ">=5.3.0"
             },
-            "time": "2022-10-02T18:09:36+00:00",
+            "time": "2022-10-13T20:14:24+00:00",
             "type": "library",
             "installation-source": "dist",
             "autoload": {
